@@ -36,11 +36,35 @@ namespace scrm_dev_mvc.Data.Repository
 
         }
 
-        public async Task<List<T>> GetAllAsync(Expression<Func<T, bool>> predicate)
+        //public async Task<List<T>> GetAllAsync(Expression<Func<T, bool>> predicate)
+        //{
+        //    return await _dbSet.Where(predicate).ToListAsync();
+        //}
+        public async Task<List<T>> GetAllAsync(
+         Expression<Func<T, bool>> predicate,
+         bool asNoTracking = false,
+         params Expression<Func<T, object>>[] includes)
         {
-            return await _dbSet.Where(predicate).ToListAsync();
-        }
+            IQueryable<T> query = _dbSet;
 
+            // Apply includes for eager loading
+            if (includes != null)
+            {
+                foreach (var include in includes)
+                {
+                    query = query.Include(include);
+                }
+            }
+
+            // Apply filter
+            query = query.Where(predicate);
+
+            // Apply no tracking if needed
+            if (asNoTracking)
+                query = query.AsNoTracking();
+
+            return await query.ToListAsync();
+        }
 
         public async Task<T> GetByIdAsync(Guid id)
         {

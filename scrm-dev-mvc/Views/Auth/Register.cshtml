@@ -285,6 +285,24 @@
                 color: var(--color-danger);
                 font-size: var(--fs-sm);
             }
+
+        /* --- ADDED CSS FOR LOGIN LINK --- */
+        .login-prompt {
+            text-align: center;
+            margin-top: var(--space-lg);
+            font-size: var(--fs-sm);
+            color: var(--text-secondary);
+        }
+
+            .login-prompt a {
+                color: var(--text-primary);
+                font-weight: 600;
+                text-decoration: none;
+            }
+
+                .login-prompt a:hover {
+                    text-decoration: underline;
+                }
     </style>
 </head>
 <body>
@@ -331,6 +349,9 @@
                         Continue with Google
                     </button>
                 </form>
+                <div class="login-prompt">
+                    Already have an account? <a asp-controller="Auth" asp-action="Login">Log in</a>
+                </div>
             </div>
         </div>
 

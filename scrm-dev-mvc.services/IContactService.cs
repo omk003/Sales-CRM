@@ -16,5 +16,7 @@ namespace scrm_dev_mvc.Services
         Task<string> UpdateContact(ContactDto contact);
 
         Contact GetContactById(int id);
+
+        //Task<(List<ContactResponseViewModel> Result, long WithTrackingMs, long WithoutTrackingMs)> GetAllContactsPerformanceTest(Guid userId);
     }
 }

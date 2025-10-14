@@ -71,6 +71,8 @@ namespace scrm_dev_mvc.Controllers
                 return Unauthorized();
 
             Guid id = Guid.Parse(userId);
+
+            
             List<ContactResponseViewModel> ContactList = await contactService.GetAllContacts(id);
             return Json(new { data = ContactList });
         }
