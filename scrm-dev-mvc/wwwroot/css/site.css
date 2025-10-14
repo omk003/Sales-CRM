@@ -1,0 +1,371 @@
+﻿/* ==========================================================================
+   1. Global Theme & Variables
+   ========================================================================== */
+
+
+:root {
+    /* ## Color Palette 🎨 */
+    --color-primary: hex(0,0,0); /* Main brand color for buttons, links, etc. */
+    --color-secondary: #ff2753; /* Supporting color #434140 */
+    --color-accent: #28a745; /* Color for highlights and success states */
+    --color-danger: #dc3545; /* Color for errors and warnings */
+
+    --text-primary: #222; /* Main text color */
+    --text-secondary: #6c757d; /* Lighter text for subheadings, meta info */
+    --text-tertiary: hsl(360, 0%, 65%);
+    --color-accent: hsl(360, 0%, 70%);
+    --color-accent1: hsl(360, 0%,30%);
+    --color-accent2: hsl(360, 0%,94%);
+    --text-inverted: #ffffff; /* Text used on dark backgrounds */
+    --text-button: #ff2753;
+    --bg-primary: #ffffff; /* Primary background color of the page */
+    --bg-secondary: hsl(0,0%,95%); /*#f8f9fa;  Lighter background for cards, sections */
+    --border-color: #dee2e6; /* Color for borders and dividers */
+    /* ## Typography 🖋️ */
+    --font-primary: stabil_grotesk, sans-serif;
+    --font-secondary: Akkurat, -apple-system,BlinkMacSystemFont,"Segoe UI";
+    --font-monospace: 'SF Mono', 'Fira Code', 'Roboto Mono', monospace;
+    --fs-base: 1rem; /* Base font size (usually 16px) */
+    --fs-ssm: 0.75rem;
+    --fs-sm: 0.875rem;
+    --fs-lg: 1.25rem;
+    --fs-h1: 3rem;
+    --fs-h2: 2.25rem;
+    --fs-h3: 1.75rem;
+    --fw-light: 300;
+    --fw-normal: 400;
+    --fw-bold: 700;
+    /* ## Spacing & Sizing 📏 */
+    --space-xs: 0.25rem; /* 4px */
+    --space-sm: 0.5rem; /* 8px */
+    --space-md: 1rem; /* 16px */
+    --space-lg: 1.5rem; /* 24px */
+    --space-xl: 3rem; /* 48px */
+    --container-width: 1140px;
+    /* ## Borders & Shadows ✨ */
+    --border-radius-sm: 0.25rem;
+    --border-radius-lg: 0.5rem;
+    --shadow-sm: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+    --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    /* ## Transitions ⏳ */
+    --transition-base: all 0.2s ease-in-out;
+}
+
+
+/* ==========================================================================
+   2. Global Resets & Defaults
+   ========================================================================== */
+
+/* A better box-sizing model */
+*, *::before, *::after {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    font-family: var(--font-primary);
+    font-size: var(--fs-base);
+    font-weight: var(--fw-normal);
+    line-height: 1.6;
+    color: var(--text-primary);
+    background-color: var(--bg-primary);
+
+    overflow: hidden;
+    height: 100%;
+    margin: 0;
+}
+
+h1, h2, h3 {
+    margin: 0 0 var(--space-md) 0;
+    font-weight: var(--fw-bold);
+    line-height: 1.2;
+}
+
+h1 {
+    font-size: var(--fs-h1);
+}
+
+h2 {
+    font-size: var(--fs-h2);
+}
+
+h3 {
+    font-size: var(--fs-h3);
+    color: var(--color-accent1);
+}
+
+p {
+    margin: 0 0 var(--space-md) 0;
+}
+
+a {
+    color: var(--color-primary);
+    text-decoration: none;
+    transition: var(--transition-base);
+}
+
+
+
+html {
+  font-size: 14px;
+}
+
+@media (min-width: 768px) {
+  html {
+    font-size: 16px;
+  }
+}
+
+.btn:focus, .btn:active:focus, .btn-link.nav-link:focus, .form-control:focus, .form-check-input:focus {
+  box-shadow: 0 0 0 0.1rem white, 0 0 0 0.25rem #f8f9fa;
+}
+
+html {
+  position: relative;
+  min-height: 100%;
+}
+
+body {
+  margin-bottom: 60px;
+}
+
+.form-floating > .form-control-plaintext::placeholder, .form-floating > .form-control::placeholder {
+  color: var(--bs-secondary-color);
+  text-align: end;
+}
+
+.form-floating > .form-control-plaintext:focus::placeholder, .form-floating > .form-control:focus::placeholder {
+  text-align: start;
+}
+
+.nav-color {
+    color: #434140;
+    
+}
+
+
+
+
+/* Add this to the bottom of your stylesheet */
+.dark-theme {
+    --color-primary: #4dabf7; /* A lighter blue for dark backgrounds */
+    --text-primary: #f8f9fa; /* Light text */
+    --text-secondary: #adb5bd; /* Dimmer light text */
+    --bg-primary: #121212; /* Dark background */
+    --bg-secondary: #1e1e1e; /* Slightly lighter dark background */
+    --border-color: #495057; /* Lighter border for contrast */
+}
+
+.nav-box {
+    border: 1px solid transparent; /* Start with a transparent border */
+    border-radius: var(--border-radius-lg);
+    transition: var(--transition-base);
+    margin: 0 var(--space-xs); /* Adds a little space between nav items */
+    color: var(--bg-secondary);
+    
+}
+
+    /* 2. Change the box's background and border on hover */
+    .nav-box:hover {
+        background-color: var(--bg-secondary);
+        transition: background-color 0.3s ease;
+    }
+
+        /* 3. Change the LINK'S text color when the box is hovered */
+/*        .nav-box:hover .nav-link {
+            color: var(--text-inverted) !important;
+        }*/
+
+.login-button {
+    border: 1px solid transparent; /* Start with a transparent border */
+    border-radius: var(--border-radius-lg);
+    transition: var(--transition-base);
+    margin: 0 var(--space-xs); /* Adds a little space between nav items */
+/*    color: var(--bg-secondary);*/
+    background-color: var(--bg-secondary);
+
+}
+
+    .login-button:hover {
+        border: 1px solid var(--text-primary);
+        background-color: var(--bg-secondary);
+    }
+
+
+
+
+.profile-dropdown {
+    position: relative;
+    display: inline-block;
+}
+
+.dropdown-menu {
+    display: none; /* Hidden by default */
+    position: absolute;
+    right: 0;
+    background-color: #f9f9f9;
+    min-width: 220px;
+    box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+    z-index: 100;
+    border-radius: 0.25rem;
+    padding: 0.5rem 0;
+    border: 1px solid rgba(0,0,0,0);
+}
+
+    .dropdown-menu a {
+        color: black;
+        padding: 12px 16px;
+        text-decoration: none;
+        display: block;
+        color: var(--color-accent1);
+        font-size: 0.9rem;
+        font-weight: var(--fw-normal);
+    }
+
+        .dropdown-menu a:hover {
+            background-color: #f1f1f1;
+        }
+
+.dropdown-divider {
+    height: 1px;
+    margin: 0 0;
+    overflow: hidden;
+    background-color: #e9ecef;
+}
+
+/* This class will be toggled with JavaScript */
+.dropdown-menu.show {
+    display: block;
+}
+
+
+
+
+
+.footer {
+    position: absolute;
+    bottom: 0;
+    width: 100%;
+    white-space: nowrap;
+    margin-bottom: auto;
+    /* Use a spacing variable for consistent height */
+    line-height: var(--space-xl);
+    background-color: #fafafa;
+    border-top: 0px solid #fafafa;
+}
+
+
+/*.table {
+    border-collapse: collapse;
+    width: 100%;
+    table-layout: fixed;
+    border: 1px solid rgba(128, 128, 128, 0.3);
+    
+}*/
+.table {
+    /* Change border-collapse to separate to allow radius */
+    border-collapse: separate;
+    border-spacing: 0; /* Removes default spacing between cells */
+
+    width: 100%;
+    table-layout: fixed;
+    border: 1px solid rgba(128, 128, 128, 0.3);
+    /* Add border-radius for the rounded corners */
+    border-radius: 12px; /* Adjust the value as you like */
+    /* This clips the inner content (like header corners) to the rounded border */
+    overflow: hidden;
+}
+    .table thead th {
+        border-bottom: 2px solid rgba(128, 128, 128, 0.7);
+        background: var(--bg-secondary, #f8f9fa);
+        position: sticky;
+        top: 0;
+        z-index: 2;
+        padding: 0.75rem 1rem;
+        text-align: left;
+    }
+
+    .table th,
+    .table td {
+        border: none;
+        border-bottom: 1px solid rgba(128, 128, 128, 0.2); /* Add border to cells instead */
+        padding: 0.75rem 1rem;
+        text-align: left;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+
+    }
+
+    .table thead th {
+        border-bottom: 2px solid rgba(128, 128, 128, 0.7);
+        font-weight:400;
+    }
+
+table.table thead th {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--color-accent1);
+}
+
+    .table tbody tr:last-child td {
+        border-bottom: none;
+    }
+
+/* Scrollable table body */
+.table-scroll-wrapper {
+    max-height: 350px;
+    overflow-y: auto;
+    overflow-x: hidden;
+    width: 100%;
+}
+
+.dataTables_filter {
+    margin-bottom: 1.5rem; /* Adjust this value as needed */
+}
+
+.btn-custom {
+    background-color: var(--color-secondary); /* Your custom purple color */
+    
+    color: #fff; /* White text */
+}
+
+.btn-custom-delete {
+    border: 1px solid var(--color-secondary); /* Your custom purple color */
+
+    color: var(--text-primary); /* White text */
+}
+    .btn-custom-delete:hover {
+        border: 1px solid var(--color-secondary); /* Your custom purple color */
+        box-shadow: 0 3px 5px rgba(0, 0, 0, 0.2);
+        color: var(--text-primary); /* White text */
+    }
+
+    /* Optional: Add a hover effect for a better user experience */
+.btn-custom:hover {
+    background-color: var(--color-secondary);
+    color: #fff;
+    box-shadow: 0 3px 5px rgba(0, 0, 0, 0.2);
+}
+
+.row-select {
+    accent-color: #ff2753;
+}
+
+.btn-primary {
+    background-color: var(--color-secondary);
+    color: white;
+    border-color: var(--color-secondary);
+}
+
+    .btn-primary:hover {
+        background-color: var(--color-secondary);
+        color: white;
+        box-shadow: 0 3px 5px rgba(0, 0, 0, 0.2);
+        border-color: var(--color-secondary);
+    }
+
+
+
+

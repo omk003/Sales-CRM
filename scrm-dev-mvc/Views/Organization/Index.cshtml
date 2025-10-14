@@ -1,0 +1,55 @@
+﻿@model IEnumerable<scrm_dev_mvc.Models.Organization>
+
+@using System.Security.Claims
+
+@{
+    // Get current user's role id (assuming stored as a claim)
+    var roleName = User.FindFirstValue(ClaimTypes.Role);
+    //int.TryParse(roleIdClaim, out var roleId);
+}
+
+@if (roleName == "ApplicationAdmin") // Show only if user is application_admin
+{
+    <div>
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Address</th>
+                    <th>Phone Number</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var org in Model)
+                {
+                    <tr>
+                        <td>@org.Name</td>
+                        <td>@org.Address</td>
+                        <td>@org.PhoneNumber</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+}
+else
+{
+    <div class="card p-4 mt-3 shadow-sm">
+        <h5>Invite Your Team</h5>
+        <form asp-action="SendInvitation" method="post">
+            <div class="mb-3">
+                <label for="email" class="form-label">Email</label>
+                <input type="email" class="form-control" id="email" name="Email" placeholder="Enter team member's email" required />
+            </div>
+            <div class="mb-3">
+                <label for="role" class="form-label">Permission</label>
+                <select class="form-select" id="role" name="RoleId" required>
+                    <option value="3">Sales Admin</option>
+                    <option value="4">Sales User</option>
+                </select>
+            </div>
+            <button type="submit" class="btn btn-primary">Send Invitation</button>
+        </form>
+    </div>
+}
+

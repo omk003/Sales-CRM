@@ -1,0 +1,20 @@
+﻿using scrm_dev_mvc.Models;
+using scrm_dev_mvc.Models.ViewModels;
+
+namespace scrm_dev_mvc.Services
+{
+    public interface IContactService
+    {
+        Task<string> CreateContactAsync(ContactDto contactDto);
+
+        Task<List<ContactResponseViewModel>> GetAllContacts(Guid userId);
+
+        Task<IEnumerable<LeadStatus>> GetLeadStatusesAsync();
+        Task<IEnumerable<Lifecycle>> GetLifeCycleStagesAsync();
+
+        Task<bool> DeleteContactsByIdsAsync(List<int> ids);
+        Task<string> UpdateContact(ContactDto contact);
+
+        Contact GetContactById(int id);
+    }
+}

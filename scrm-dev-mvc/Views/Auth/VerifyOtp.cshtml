@@ -1,0 +1,19 @@
+﻿@{
+    ViewData["Title"] = "Verify OTP";
+}
+
+<div class="container mt-5">
+    <h2>Enter OTP</h2>
+    <form asp-action="VerifyOtp" method="post">
+
+        <div asp-validation-summary="ModelOnly" class="validation-summary-errors"></div>
+        <input type="hidden" name="invitationCode" value="@ViewBag.InvitationCode" />
+
+        <input type="hidden" name="email" value="@ViewBag.Email" />
+        <div class="form-group">
+            <label for="otp">OTP Code</label>
+            <input type="text" name="otp" class="form-control w-25" maxlength="6" required />
+        </div>
+        <button type="submit" class="btn btn-primary mt-3">Verify</button>
+    </form>
+</div>

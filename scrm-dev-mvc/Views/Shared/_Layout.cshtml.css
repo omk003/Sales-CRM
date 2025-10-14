@@ -1,0 +1,68 @@
+﻿
+a.navbar-brand {
+    white-space: normal;
+    text-align: center;
+    word-break: break-all;
+    
+}
+.hover-lift:hover {
+    transform: translateY(-3px) !important;
+    box-shadow: var(--shadow-lg) !important;
+}
+a {
+
+    color: var(--color-primary); /* Use the primary color variable */
+    font-weight:900;
+}
+
+.btn-primary {
+    color: var(--text-inverted); /* Use inverted text color (white) */
+    background-color: var(--color-primary); /* Use primary color */
+    border: 1px solid var(--color-primary); /* Border can match the background */
+    transition: var(--transition-base); /* Add a smooth transition */
+}
+
+    .btn-primary:hover {
+        opacity: 0.85; /* Slight fade on hover for interactivity */
+    }
+
+.nav-pills .nav-link.active, .nav-pills .show > .nav-link {
+    color: var(--text-inverted);
+    background-color: var(--color-primary);
+    border: 1px solid var(--color-primary);
+    font-weight: 700
+}
+
+
+.nav-item .nav-link {
+    background-color: var(--bg-secondary); /* A light grey background */
+    border-radius: var(--border-radius-lg); /* Rounds the corners */
+    transition: var(--transition-base); /* Smooth hover effect */
+    padding-left: var(--space-md) !important; /* Ensure consistent padding */
+    padding-right: var(--space-md) !important;
+}
+
+.border-top {
+    border-top: 1px solid var(--border-color); /* Use the border color variable */
+}
+
+.border-bottom {
+    border-bottom: 1px solid var(--border-color); /* Use the border color variable */
+}
+
+.box-shadow {
+     
+    /* Use one of the predefined shadow variables */
+    box-shadow: var(--shadow-md);
+}
+
+button.accept-policy {
+    font-size: var(--fs-base); /* Use the base font size variable */
+    line-height: inherit;
+}
+
+
+   
+
+
+/* --- Profile Dropdown Styles --- */

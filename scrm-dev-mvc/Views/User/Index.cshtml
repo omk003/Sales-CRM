@@ -1,0 +1,311 @@
+﻿@model scrm_dev_mvc.Models.ViewModels.UserViewModel
+@{
+    ViewData["Title"] = "My Profile";
+    // This view will now use your main _Layout.cshtml by default
+}
+
+@* Display feedback messages from the server *@
+@if (TempData["Message"] != null)
+{
+    <div id="tempDataMessage" class="alert alert-info alert-dismissible fade show" role="alert" style="position: absolute; top: 80px; right: 20px; z-index: 1050;">
+        @TempData["Message"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
+
+<div class="profile-container">
+    <!-- Header Section with Tab Navigation -->
+    <header class="profile-header">
+        <h1 class="page-title">My Profile</h1>
+        <nav class="profile-nav">
+            <button id="viewBtn" class="nav-tab active" type="button">Profile Overview</button>
+            <button id="editBtn" class="nav-tab" type="button">Edit Profile</button>
+        </nav>
+    </header>
+
+    <main class="profile-content">
+        <!-- Section to View Profile Info (Visible by default) -->
+        <div id="viewProfileSection">
+            <div class="profile-info-card">
+                <div class="info-grid">
+                    <div class="info-item">
+                        <span class="info-label">First Name</span>
+                        <span class="info-value">@Model.FirstName</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Last Name</span>
+                        <span class="info-value">@Model.LastName</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Email</span>
+                        <span class="info-value">@Model.Email</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Organization</span>
+                        <span class="info-value">@Model.OrganizationName</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Role</span>
+                        <span class="info-value">@Model.Role</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Google Sync</span>
+                        <span class="info-value">@(Model.IsSyncedWithGoogle ? "Enabled" : "Not Synced")</span>
+                    </div>
+                </div>
+                @if (!Model.IsSyncedWithGoogle)
+                {
+                    <div class="sync-action">
+                        <a asp-action="GmailSync" asp-controller="Auth" class="btn-common sync-btn">Sync Gmail Account</a>
+                    </div>
+                }
+            </div>
+        </div>
+
+        <!-- Section to Edit Profile Info (Hidden by default) -->
+        <div id="editProfileSection" style="display: none;">
+            <div class="profile-edit-card">
+                <form asp-action="UpdateProfile" asp-controller="User" method="post">
+                    <input type="hidden" name="Id" value="@Model.Id" />
+
+                    <div class="form-group">
+                        <label>First Name</label>
+                        <input type="text" name="FirstName" value="@Model.FirstName" class="form-input" />
+                    </div>
+
+                    <div class="form-group">
+                        <label>Last Name</label>
+                        <input type="text" name="LastName" value="@Model.LastName" class="form-input" />
+                    </div>
+
+                    <div class="form-group">
+                        <label>Email</label>
+                        <input type="email" value="@Model.Email" readonly class="form-input readonly" />
+                    </div>
+
+                    <div class="form-group">
+                        <label>Organization</label>
+                        <input type="text" value="@Model.OrganizationName" readonly class="form-input readonly" />
+                    </div>
+
+                    <div class="btn-container">
+                        <button type="submit" class="btn-common submit-btn">Save Changes</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </main>
+</div>
+
+<style>
+    /* Main container and layout */
+    .profile-container {
+        max-width: 900px;
+        margin: 0 auto;
+        display: flex;
+        flex-direction: column;
+        /*
+                This is the key fix for scrolling in a non-scrolling parent.
+                It calculates the available vertical space by taking the full viewport height (100vh)
+                and subtracting the vertical padding of your main layout's content area.
+                I've assumed 5rem total padding (2.5rem top + 2.5rem bottom).
+                Adjust this value if your main layout's padding is different.
+            */
+        height: calc(100vh - 5rem);
+    }
+
+    .profile-header {
+        border-bottom: 1px solid #e5e5e5;
+        padding-bottom: 20px;
+        margin-bottom: 30px;
+        flex-shrink: 0; /* Prevents the header from shrinking */
+    }
+
+    .page-title {
+        font-size: 2rem;
+        font-weight: 700;
+        color: #333;
+    }
+
+    .profile-content {
+        /* This makes the main content area scrollable if it overflows */
+        overflow-y: auto;
+    }
+
+    /* Tab Navigation */
+    .profile-nav {
+        margin-top: 20px;
+        display: flex;
+        gap: 10px;
+    }
+
+    .nav-tab {
+        padding: 10px 20px;
+        font-size: 1rem;
+        font-weight: 600;
+        border: 2px solid transparent;
+        border-bottom: 2px solid #e5e5e5;
+        background: none;
+        cursor: pointer;
+        color: #666;
+        transition: all 0.2s ease;
+        border-radius: 6px 6px 0 0;
+    }
+
+        .nav-tab:hover {
+            background-color: #f8f8f8;
+            color: #333;
+        }
+
+        .nav-tab.active {
+            color: var(--color-secondary, #0078ff); /* Uses your variable with a fallback */
+            border-color: var(--color-secondary, #0078ff);
+        }
+
+    /* Shared Card styles */
+    .profile-info-card, .profile-edit-card {
+        background: #ffffff;
+        padding: 30px;
+        border-radius: 12px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+        border: 1px solid #e5e5e5;
+    }
+
+    /* View Profile Styles */
+    .info-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 25px;
+    }
+
+    .info-item {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .info-label {
+        font-size: 0.9rem;
+        color: #777;
+        margin-bottom: 4px;
+    }
+
+    .info-value {
+        font-size: 1.1rem;
+        color: #333;
+        font-weight: 500;
+    }
+
+    .sync-action {
+        border-top: 1px solid #eee;
+        margin-top: 25px;
+        padding-top: 25px;
+    }
+
+    /* Edit Form Styles */
+    .form-group {
+        margin-bottom: 20px;
+    }
+
+    label {
+        display: block;
+        font-size: 0.9rem;
+        font-weight: 600;
+        color: #555;
+        margin-bottom: 6px;
+    }
+
+    .form-input {
+        width: 100%;
+        padding: 12px;
+        border: 1px solid #ccc;
+        border-radius: 8px;
+        font-size: 1rem;
+        transition: border-color 0.2s;
+    }
+
+        .form-input:focus {
+            border-color: var(--color-secondary, #0078ff); /* Uses your variable */
+            outline: none;
+        }
+
+        .form-input.readonly {
+            background: #f5f5f5;
+            cursor: not-allowed;
+        }
+
+    /* Button Styles */
+    .btn-container {
+        margin-top: 30px;
+        display: flex;
+    }
+
+    .btn-common {
+        padding: 12px 20px;
+        border: none;
+        border-radius: 8px;
+        font-size: 1rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s;
+        text-decoration: none;
+        text-align: center;
+    }
+
+    .submit-btn {
+        background-color: #333;
+        color: white;
+    }
+
+        .submit-btn:hover {
+            background-color: #000;
+        }
+
+    .sync-btn {
+        background-color: var(--color-secondary, #0078ff); /* Uses your variable */
+        color: white;
+        display: inline-block;
+    }
+
+        .sync-btn:hover {
+            filter: brightness(90%); /* Adds a hover effect */
+        }
+</style>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const viewBtn = document.getElementById('viewBtn');
+        const editBtn = document.getElementById('editBtn');
+        const viewSection = document.getElementById('viewProfileSection');
+        const editSection = document.getElementById('editProfileSection');
+
+        // Function to switch tabs
+        function showViewTab() {
+            viewSection.style.display = 'block';
+            editSection.style.display = 'none';
+            viewBtn.classList.add('active');
+            editBtn.classList.remove('active');
+        }
+
+        function showEditTab() {
+            viewSection.style.display = 'none';
+            editSection.style.display = 'block';
+            viewBtn.classList.remove('active');
+            editBtn.classList.add('active');
+        }
+
+        // Event listeners
+        viewBtn.addEventListener('click', showViewTab);
+        editBtn.addEventListener('click', showEditTab);
+
+        // Auto-hide TempData message
+        const tempDataAlert = document.getElementById('tempDataMessage');
+        if (tempDataAlert) {
+            setTimeout(() => {
+                tempDataAlert.classList.remove('show');
+                 // Use a bootstrap collapse/fade out if available, or just hide
+                setTimeout(() => { tempDataAlert.style.display = 'none'; }, 150);
+            }, 5000);
+        }
+    });
+</script>
+

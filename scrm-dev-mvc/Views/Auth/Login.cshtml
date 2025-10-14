@@ -1,0 +1,397 @@
+﻿@model scrm_dev_mvc.Models.ViewModels.LoginViewModel
+@{
+    ViewData["Title"] = "Log in";
+    Layout = null;
+}
+@if (TempData["Message"] != null)
+{
+    // Added an id="tempDataMessage" to the div
+    <div id="tempDataMessage" class="alert alert-info">
+        @TempData["Message"]
+    </div>
+}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - SCRM</title>
+    <link rel="stylesheet" href="~/css/site.css" />
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: var(--font-primary);
+            height: 100vh;
+            overflow: hidden;
+            margin: 0;
+        }
+
+        .container {
+            display: flex;
+            height: 100vh;
+        }
+
+        .left-section {
+            flex: 1;
+            padding: 35px 35px;
+            display: flex;
+            flex-direction: column;
+            background: var(--bg-primary);
+            overflow-y: auto;
+            align-items:center;
+        }
+
+        .logo {
+            font-size: 28px;
+            font-weight: var(--fw-bold);
+            letter-spacing: -0.5px;
+            margin-bottom: 40px;
+            margin-right: auto;
+            color: var(--text-primary);
+
+        }
+
+        .logo-icon {
+            display: inline-block;
+            width: 24px;
+            height: 24px;
+            background: var(--text-primary);
+            border-radius: var(--border-radius-sm);
+            margin-left: 4px;
+            position: relative;
+            top: 3px;
+        }
+
+        .login-content {
+
+            max-width: 330px;
+            width: 100%;
+            align-items:center;
+        }
+
+        h1 {
+            font-size: var(--fs-h3);
+            font-weight: var(--fw-bold);
+            margin-bottom: var(--space-lg);
+            color: var(--text-primary);
+            letter-spacing: -0.5px;
+        }
+
+        .social-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: var(--space-md);
+            margin-bottom: var(--space-lg);
+        }
+
+        .social-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 8px 24px;
+            border: 1.5px solid var(--border-color);
+            border-radius: var(--border-radius-lg);
+            background: var(--bg-primary);
+            font-size: var(--fs-base);
+            font-weight: 500;
+            cursor: pointer;
+            transition: var(--transition-base);
+            text-decoration: none;
+            color: var(--text-primary);
+            font-family: var(--font-primary);
+            width: 100%;
+        }
+
+        .social-btn:hover {
+                border-color: var(--color-secondary);
+                background: var(--color-secondary);
+                color: var(--text-inverted)
+            
+        }
+
+        .social-btn svg {
+            fill:currentColor;
+            width: 16px;
+            height: 16px;
+            margin-right: var(--space-md);
+        }
+
+        .divider {
+            display: flex;
+            align-items: center;
+            margin: var(--space-lg) 0;
+            color: var(--text-secondary);
+            font-size: var(--fs-sm);
+        }
+
+        .divider::before,
+        .divider::after {
+            content: '';
+            flex: 1;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .divider::before {
+            margin-right: var(--space-md);
+        }
+
+        .divider::after {
+            margin-left: var(--space-md);
+        }
+
+        .form-group {
+            margin-bottom: var(--space-lg);
+        }
+
+        label {
+            display: block;
+            font-size: var(--fs-ssm);
+            font-weight: 600;
+            margin-bottom: var(--space-sm);
+            color: var(--text-tertiary);
+        }
+
+        input[type="email"],
+        input[type="password"] {
+            width: 100%;
+            padding: 14px var(--space-md);
+            border: 1.5px solid var(--border-color);
+            border-radius: var(--border-radius-lg);
+            font-size: var(--fs-base);
+            transition: var(--transition-base);
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            font-family: var(--font-primary);
+        }
+
+        input[type="email"]:focus,
+        input[type="password"]:focus {
+            outline: none;
+            border-color: var(--color-primary);
+            box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
+        }
+
+        input[type="email"]::placeholder,
+        input[type="password"]::placeholder {
+            color: var(--color-accent);
+        }
+
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            margin-bottom: var(--space-lg);
+        }
+
+        .checkbox-group input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            margin-right: var(--space-sm);
+            cursor: pointer;
+            accent-color: var(--color-primary);
+        }
+
+        .checkbox-group label {
+            margin: 0;
+            font-weight: var(--fw-normal);
+            color: var(--text-secondary);
+            cursor: pointer;
+        }
+
+        .submit-btn {
+            width: 100%;
+            padding: 14px var(--space-lg);
+            background: var(--text-primary);
+            color: var(--text-inverted);
+            border: none;
+            border-radius: var(--border-radius-lg);
+            font-size: var(--fs-base);
+            font-weight: var(--fw-bold);
+            cursor: pointer;
+            transition: var(--transition-base);
+            font-family: var(--font-primary);
+        }
+
+        .submit-btn:hover {
+            background: var(--text-secondary);
+            transform: translateY(-1px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .submit-btn:active {
+            transform: translateY(0);
+        }
+
+        .text-danger {
+            color: var(--color-danger);
+            font-size: var(--fs-sm);
+            margin-top: var(--space-xs);
+            display: block;
+        }
+
+        .footer {
+            margin-top: auto;
+            padding-top: var(--space-xl);
+            font-size: var(--fs-sm);
+            color: var(--text-secondary);
+        }
+
+        .footer a {
+            color: var(--text-secondary);
+            text-decoration: none;
+            margin: 0 var(--space-xs);
+        }
+
+        .footer a:hover {
+            color: var(--text-primary);
+            text-decoration: underline;
+        }
+
+        .right-section {
+            flex: 1;
+            background: white;  
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .art-container {
+            width: 90%;
+            height: 90%;
+            border-radius: 1rem;
+            position: relative;
+        }
+        
+        .validation-summary-errors {
+            background: #fee;
+            border: 1px solid #fcc;
+            border-radius: var(--border-radius-lg);
+            padding: var(--space-md) var(--space-md);
+            margin-bottom: var(--space-lg);
+        }
+
+        .validation-summary-errors ul {
+            list-style: none;
+            margin: 0;
+            padding: 0;
+        }
+
+        .validation-summary-errors li {
+            color: var(--color-danger);
+            font-size: var(--fs-sm);
+        }
+
+        .signup-prompt {
+            text-align: center;
+            margin-top: 10px; /* Adjust this value to get the space you want */
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="left-section">
+            <div class="logo">
+                SCRM  @* <span class="logo-icon"></span> *@
+            </div>
+
+            <div class="login-content">
+                <h1>Log in </h1>
+
+                <!-- Email + Password Login -->
+                <form asp-action="Login" method="post">
+                    <div asp-validation-summary="ModelOnly" class="validation-summary-errors"></div>
+                    <input type="hidden" name="invitationCode" value="@ViewBag.InvitationCode" />
+                    <div class="form-group">
+                        <label asp-for="Email">Email</label>
+                        <input asp-for="Email" type="email" placeholder="name@email.com" />
+                        <span asp-validation-for="Email" class="text-danger"></span>
+                    </div>
+                    <div class="form-group">
+                        <label asp-for="Password">Password</label>
+                        <input asp-for="Password" type="password" placeholder="Enter your password" />
+                        <span asp-validation-for="Password" class="text-danger"></span>
+                    </div>
+                    <button type="submit" class="submit-btn">Login</button>
+                </form>
+
+                <div class="divider">or</div>
+                
+
+
+                <!-- Google Login -->
+                <form asp-action="LoginWithGoogle" method="post">
+                    <input type="hidden" name="returnUrl" value="@ViewData["ReturnUrl"]" />
+                    <input type="hidden" name="invitationCode" value="@ViewBag.InvitationCode" />
+                    <button type="submit" class="social-btn">
+                        <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
+                            <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
+                            <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" />
+                            <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
+                        </svg>
+                        Continue with Google
+                    </button>
+                </form>
+
+
+                <div class="signup-prompt">
+                    <span class="text-muted">Don't have an account? </span>
+                    <a asp-action="Register" class="fw-bold text-decoration-none">Sign up</a>
+                </div>
+            </div>
+
+
+           
+        </div>
+
+        <div class="right-section">
+            <div class="art-container"></div>
+        </div>
+    </div>
+
+    @section Scripts {
+        @{
+            await Html.RenderPartialAsync("_ValidationScriptsPartial");
+            
+
+        }
+    }
+    <script>
+        const artContainer = document.querySelector('.art-container');
+
+        const images = [
+            "https://plus.unsplash.com/premium_photo-1759558515428-e9d62979f6f8?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxmZWF0dXJlZC1waG90b3MtZmVlZHw1fHx8ZW58MHx8fHx8",
+            "https://images.unsplash.com/photo-1759509326919-7f5d3961f8f1?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxmZWF0dXJlZC1waG90b3MtZmVlZHwxNnx8fGVufDB8fHx8fA%3D%3D",
+            "https://plus.unsplash.com/premium_photo-1738634511326-c60cefa6ec0b?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1yZWxhdGVkfDl8fHxlbnwwfHx8fHw%3D",
+            "https://images.unsplash.com/photo-1759392658577-4324fb89b991?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxmZWF0dXJlZC1waG90b3MtZmVlZHw1NXx8fGVufDB8fHx8fA%3D%3D"
+        ];
+
+        // Pick a random image
+        const randomImage = images[Math.floor(Math.random() * images.length)];
+
+        // Set it as background
+        artContainer.style.backgroundImage = `url('${randomImage}')`;
+
+
+                setTimeout(function () {
+            // Find the alert message element by its ID
+            var alert = document.getElementById('tempDataMessage');
+
+            // If the element exists, set another timeout to hide it
+            if (alert) {
+                setTimeout(function () {
+                    // Hides the element by setting its display style to 'none'
+                    alert.style.display = 'none';
+                }, 5000); // 5000 milliseconds = 5 seconds
+            }
+        }, 300);
+    </script>
+</body>
+
+</html>

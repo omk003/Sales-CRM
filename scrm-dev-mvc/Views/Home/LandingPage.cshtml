@@ -1,0 +1,150 @@
+﻿@{
+    Layout = null;
+}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SCRM - Simplify Your Sales Process</title>
+
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Google Fonts: Poppins -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <style>
+        /* Custom styles to extend Tailwind */
+        body {
+            font-family: 'Poppins', sans-serif;
+        }
+
+        .brand-red {
+            background-color: #ff2753;
+        }
+
+        .brand-text {
+            color: #ff2753;
+        }
+
+        .brand-border {
+            border-color: #ff2753;
+        }
+    </style>
+</head>
+<body class="bg-gray-50 text-gray-800">
+
+    <!-- Header / Navigation -->
+    <header class="bg-white/80 backdrop-blur-md sticky top-0 z-50">
+        <nav class="container mx-auto px-6 py-4 flex justify-between items-center">
+            <h1 class="text-2xl font-bold text-gray-900">SCRM</h1>
+            <div>
+                <a asp-action="Login" asp-controller="Auth" class="text-gray-600 hover:text-gray-900 mx-3">Login</a>
+                <a asp-action="Register" asp-controller="Auth" class="brand-red text-white font-semibold px-5 py-2 rounded-lg hover:opacity-90 transition-opacity">
+                    Start Now
+                </a>
+            </div>
+        </nav>
+    </header>
+
+    <!-- Main Content -->
+    <main>
+        <!-- Hero Section -->
+        <section class="text-center py-20 md:py-32 px-6 bg-white">
+            <div class="container mx-auto">
+                <h1 class="text-4xl md:text-6xl font-extrabold text-gray-900 leading-tight">
+                    Your Entire Sales Process, <span class="brand-text">Simplified</span>.
+                </h1>
+                <p class="mt-6 text-lg md:text-xl text-gray-600 max-w-3xl mx-auto">
+                    Stop chasing leads and start closing deals. SCRM is the refreshingly simple, powerful CRM that helps your team win, without the clutter.
+                </p>
+                <div class="mt-10">
+                    <a href="#" class="brand-red text-white font-semibold px-8 py-4 rounded-lg text-lg hover:opacity-90 transition-opacity shadow-lg shadow-red-500/20">
+                        Start Now for Free
+                    </a>
+                </div>
+                <div class="mt-16 max-w-5xl mx-auto">
+                    <img src="https://placehold.co/1200x600/F3F4F6/333333?text=SCRM+Dashboard+UI" alt="SCRM Dashboard Screenshot" class="rounded-2xl shadow-2xl ring-1 ring-gray-900/10">
+                </div>
+            </div>
+        </section>
+
+        <!-- Features Section -->
+        <section class="py-20 md:py-28">
+            <div class="container mx-auto px-6 space-y-20">
+
+                <!-- Feature 1: Contact & Company Management -->
+                <div class="grid md:grid-cols-2 gap-12 md:gap-16 items-center">
+                    <div class="md:order-last">
+                        <img src="https://placehold.co/600x450/FFE8EC/ff2753?text=Contacts+View" alt="Contact Management" class="rounded-xl shadow-lg w-full">
+                    </div>
+                    <div>
+                        <span class="text-sm font-bold brand-text uppercase">Unified View</span>
+                        <h2 class="text-3xl md:text-4xl font-bold text-gray-900 mt-2">One Place for Contacts & Companies</h2>
+                        <p class="mt-4 text-lg text-gray-600">
+                            Get a 360° view of every customer. See all contact details, communication history, associated deals, and notes in one central, organized profile. Stop digging through inboxes and spreadsheets forever.
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Feature 2: Deals Pipeline -->
+                <div class="grid md:grid-cols-2 gap-12 md:gap-16 items-center">
+                    <div>
+                        <img src="https://placehold.co/600x450/FFE8EC/ff2753?text=Deals+Pipeline" alt="Deals Pipeline" class="rounded-xl shadow-lg w-full">
+                    </div>
+                    <div>
+                        <span class="text-sm font-bold brand-text uppercase">Visual Pipeline</span>
+                        <h2 class="text-3xl md:text-4xl font-bold text-gray-900 mt-2">Track Deals with Clarity</h2>
+                        <p class="mt-4 text-lg text-gray-600">
+                            Visualize your entire sales pipeline with a simple drag-and-drop interface. Instantly see which deals need attention and forecast your revenue with confidence. Never let an opportunity slip through the cracks again.
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Feature 3: Workflow Automation -->
+                <div class="grid md:grid-cols-2 gap-12 md:gap-16 items-center">
+                    <div class="md:order-last">
+                        <img src="https://placehold.co/600x450/FFE8EC/ff2753?text=Automation+Flow" alt="Workflow Automation" class="rounded-xl shadow-lg w-full">
+                    </div>
+                    <div>
+                        <span class="text-sm font-bold brand-text uppercase">Automation</span>
+                        <h2 class="text-3xl md:text-4xl font-bold text-gray-900 mt-2">Automate the Busywork</h2>
+                        <p class="mt-4 text-lg text-gray-600">
+                            Free up your team to focus on selling, not data entry. Automate follow-up emails, task creation, and data updates, so your team can spend more time building relationships and closing deals.
+                        </p>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- Final CTA Section -->
+        <section class="bg-white py-20 md:py-28">
+            <div class="container mx-auto px-6 text-center">
+                <h2 class="text-3xl md:text-5xl font-extrabold text-gray-900">
+                    Ready to Supercharge Your Sales?
+                </h2>
+                <p class="mt-5 text-lg md:text-xl text-gray-600 max-w-2xl mx-auto">
+                    Join thousands of sales teams closing deals smarter, not harder. Start your free trial today and get your team set up in minutes.
+                </p>
+                <div class="mt-10">
+                    <a href="#" class="brand-red text-white font-semibold px-8 py-4 rounded-lg text-lg hover:opacity-90 transition-opacity shadow-lg shadow-red-500/20">
+                        Get Started - It's Free
+                    </a>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-gray-100 border-t border-gray-200">
+        <div class="container mx-auto px-6 py-8 text-center text-gray-500">
+            <p>&copy; 2025 SCRM. All rights reserved.</p>
+        </div>
+    </footer>
+
+</body>
+</html>
