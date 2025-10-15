@@ -17,6 +17,8 @@ namespace scrm_dev_mvc.Services
 
         Contact GetContactById(int id);
 
+        Task<bool> AssociateContactToCompany(int contactId, int companyId);
+
         //Task<(List<ContactResponseViewModel> Result, long WithTrackingMs, long WithoutTrackingMs)> GetAllContactsPerformanceTest(Guid userId);
     }
 }

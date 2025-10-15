@@ -1,5 +1,7 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using SCRM_dev.Services;
+using scrm_dev_mvc.Data.Repository;
 using scrm_dev_mvc.Models;
 using scrm_dev_mvc.Models.ViewModels;
 using scrm_dev_mvc.services;
@@ -8,7 +10,7 @@ using scrm_dev_mvc.Services;
 namespace scrm_dev_mvc.Controllers
 {
     [Authorize]
-    public class ContactController(IContactService contactService, IUserService userService, IOrganizationService organizationService) : Controller
+    public class ContactController(IContactService contactService, IUserService userService, IOrganizationService organizationService, IGmailService gmailService, IConfiguration configuration) : Controller
     {
         public IActionResult Index()
         {
@@ -16,6 +18,34 @@ namespace scrm_dev_mvc.Controllers
             return View();
         }
 
+        public IActionResult ContactPreview(int id)
+        {
+            var contact = contactService.GetContactById(id);
+            var ContactPreview = new ContactPreviewViewModel
+            {
+                Id = id,
+                Name = contact.FirstName ?? "",
+                Email = contact.Email,
+
+                JobTitle = contact.JobTitle ?? "",
+
+                CreatedAt = contact.CreatedAt,
+
+                LastActivityDate = DateTime.Now,
+
+                LifecycleStage = contact.LifeCycleStage.LifeCycleStageName,
+
+                LeadStatus = contact.LeadStatus?.LeadStatusName ?? "",
+
+                Company = contact.Company ?? new Company(),
+
+                Deals = (contact.Deals).ToList(),
+
+                Activities = contact.Activities.ToList()
+            };
+
+            return View(ContactPreview);
+        }
         public async Task<IActionResult> Insert()
         {
             var userId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
@@ -147,6 +177,23 @@ namespace scrm_dev_mvc.Controllers
             // 1. Redirect to Index with TempData message
             TempData["SuccessMessage"] = result;
             return RedirectToAction("Index");
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> AssociateContactToCompany(int contactId, int companyId)
+        {
+            // Your logic to associate contact to company
+            await contactService.AssociateContactToCompany(contactId, companyId);
+            return Ok();
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> SendEmail(string contactEmail, string subject, string body)
+        {
+            // Your email sending logic here
+            string? adminId = configuration["Data:AdminEmailId"];
+            await gmailService.SendEmailAsync(Guid.Parse(adminId ?? ""), contactEmail, subject, body,"");
+            return Ok();
         }
 
     }

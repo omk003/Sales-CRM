@@ -2,6 +2,15 @@ var dataTable;
 
 $(document).ready(function () {
     loadDataTable();
+
+    // This goes after your DataTable setup
+    $('#tblData tbody').on('click', 'tr.contact-row td:not(:first-child)', function () {
+        console.log('Row cell clicked!');
+        var contactId = $(this).closest('tr').data('id');
+        if (contactId) {
+            window.location.href = '/Contact/ContactPreview/' + contactId;
+        }
+    });
 });
 
 function loadDataTable() {
@@ -24,9 +33,17 @@ function loadDataTable() {
             { data: 'phoneNumber', "width": "15%" },
             { data: 'leadStatus', "width": "15%" },
             { data: 'createdAt', "width": "10%" }
-        ]
+        ],
+        // Highlight: Use createdRow to assign data-id
+        "createdRow": function (row, data, dataIndex) {
+            $(row).attr('data-id', data.id);
+            $(row).addClass('contact-row');
+        }
     });
 }
+
+
+
 $(document).on('change', '.row-select', function () {
     let selected = $('.row-select:checked').length;
     const actionBar = $('#actionBar');
@@ -90,3 +107,5 @@ setTimeout(function () {
         }, 5000); // 5000 milliseconds = 5 seconds
     }
 }, 300);
+
+

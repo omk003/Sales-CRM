@@ -1,0 +1,296 @@
+﻿@model scrm_dev_mvc.Models.ViewModels.ContactPreviewViewModel
+@* <div class="contact-preview-scroll-wrapper" style="height: 100vh; overflow-y: auto; -webkit-overflow-scrolling: touch;"> *@
+    <div style="padding: 0 0 0 var(--space-md);">
+        <a href="@Url.Action("Index", "Contact")" style="
+        display: inline-block;
+        color: var(--color-primary);
+        font-size: var(--fs-sm);
+        font-family: var(--font-primary);
+        font-weight: var(--fw-bold);
+        text-decoration: none;
+        letter-spacing: 0.03em;
+        transition: var(--transition-base);
+        border-radius: var(--border-radius-sm);
+        
+        
+    "
+           onmouseover="this.style.backgroundColor=window.getComputedStyle(document.body).getPropertyValue('--bg-secondary')"
+           onmouseout="this.style.backgroundColor='transparent'">
+            &lt; Contacts
+        </a>
+    </div>
+<!-- Email Compose Modal -->
+<div id="emailModal" class="modal" tabindex="-1" style="display:none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.3); z-index: 9999; align-items: center; justify-content: center;">
+    <div class="modal-dialog" style="max-width: 450px; margin: 4rem auto;">
+        <div class="modal-content" style="background:var(--bg-primary);border-radius:var(--border-radius-lg);padding:var(--space-lg);">
+            <div class="modal-header" style="display: flex; justify-content: space-between; align-items: center;">
+                <h5 class="modal-title">Send Email</h5>
+                <button type="button" class="btn-close" onclick="closeEmailModal()"></button>
+            </div>
+            <div class="modal-body">
+                <form id="emailForm" autocomplete="off">
+                    <div style="margin-bottom:var(--space-md);">
+                        <label for="emailSubject" style="font-weight:var(--fw-bold);">Subject</label>
+                        <input type="text" id="emailSubject" name="subject" style="width:100%;padding:var(--space-sm);border-radius:var(--border-radius-sm);border:1px solid var(--border-color);" required />
+                    </div>
+                    <div style="margin-bottom:var(--space-md);">
+                        <label for="emailBody" style="font-weight:var(--fw-bold);">Body</label>
+                        <textarea id="emailBody" name="body" rows="6" style="width:100%;padding:var(--space-sm);border-radius:var(--border-radius-sm);border:1px solid var(--border-color);" required></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-custom" style="width:100%;">Send</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+    <!-- Company Select Modal -->
+    <!-- Modal ... -->
+    <div id="companyModal" class="modal" tabindex="-1" style="display:none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.3); z-index: 9999; align-items: center; justify-content: center;">
+        <div class="modal-dialog" style="max-width: 400px; margin: 4rem auto;">
+            <div class="modal-content" style="background:var(--bg-primary);border-radius:var(--border-radius-lg);padding:var(--space-lg);">
+                <div class="modal-header" style="display: flex; justify-content: space-between; align-items: center;">
+                    <h5 class="modal-title">Select a Company</h5>
+                    <button type="button" class="btn-close" onclick="closeCompanyModal()"></button>
+                </div>
+                <div class="modal-body">
+                    <ul id="companyList" style="list-style:none;padding:0;"></ul>
+                </div>
+            </div>
+        </div>
+    </div>
+<div class="container-fluid" style="max-width: var(--container-width); margin: var(--space-xl) auto;">
+    <div class="row" style="display: flex; gap: var(--space-lg);">
+
+        <!-- Column 1: Contact Profile & Actions -->
+        <aside style="flex: 1; min-width: 280px;">
+                <section style="background: var(--bg-secondary); border-radius: var(--border-radius-lg); padding: var(--space-lg); box-shadow: var(--shadow-sm); margin-bottom: var(--space-lg); text-align: center;">
+                    <div style="display: flex; align-items: center; justify-content: center; gap: var(--space-md); margin-bottom: var(--space-sm);">
+                        <span class="rounded-circle" style="display:inline-block;width:80px;height:80px;background:var(--color-accent2);color:var(--color-secondary);text-align:center;line-height:80px; font-size: 2.5rem;">
+                            <i class="fas fa-user"></i>
+                        </span>
+                        <h2 style="font-size: var(--fs-h3); margin: 0;">@Model.Name</h2>
+                    </div>
+                    <p style="color: var(--color-accent1); margin-bottom: var(--space-sm);">@Model.JobTitle</p>
+                    <p style="color: var(--text-secondary);">@Model.Email</p>
+                    <div style="display:flex; justify-content:center; gap:var(--space-md); margin-bottom: var(--space-md);">
+                    <a href="javascript:void(0);" title="Email" style="color: var(--color-secondary);" onclick="openEmailModal()">
+                        <i class="fas fa-envelope"></i>
+                    </a>
+                        <a href="tel:@Model.PhoneNumber" title="Call" style="color: var(--color-accent);"><i class="fas fa-phone"></i></a>
+                        <a href="@Url.Action("CreateTask", "Task", new { contactId = Model.Id })" title="Task" style="color: var(--color-primary);"><i class="fas fa-tasks"></i></a>
+                    </div>
+                </section>
+            <section style="background: var(--bg-secondary); border-radius: var(--border-radius-lg); box-shadow: var(--shadow-sm); padding: var(--space-lg);">
+                <h3 style="font-size: var(--fs-lg); color: var(--color-accent1); margin-bottom: var(--space-md);">About this contact</h3>
+                <div style="font-size:var(--fs-base);color:var(--text-secondary);">
+                    <div><b>Email:</b> @Model.Email</div>
+                    <div><b>Phone:</b> @Model.PhoneNumber</div>
+                    <div><b>Created At:</b> @Model.CreatedAt?.ToString("MM/dd/yyyy hh:mm tt")</div>
+                </div>
+            </section>
+        </aside>
+
+        <!-- Column 2: Tabs and Overview/Activities -->
+        <main style="flex: 2; min-width: 520px;">
+            <nav class="nav-tabs" style="display:flex; gap:var(--space-md); border-bottom:1px solid var(--border-color); margin-bottom: var(--space-lg);">
+                <button type="button" class="nav-box" id="tab-overview" style="background:none;border:none;padding:var(--space-sm) var(--space-md);font-size:var(--fs-lg);color:var(--color-accent1);" onclick="showTab('overview')">Overview</button>
+                <button type="button" class="nav-box" id="tab-activities" style="background:none;border:none;padding:var(--space-sm) var(--space-md);font-size:var(--fs-lg);color:var(--color-accent1);" onclick="showTab('activities')">Activities</button>
+                
+            </nav>
+            <section id="tab-content-overview" class="tab-content" style="display:block;">
+                <div style="background:var(--bg-secondary);border-radius:var(--border-radius-lg);box-shadow:var(--shadow-sm);padding:var(--space-lg);margin-bottom:var(--space-lg);">
+                    <h3 style="font-size:var(--fs-lg);color:var(--color-accent1);margin-bottom:var(--space-md);">Data Highlights</h3>
+                    <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:var(--space-lg);color:var(--text-secondary);">
+                        <div>
+                            <b>Create Date:</b><br />@Model.CreatedAt?.ToString("MM/dd/yyyy hh:mm tt")
+                        </div>
+                        <div>
+                            <b>Last Activity Date:</b><br />@Model.LastActivityDate.ToString("MM/dd/yyyy hh:mm tt")
+                        </div>
+                        <div>
+                            <b>Lifecycle Stage:</b><br />@Model.LifecycleStage
+                        </div>
+                        <div>
+                            <b>Lead Status:</b><br />@Model.LeadStatus
+                        </div>
+                    </div>
+                </div>
+                @* <div style="margin-bottom:var(--space-lg);">
+                    @if (Model.Company == null)
+                    {
+                        <a href="@Url.Action("AddCompany", "Contact", new { id = Model.Id })" class="btn btn-custom" style="margin-right:var(--space-md);">+ Add Company</a>
+                    }
+                    else
+                    {
+                        <span style="color: var(--color-secondary); font-weight: var(--fw-bold);">Company: @Model.Company.Name</span>
+                    }
+                </div>
+                <div>
+                    @if (Model.Deal == null)
+                    {
+                        <a href="@Url.Action("AddDeal", "Contact", new { id = Model.Id })" class="btn btn-custom">+ Add Deal</a>
+                    }
+                    else
+                    {
+                        <span style="color: var(--color-accent); font-weight: var(--fw-bold);">Deal: @Model.Deal.Id</span>
+                    }
+                </div> *@
+            </section>
+            <section id="tab-content-activities" class="tab-content" style="display:none;">
+                <div style="background:var(--bg-secondary);border-radius:var(--border-radius-lg);box-shadow:var(--shadow-sm);padding:var(--space-lg);">
+                    <h3 style="font-size:var(--fs-lg);color:var(--color-accent1);margin-bottom:var(--space-md);">Recent Activities</h3>
+                    <div style="margin-bottom:var(--space-md);">
+                        <input type="text" style="width:70%;padding:var(--space-sm);border-radius:var(--border-radius-sm);border:1px solid var(--border-color);" placeholder="Search activities" />
+                        <button class="btn btn-custom" style="margin-left:var(--space-sm);">Search</button>
+                    </div>
+                    @if (Model.Activities != null && Model.Activities.Any())
+                    {
+                        <ul style="list-style:none;padding:0;margin:0;">
+                            @foreach (var act in Model.Activities.OrderByDescending(a => a.ActivityDate))
+                            {
+                                <li style="border-bottom:1px solid var(--border-color);padding:var(--space-md) 0;">
+                                    <span style="margin-right:var(--space-sm);"><i class="fas fa-@act.ActivityType.Name.ToLower()"></i></span>
+                                    <b>@act.Id</b> - <span style="color:var(--text-secondary);">@act.ActivityDate.Value.ToString("MM/dd/yyyy hh:mm tt")</span>
+                                    <div style="color:var(--text-secondary);">@act.Notes</div>
+                                </li>
+                            }
+                        </ul>
+                    }
+                    else
+                    {
+                        <p style="color:var(--text-tertiary);">No recent activities.</p>
+                    }
+                </div>
+            </section>
+           
+        </main>
+
+        <!-- Column 3: Company & Deals -->
+        <aside style="flex:1; min-width: 280px;">
+            <section style="background:var(--bg-secondary);border-radius:var(--border-radius-lg);box-shadow:var(--shadow-sm);padding:var(--space-lg);margin-bottom:var(--space-lg);">
+                <div style="display:flex;justify-content:space-between;align-items:center;">
+                    <h3 style="font-size:var(--fs-lg);color:var(--color-accent1);margin-bottom:var(--space-md);">Companies</h3>
+                    @* <a href="@Url.Action("AddCompany", "Contact", new { id = Model.Id })" class="btn btn-custom" style="font-size:var(--fs-sm);padding:var(--space-xs) var(--space-sm);">+Add</a> *@
+                        <button class="btn btn-custom" type="button" onclick="openCompanyModal()">+ Add</button>
+                </div>
+                @if (Model.Company != null)
+                {
+                    <div style="background:var(--bg-primary);border-radius:var(--border-radius-sm);padding:var(--space-md);box-shadow:var(--shadow-sm);margin-bottom:var(--space-sm);">
+                        <div style="font-weight:var(--fw-bold);margin-bottom:var(--space-xs);">@Model.Company.Name</div>
+                        @* <a href="mailto:@Model.Company.Email" style="color:var(--color-primary);font-size:var(--fs-sm);">@Model.Company.Email</a><br /> *@
+                        <span style="color:var(--text-secondary);font-size:var(--fs-sm);">Domain: @Model.Company.Domain</span>
+                    </div>
+                }
+                else
+                {
+                    <p style="color:var(--text-tertiary);">No company associated.</p> 
+                }
+            </section>
+            <section style="background:var(--bg-secondary);border-radius:var(--border-radius-lg);box-shadow:var(--shadow-sm);padding:var(--space-lg);">
+                <div style="display:flex;justify-content:space-between;align-items:center;">
+                    <h3 style="font-size:var(--fs-lg);color:var(--color-accent1);margin-bottom:var(--space-md);">Deals</h3>
+                    <a href="@Url.Action("AddDeal", "Contact", new { id = Model.Id })" class="btn btn-custom" style="font-size:var(--fs-sm);padding:var(--space-xs) var(--space-sm);">+Add</a>
+                </div>
+                @if (Model.Deals != null)
+                {
+                    <div style="background:var(--bg-primary);border-radius:var(--border-radius-sm);padding:var(--space-md);box-shadow:var(--shadow-sm);margin-bottom:var(--space-sm);">
+                        @* <div style="font-weight:var(--fw-bold);margin-bottom:var(--space-xs);">@Model.Deal.Company.Name</div> *@
+                        @* <span style="color:var(--text-secondary);font-size:var(--fs-sm);">@Model.Deal.CreatedAt</span> *@
+                    </div>
+                }
+                else
+                {
+                    <p style="color:var(--text-tertiary);">Track the revenue opportunities associated with this record.</p>
+                }
+            </section>
+        </aside>
+    </div>
+</div>
+
+<!-- FontAwesome for icons (if not already included) -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+<script>
+
+    function showTab(tabName) {
+        document.getElementById('tab-content-overview').style.display = 'none';
+        document.getElementById('tab-content-activities').style.display = 'none';
+        
+        document.getElementById('tab-' + tabName).classList.add('active');
+        ['overview', 'activities'].forEach(function(tab) {
+            if (tab !== tabName) document.getElementById('tab-' + tab).classList.remove('active');
+        });
+        document.getElementById('tab-content-' + tabName).style.display = 'block';
+    }
+        function closeCompanyModal() {
+                document.getElementById('companyModal').style.display = 'none';
+            }
+        function openCompanyModal() {
+            // Fetch companies from server
+            $.get('/Company/GetAll', function (response) {
+            var list = $('#companyList');
+            list.empty();
+
+            // Use response.data (array)
+            response.data.forEach(function (company) {
+                list.append(
+                    `<li style="padding:8px; border-bottom:1px solid var(--border-color); cursor:pointer;" onclick="selectCompany(${company.id})">
+                        <b>${company.name ?? 'Unnamed Company'}</b>
+                        <span style="color:var(--text-secondary); font-size:var(--fs-sm);">${company.domain ?? ''}</span>
+                    </li>`
+                );
+            });
+            $('#companyModal').css('display', 'flex');
+        });
+        }
+
+        function closeCompanyModal() {
+            $('#companyModal').hide();
+        }
+
+        function selectCompany(companyId) {
+            // POST selected companyId and contactId to server
+            $.ajax({
+                url: '/Contact/AssociateContactToCompany',
+                type: 'POST',
+                data: { contactId: '@Model.Id', companyId: companyId },
+                success: function () {
+                    closeCompanyModal();
+                    location.reload(); // Or update UI as needed
+                }
+            });
+        }
+
+
+            function openEmailModal() {
+        // Reset form fields
+        $('#emailSubject').val('');
+        $('#emailBody').val('');
+        $('#emailModal').css('display', 'flex');
+    }
+    function closeEmailModal() {
+        $('#emailModal').hide();
+    }
+
+    // Handle form submit
+    $('#emailForm').on('submit', function(event){
+        event.preventDefault();
+        var subject = $('#emailSubject').val();
+        var body = $('#emailBody').val();
+        var contactEmail = '@Model.Email';
+
+        $.ajax({
+            url: '/Contact/SendEmail',
+            type: 'POST',
+            data: { contactEmail: contactEmail, subject: subject, body: body },
+            success: function(response) {
+                closeEmailModal();
+                alert("Email sent successfully!");
+            },
+            error: function() {
+                alert("Failed to send email.");
+            }
+        });
+    });
+</script>
+@* </div> *@

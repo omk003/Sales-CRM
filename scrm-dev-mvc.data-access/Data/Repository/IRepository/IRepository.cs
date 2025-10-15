@@ -15,6 +15,8 @@ namespace scrm_dev_mvc.Data.Repository.IRepository
 
         Task<T> FindAsync(Guid id);
 
+        Task<bool> AnyAsync(Expression<Func<T, bool>> predicate);
+
 
     }
 }

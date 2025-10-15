@@ -74,8 +74,8 @@ namespace scrm_dev_mvc.Data.Repository
         }
 
         public Task<T> FirstOrDefaultAsync(
-     Expression<Func<T, bool>> predicate,
-     string? include = null)
+             Expression<Func<T, bool>> predicate,
+             string? include = null)
         {
             IQueryable<T> query = _dbSet;
 
@@ -101,7 +101,10 @@ namespace scrm_dev_mvc.Data.Repository
             await _context.SaveChangesAsync();
 
         }
+        public Task<bool> AnyAsync(Expression<Func<T, bool>> predicate)
+        {
+            return _dbSet.AnyAsync(predicate);
+        }
 
-        
     }
 }

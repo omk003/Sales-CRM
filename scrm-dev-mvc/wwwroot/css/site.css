@@ -71,7 +71,7 @@ body {
     color: var(--text-primary);
     background-color: var(--bg-primary);
 
-    overflow: hidden;
+/*    overflow: hidden;*/
     height: 100%;
     margin: 0;
 }
@@ -367,5 +367,29 @@ table.table thead th {
     }
 
 
+#tblData tbody tr.contact-row td:not(:first-child) {
+    cursor: pointer;
+}
 
+#tblData tbody tr.contact-row:hover td {
+    background-color: var(--color-accent2);
+    transition: var(--transition-base);
+}
 
+.modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0,0,0,0.3);
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.modal-dialog {
+    max-width: 400px;
+    width: 100%;
+}

@@ -15,7 +15,7 @@ namespace SCRM_dev.Services
     {
         public async Task<string> CreateContactAsync(ContactDto contactDto)
         {
-            if(contactDto == null)
+            if (contactDto == null)
             {
                 return null;
             }
@@ -30,9 +30,9 @@ namespace SCRM_dev.Services
 
             //check if contact already exists
             var existingContact = await unitOfWork.Contacts.FirstOrDefaultAsync(c => c.Email == contactDto.Email && c.OrganizationId == user.OrganizationId);
-            if(existingContact != null)
+            if (existingContact != null)
             {
-                if(existingContact.IsDeleted == true)
+                if (existingContact.IsDeleted == true)
                 {
                     existingContact.IsDeleted = false;
                     existingContact.FirstName = contactDto.FirstName;
@@ -50,7 +50,7 @@ namespace SCRM_dev.Services
                 {
                     return "Contact with this email already exists";
                 }
-                    
+
             }
             // Map ContactDto to Contact entity
             var contact = new Contact
@@ -152,60 +152,35 @@ namespace SCRM_dev.Services
 
         public Contact GetContactById(int id)
         {
-            var contact = unitOfWork.Contacts.FirstOrDefaultAsync(c => c.Id == id).Result;
+            var contact = unitOfWork.Contacts.FirstOrDefaultAsync(c => c.Id == id, "LeadStatus,LifeCycleStage,Company,Deals,Activities").Result;
             return contact;
         }
 
+        public async Task<bool> AssociateContactToCompany(int contactId, int companyId)
+        {
+            var contact = await unitOfWork.Contacts.FirstOrDefaultAsync(c => c.Id == contactId);
+            if (contact == null)
+                return false;
 
-     
+            // Optional: Check if company exists
+            var companyExists = await unitOfWork.Company.AnyAsync(c => c.Id == companyId);
+            if (!companyExists)
+                return false;
 
-    //public async Task<(List<ContactResponseViewModel> Result, long WithTrackingMs, long WithoutTrackingMs)> GetAllContactsPerformanceTest(Guid userId)
-    //{
-    //    var user = await unitOfWork.Users.GetByIdAsync(userId);
-    //    if (user == null)
-    //        return (new List<ContactResponseViewModel>(), 0, 0);
+            contact.CompanyId = companyId;
+            unitOfWork.Contacts.Update(contact);
 
-    //    Expression<Func<Contact, bool>> predicate;
-    //    if (user.RoleId == 2 || user.RoleId == 3)
-    //        predicate = c => c.OrganizationId == user.OrganizationId && c.IsDeleted == false;
-    //    else
-    //        predicate = c => c.OwnerId == userId && c.OrganizationId == user.OrganizationId && c.IsDeleted == false;
-
-    //    var stopwatch = new Stopwatch();
-
-    //    // With Tracking
-    //    stopwatch.Start();
-    //    var withTrackingContacts = await unitOfWork.Contacts.GetAllAsync(predicate);
-    //    stopwatch.Stop();
-    //    var withTrackingMs = stopwatch.ElapsedMilliseconds;
-
-    //    // Without Tracking (if supported in your repo)
-    //    stopwatch.Reset();
-    //    stopwatch.Start();
-    //    var withoutTrackingContacts = await unitOfWork.Contacts.GetAllAsync(predicate, asNoTracking: true);
-    //    stopwatch.Stop();
-    //    var withoutTrackingMs = stopwatch.ElapsedMilliseconds;
-
-    //    // You can pick one set for building your view models, or both
-    //    List<ContactResponseViewModel> contactResponseViewModels = new List<ContactResponseViewModel>();
-    //    foreach (var contact in withTrackingContacts)
-    //    {
-    //        var id = contact.Id;
-    //        var contactWithLeadStatus = await unitOfWork.Contacts.FirstOrDefaultAsync(c => c.Id == id, "LeadStatus");
-    //        var leadStatus = contactWithLeadStatus?.LeadStatus;
-    //        contactResponseViewModels.Add(new ContactResponseViewModel
-    //        {
-    //            Id = id,
-    //            Name = contact.FirstName + " " + contact.LastName,
-    //            Email = contact.Email,
-    //            PhoneNumber = contact.Number,
-    //            LeadStatus = leadStatus != null ? leadStatus.LeadStatusName : "N/A",
-    //            CreatedAt = contact.CreatedAt,
-    //        });
-    //    }
-
-    //    return (contactResponseViewModels, withTrackingMs, withoutTrackingMs);
-    //}
-
-}
+            try
+            {
+                await unitOfWork.SaveChangesAsync();
+                return true;
+            }
+            catch (Exception ex)
+            {
+                // Log the exception here (if you have a logger)
+                Debug.WriteLine($"Error associating contact to company: {ex.Message}");
+                return false;
+            }
+        }
+    }
 }
