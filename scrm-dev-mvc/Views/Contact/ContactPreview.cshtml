@@ -1,5 +1,5 @@
 ﻿@model scrm_dev_mvc.Models.ViewModels.ContactPreviewViewModel
-@* <div class="contact-preview-scroll-wrapper" style="height: 100vh; overflow-y: auto; -webkit-overflow-scrolling: touch;"> *@
+
     <div style="padding: 0 0 0 var(--space-md);">
         <a href="@Url.Action("Index", "Contact")" style="
         display: inline-block;
@@ -58,6 +58,30 @@
             </div>
         </div>
     </div>
+
+<!-- Call Contact Modal -->
+<div id="callModal" class="modal" tabindex="-1"
+     style="display:none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.3); z-index: 9999; align-items: center; justify-content: center;">
+    <div class="modal-dialog" style="max-width: 350px; margin: 4rem auto;">
+        <div class="modal-content" style="background:var(--bg-primary);border-radius:var(--border-radius-lg);padding:var(--space-lg);">
+            <div class="modal-header" style="display: flex; justify-content: space-between; align-items: center;">
+                <h5 class="modal-title">Call Contact</h5>
+                <button type="button" class="btn-close" onclick="closeCallModal()"></button>
+            </div>
+            <div class="modal-body">
+                <div style="margin-bottom:var(--space-md);">
+                    <label style="font-weight:var(--fw-bold);">Contact Number</label>
+                    <div style="padding:var(--space-sm);font-size:var(--fs-base);background:var(--bg-secondary);border-radius:var(--border-radius-sm);border:1px solid var(--border-color);">
+                        @Model.PhoneNumber
+                    </div>
+                </div>
+                <button type="button" class="btn btn-custom" style="width:100%;" onclick="makeCall()">
+                    Call
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
 <div class="container-fluid" style="max-width: var(--container-width); margin: var(--space-xl) auto;">
     <div class="row" style="display: flex; gap: var(--space-lg);">
 
@@ -76,7 +100,9 @@
                     <a href="javascript:void(0);" title="Email" style="color: var(--color-secondary);" onclick="openEmailModal()">
                         <i class="fas fa-envelope"></i>
                     </a>
-                        <a href="tel:@Model.PhoneNumber" title="Call" style="color: var(--color-accent);"><i class="fas fa-phone"></i></a>
+                    <a href="javascript:void(0);" title="Call" style="color: var(--color-accent);" onclick="openCallModal()">
+                        <i class="fas fa-phone"></i>
+                    </a>
                         <a href="@Url.Action("CreateTask", "Task", new { contactId = Model.Id })" title="Task" style="color: var(--color-primary);"><i class="fas fa-tasks"></i></a>
                     </div>
                 </section>
@@ -93,7 +119,7 @@
         <!-- Column 2: Tabs and Overview/Activities -->
         <main style="flex: 2; min-width: 520px;">
             <nav class="nav-tabs" style="display:flex; gap:var(--space-md); border-bottom:1px solid var(--border-color); margin-bottom: var(--space-lg);">
-                <button type="button" class="nav-box" id="tab-overview" style="background:none;border:none;padding:var(--space-sm) var(--space-md);font-size:var(--fs-lg);color:var(--color-accent1);" onclick="showTab('overview')">Overview</button>
+                <button type="button" class="nav-box active" id="tab-overview" style="background:none;border:none;padding:var(--space-sm) var(--space-md);font-size:var(--fs-lg);color:var(--color-accent1);" onclick="showTab('overview')">Overview</button>
                 <button type="button" class="nav-box" id="tab-activities" style="background:none;border:none;padding:var(--space-sm) var(--space-md);font-size:var(--fs-lg);color:var(--color-accent1);" onclick="showTab('activities')">Activities</button>
                 
             </nav>
@@ -292,5 +318,27 @@
             }
         });
     });
+
+
+            function openCallModal() {
+        $('#callModal').css('display', 'flex');
+    }
+    function closeCallModal() {
+        $('#callModal').hide();
+    }
+    function makeCall() {
+        var phoneNumber = '@Model.PhoneNumber';
+        $.ajax({
+            url: '/Contact/CallContact',
+            type: 'POST',
+            data: { phoneNumber: phoneNumber },
+            success: function(response) {
+                closeCallModal();
+                alert("Call initiated! (SID: " + response + ")");
+            },
+            error: function() {
+                alert("Failed to initiate call.");
+            }
+        });
+    }
 </script>
-@* </div> *@

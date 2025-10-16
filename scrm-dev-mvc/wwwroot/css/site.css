@@ -375,6 +375,14 @@ table.table thead th {
     background-color: var(--color-accent2);
     transition: var(--transition-base);
 }
+#tblData tbody tr.company-row td:not(:first-child) {
+    cursor: pointer;
+}
+
+#tblData tbody tr.company-row:hover td {
+    background-color: var(--color-accent2);
+    transition: var(--transition-base);
+}
 
 .modal {
     position: fixed;
@@ -392,4 +400,197 @@ table.table thead th {
 .modal-dialog {
     max-width: 400px;
     width: 100%;
+}
+
+
+.nav-box.active {
+    background-color: var(--color-accent2); 
+    color: var(--color-primary, #2b2d42);
+    border-bottom: 2px solid var(--color-primary, #2b2d42);
+    border-radius: var(--border-radius-sm, 6px) 6px 0 0;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+
+
+
+
+
+
+
+
+/* Kanban Board Styles */
+.kanban-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--space-lg);
+}
+
+.kanban-board {
+    display: flex;
+    gap: var(--space-lg);
+    overflow-x: auto;
+    padding-bottom: var(--space-lg);
+}
+
+.kanban-column {
+    background: var(--bg-secondary);
+    border-radius: var(--border-radius-lg);
+    box-shadow: var(--shadow-sm);
+    min-width: 320px;
+    width: 320px;
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    max-height: 70vh;
+}
+
+.kanban-column-header {
+    background: var(--bg-primary);
+    padding: var(--space-md) var(--space-sm);
+    border-bottom: 1px solid var(--border-color);
+    font-size: var(--fs-lg);
+    color: var(--color-accent1);
+    font-weight: var(--fw-bold);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-radius: var(--border-radius-lg) var(--border-radius-lg) 0 0;
+}
+
+.kanban-column-body {
+    flex: 1;
+    padding: var(--space-sm);
+    overflow-y: auto;
+}
+
+.kanban-card {
+    background: var(--bg-primary);
+    border-radius: var(--border-radius-sm);
+    box-shadow: var(--shadow-sm);
+    margin-bottom: var(--space-md);
+    padding: var(--space-md);
+    cursor: grab;
+    transition: box-shadow 0.2s;
+    border: 1px solid var(--border-color);
+}
+
+    .kanban-card:hover {
+        box-shadow: var(--shadow-lg);
+        border-color: var(--color-secondary);
+    }
+
+.deal-title {
+    font-size: var(--fs-lg);
+    font-weight: var(--fw-bold);
+    color: var(--color-secondary);
+}
+
+.deal-info {
+    display: flex;
+    justify-content: space-between;
+    font-size: var(--fs-sm);
+    color: var(--text-secondary);
+    margin-top: var(--space-xs);
+}
+
+.deal-actions {
+    margin-top: var(--space-sm);
+    display: flex;
+    gap: var(--space-xs);
+}
+
+/* Responsive Kanban */
+@media (max-width: 800px) {
+    .kanban-board {
+        flex-direction: column;
+        gap: var(--space-md);
+    }
+
+    .kanban-column {
+        width: 100%;
+        min-width: 0;
+        max-height: none;
+    }
+}
+
+.kanban-container {
+    max-width: 100vw;
+    margin: 0 auto;
+    padding: 0.5rem;
+    background: var(--bg-secondary);
+    border-radius: var(--border-radius-lg);
+    box-shadow: var(--shadow-sm);
+    height: 80vh; /* Adjust as needed */
+    display: flex;
+    flex-direction: column;
+}
+
+.kanban-header {
+    margin-bottom: 0.5rem;
+}
+
+.kanban-board {
+    display: flex;
+    gap: 0.5rem;
+    overflow-x: auto;
+    min-height: 0;
+    height: 100%;
+}
+
+.kanban-column {
+    background: var(--bg-primary);
+    border-radius: var(--border-radius-lg);
+    min-width: 180px;
+    width: 180px;
+    max-width: 180px;
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    max-height: 100%;
+    font-size: 0.85rem;
+}
+
+.kanban-column-header {
+    background: var(--bg-secondary);
+    padding: 0.3rem 0.5rem;
+    font-size: 0.95rem;
+}
+
+.kanban-column-body {
+    flex: 1;
+    overflow-y: auto;
+    padding: 0.25rem;
+}
+
+.kanban-card {
+    background: var(--bg-primary);
+    border-radius: var(--border-radius-sm);
+    box-shadow: var(--shadow-sm);
+    margin-bottom: 0.3rem;
+    padding: 0.5rem 0.3rem;
+    font-size: 0.85rem;
+    cursor: grab;
+    border: 1px solid var(--border-color);
+    min-height: 48px;
+}
+
+.deal-title {
+    font-weight: 600;
+    font-size: 0.95rem;
+    color: var(--color-secondary);
+}
+
+.deal-info {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    display: flex;
+    justify-content: space-between;
+}
+
+.deal-actions {
+    margin-top: 0.2rem;
+    display: flex;
+    gap: 0.2rem;
 }

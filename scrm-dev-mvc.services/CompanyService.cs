@@ -158,7 +158,7 @@ namespace scrm_dev_mvc.services
 
         public Company GetCompanyById(int id)
         {
-            var Company = unitOfWork.Company.FirstOrDefaultAsync(c => c.Id == id).Result;
+            var Company = unitOfWork.Company.FirstOrDefaultAsync(c => c.Id == id, "Deals,Contacts").Result;
             return Company;
         }
     }

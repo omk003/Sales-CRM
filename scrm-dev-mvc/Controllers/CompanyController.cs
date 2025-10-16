@@ -127,5 +127,23 @@ namespace scrm_dev_mvc.Controllers
             return RedirectToAction("Index");
 
         }
+
+
+        public IActionResult CompanyPreview(int id)
+        {
+            var company =  companyService.GetCompanyById(id);
+            var model = new CompanyPreviewViewModel()
+            {
+                Id = id,
+                Name = company.Name,
+                Domain = company.Domain,
+                Contacts = company.Contacts,
+                Deals = company.Deals,
+                CreatedAt = company.CreatedAt,
+                City = company.City,
+                Country = company.Country,
+            };
+            return View(model);
+        }
     }
 }

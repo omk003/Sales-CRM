@@ -1,0 +1,57 @@
+﻿@model scrm_dev_mvc.Models.ViewModels.KanbanBoardViewModel
+
+<div class="kanban-container">
+    <div class="kanban-header">
+        <h2 style="font-size:1.2rem; margin:0;">Deals Board</h2>
+        <button class="btn btn-primary btn-custom" id="create-deal-btn" style="padding:0.3rem 1rem;">
+            + Create Deal
+        </button>
+    </div>
+
+    <div class="kanban-board">
+        @foreach (var stage in Model.DealStages)
+        {
+            <div class="kanban-column" data-stage="@stage">
+                <div class="kanban-column-header">
+                    <span class="column-title">@stage</span>
+                    <span class="column-count">@Model.DealsByStage[stage].Count</span>
+                </div>
+                <div class="kanban-column-body">
+                    @foreach (var deal in Model.DealsByStage[stage])
+                    {
+                        <div class="kanban-card" data-dealid="@deal.Id">
+                            <div class="deal-title">@deal.Id</div>
+                            <div class="deal-info">
+                                <span class="deal-value">@deal.Value?.ToString("C0")</span>
+                                <span class="deal-owner">@deal.Owner?.FirstName</span>
+                            </div>
+                            <div class="deal-actions">
+                                <a href="@Url.Action("Details", "Deals", new { id = deal.Id })" class="btn btn-sm btn-custom">View</a>
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+        }
+    </div>
+</div>
+
+<script>
+    document.querySelectorAll('.kanban-card').forEach(card => {
+        card.draggable = true;
+        card.addEventListener('dragstart', function(e) {
+            e.dataTransfer.setData('text/plain', card.dataset.dealid);
+        });
+    });
+
+    document.querySelectorAll('.kanban-column-body').forEach(col => {
+        col.addEventListener('dragover', function(e) { e.preventDefault(); });
+        col.addEventListener('drop', function(e) {
+            e.preventDefault();
+            const dealId = e.dataTransfer.getData('text/plain');
+            const card = document.querySelector(`[data-dealid="${dealId}"]`);
+            if (card) col.appendChild(card);
+            // TODO: Trigger AJAX/move deal stage backend update
+        });
+    });
+</script>

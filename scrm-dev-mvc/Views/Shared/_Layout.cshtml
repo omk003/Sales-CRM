@@ -249,7 +249,7 @@
                         @* --- UPDATED CLASS LOGIC (combines with existing 'disabled' check) --- *@
                         <li><a asp-controller="Company" asp-action="Index" class="@(hasOrganization ? "" : "disabled") @(currentController == "Company" ? "active" : "")"><i class="bi bi-buildings"></i> Companies</a></li>
 
-                        <li><a asp-controller="Home" asp-action="Index"><i class="bi bi-kanban"></i> Deals</a></li>
+                        <li><a asp-controller="Deal" asp-action="KanbanBoard"><i class="bi bi-kanban"></i> Deals</a></li>
                         <li><a asp-controller="Home" asp-action="Index"><i class="bi bi-grid"></i> Workspace</a></li>
                         <li><a asp-controller="Home" asp-action="Index"><i class="bi bi-diagram-3"></i> Workflow</a></li>
                     </ul>

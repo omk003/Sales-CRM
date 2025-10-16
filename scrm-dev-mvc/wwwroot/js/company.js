@@ -2,6 +2,14 @@ var dataTable;
 
 $(document).ready(function () {
     loadDataTable();
+    // This goes after your DataTable setup
+    $('#tblData tbody').on('click', 'tr.company-row td:not(:first-child)', function () {
+        console.log('Row cell clicked!');
+        var companyId = $(this).closest('tr').data('id');
+        if (companyId) {
+            window.location.href = '/Company/CompanyPreview/' + companyId;
+        }
+    });
 });
 
 function loadDataTable() {
@@ -24,7 +32,12 @@ function loadDataTable() {
             { data: 'country', "width": "15%" },
             { data: 'userName', "width": "15%" },
             { data: 'createdDate', "width": "10%" }
-        ]
+        ],
+        // Highlight: Use createdRow to assign data-id
+        "createdRow": function (row, data, dataIndex) {
+            $(row).attr('data-id', data.id);
+            $(row).addClass('company-row');
+        }
     });
 }
 $(document).on('change', '.row-select', function () {

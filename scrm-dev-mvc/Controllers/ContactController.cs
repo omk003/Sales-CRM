@@ -6,11 +6,12 @@ using scrm_dev_mvc.Models;
 using scrm_dev_mvc.Models.ViewModels;
 using scrm_dev_mvc.services;
 using scrm_dev_mvc.Services;
+using System.Web;
 
 namespace scrm_dev_mvc.Controllers
 {
     [Authorize]
-    public class ContactController(IContactService contactService, IUserService userService, IOrganizationService organizationService, IGmailService gmailService, IConfiguration configuration) : Controller
+    public class ContactController(ICallService callService,IContactService contactService, IUserService userService, IOrganizationService organizationService, IGmailService gmailService, IConfiguration configuration) : Controller
     {
         public IActionResult Index()
         {
@@ -26,14 +27,14 @@ namespace scrm_dev_mvc.Controllers
                 Id = id,
                 Name = contact.FirstName ?? "",
                 Email = contact.Email,
-
+                PhoneNumber = contact.Number ?? "",
                 JobTitle = contact.JobTitle ?? "",
 
                 CreatedAt = contact.CreatedAt,
 
                 LastActivityDate = DateTime.Now,
 
-                LifecycleStage = contact.LifeCycleStage.LifeCycleStageName,
+                LifecycleStage = contact.LifeCycleStage?.LifeCycleStageName ?? "",
 
                 LeadStatus = contact.LeadStatus?.LeadStatusName ?? "",
 
@@ -196,5 +197,13 @@ namespace scrm_dev_mvc.Controllers
             return Ok();
         }
 
+
+        [HttpPost]
+        public async Task<IActionResult> CallContact(string phoneNumber)
+        {
+            var decodedNumber = HttpUtility.HtmlDecode(phoneNumber);
+            var sid = await callService.MakeCallAsync(decodedNumber);
+            return Ok(sid); // Or return Ok() if you don't want to display SID
+        }
     }
 }

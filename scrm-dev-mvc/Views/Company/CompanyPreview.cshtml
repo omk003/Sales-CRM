@@ -1,0 +1,221 @@
+﻿@model scrm_dev_mvc.Models.ViewModels.CompanyPreviewViewModel
+
+<style>
+    .nav-box.active {
+        background: var(--bg-tertiary, #f2f4f8);
+        color: var(--color-primary, #2b2d42);
+        font-weight: bold;
+        border-bottom: 2px solid var(--color-primary, #2b2d42);
+        border-radius: var(--border-radius-sm, 6px) 6px 0 0;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.04);
+    }
+</style>
+
+<div style="padding: 0 0 0 var(--space-md);">
+    <a href="@Url.Action("Index", "Company")" style="
+        display: inline-block;
+        color: var(--color-primary);
+        font-size: var(--fs-sm);
+        font-family: var(--font-primary);
+        font-weight: var(--fw-bold);
+        text-decoration: none;
+        letter-spacing: 0.03em;
+        transition: var(--transition-base);
+        border-radius: var(--border-radius-sm);
+    "
+       onmouseover="this.style.backgroundColor=window.getComputedStyle(document.body).getPropertyValue('--bg-secondary')"
+       onmouseout="this.style.backgroundColor='transparent'">
+        &lt; Companies
+    </a>
+</div>
+
+<!-- Add Contact Modal -->
+<div id="contactModal" class="modal" tabindex="-1"
+     style="display:none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.3); z-index: 9999; align-items: center; justify-content: center;">
+    <div class="modal-dialog" style="max-width: 400px; margin: 4rem auto;">
+        <div class="modal-content" style="background:var(--bg-primary);border-radius:var(--border-radius-lg);padding:var(--space-lg);">
+            <div class="modal-header">
+                <h5 class="modal-title">Select a Contact</h5>
+                <button type="button" class="btn-close" onclick="closeContactModal()"></button>
+            </div>
+            <div class="modal-body">
+                <ul id="contactList" style="list-style:none;padding:0;"></ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="container-fluid" style="max-width: var(--container-width); margin: var(--space-xl) auto;">
+    <div class="row" style="display: flex; gap: var(--space-lg);">
+
+        <!-- Column 1: Company Profile -->
+        <aside style="flex: 1; min-width: 280px;">
+            <section style="background: var(--bg-secondary); border-radius: var(--border-radius-lg); padding: var(--space-lg); box-shadow: var(--shadow-sm); margin-bottom: var(--space-lg); text-align: left;">
+                <div style="display: flex; align-items: center; gap: var(--space-md); margin-bottom: var(--space-sm);">
+                    <span class="rounded-circle" style="display:inline-block;width:80px;height:80px;background:var(--color-accent2);color:var(--color-secondary);text-align:center;line-height:80px; font-size: 2.5rem;">
+                        <i class="fas fa-building"></i>
+                    </span>
+                    <h2 style="font-size: var(--fs-h3); margin: 0;">@Model.Name</h2>
+                </div>
+                <p style="color: var(--color-accent1); margin-bottom: var(--space-sm);">@Model.Domain</p>
+                <p style="color: var(--text-secondary);">@Model.Domain</p>
+                <p style="color: var(--text-secondary);">Location: @Model.City, @Model.Country</p>
+            </section>
+            <section style="background: var(--bg-secondary); border-radius: var(--border-radius-lg); box-shadow: var(--shadow-sm); padding: var(--space-lg);">
+                <h3 style="font-size: var(--fs-lg); color: var(--color-accent1); margin-bottom: var(--space-md);">About this company</h3>
+                <div style="font-size:var(--fs-base);color:var(--text-secondary);">
+                    <div><b>Domain:</b> @Model.Domain</div>
+                    <div><b>Created At:</b> @Model.CreatedAt?.ToString("MM/dd/yyyy hh:mm tt")</div>
+                </div>
+            </section>
+        </aside>
+
+        <!-- Column 2: Tabs and Overview/Activities -->
+        <main style="flex: 2; min-width: 520px;">
+            <nav class="nav-tabs" style="display:flex; gap:var(--space-md); border-bottom:1px solid var(--border-color); margin-bottom: var(--space-lg);">
+                <button type="button" class="nav-box active" id="tab-overview" style="background:none;border:none;padding:var(--space-sm) var(--space-md);font-size:var(--fs-lg);color:var(--color-accent1);" onclick="showTab('overview')">Overview</button>
+                <button type="button" class="nav-box" id="tab-activities" style="background:none;border:none;padding:var(--space-sm) var(--space-md);font-size:var(--fs-lg);color:var(--color-accent1);" onclick="showTab('activities')">Activities</button>
+            </nav>
+
+            <!-- Overview Tab -->
+            <section id="tab-content-overview" class="tab-content" style="display:block;">
+                <div style="background:var(--bg-secondary);border-radius:var(--border-radius-lg);box-shadow:var(--shadow-sm);padding:var(--space-lg);margin-bottom:var(--space-lg);">
+                    <h3 style="font-size:var(--fs-lg);color:var(--color-accent1);margin-bottom:var(--space-md);">Company Highlights</h3>
+                    <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:var(--space-lg);color:var(--text-secondary);">
+                        <div>
+                            <b>Create Date:</b><br />@Model.CreatedAt?.ToString("MM/dd/yyyy hh:mm tt")
+                        </div>
+                        <div>
+                            <b>Domain:</b><br />@Model.Domain
+                        </div>
+                        <div>
+                            <b>Location:</b><br />@Model.City, @Model.Country
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Activities Tab -->
+            <section id="tab-content-activities" class="tab-content" style="display:none;">
+                <div style="background:var(--bg-secondary);border-radius:var(--border-radius-lg);box-shadow:var(--shadow-sm);padding:var(--space-lg);">
+                    <h3 style="font-size:var(--fs-lg);color:var(--color-accent1);margin-bottom:var(--space-md);">Recent Activities</h3>
+                    @if (Model.Activities != null && Model.Activities.Any())
+                    {
+                        <ul style="list-style:none;padding:0;margin:0;">
+                            @foreach (var act in Model.Activities.OrderByDescending(a => a.ActivityDate))
+                            {
+                                <li style="border-bottom:1px solid var(--border-color);padding:var(--space-md) 0;">
+                                    <span style="margin-right:var(--space-sm);"><i class="fas fa-@act.ActivityType.Name.ToLower()"></i></span>
+                                    <b>@act.Id</b> - <span style="color:var(--text-secondary);">@act.ActivityDate.Value.ToString("MM/dd/yyyy hh:mm tt")</span>
+                                    <div style="color:var(--text-secondary);">@act.Notes</div>
+                                </li>
+                            }
+                        </ul>
+                    }
+                    else
+                    {
+                        <p style="color:var(--text-tertiary);">No recent activities.</p>
+                    }
+                </div>
+            </section>
+        </main>
+    </div>
+    <!-- Separate rows for Contacts and Deals, similar to ContactPreview -->
+    <div class="row" style="display: flex; gap: var(--space-lg); margin-top: var(--space-lg);">
+        <!-- Contacts Section -->
+        <section style="flex:1; background:var(--bg-secondary);border-radius:var(--border-radius-lg);box-shadow:var(--shadow-sm);padding:var(--space-lg);margin-bottom:var(--space-lg);">
+            <div style="display:flex;justify-content:space-between;align-items:center;">
+                <h3 style="font-size:var(--fs-lg);color:var(--color-accent1);margin-bottom:var(--space-md);">Contacts</h3>
+                <button class="btn btn-custom" type="button" onclick="openContactModal()">+ Add Contact</button>
+            </div>
+            @if (Model.Contacts != null && Model.Contacts.Any())
+            {
+                <ul style="list-style:none;padding:0;">
+                    @foreach (var contact in Model.Contacts)
+                    {
+                        <li style="border-bottom:1px solid var(--border-color);padding:var(--space-md) 0;">
+                            <span style="margin-right:var(--space-sm);"><i class="fas fa-user"></i></span>
+                            <b>@contact.FirstName</b> - <span style="color:var(--text-secondary);">@contact.JobTitle</span>
+                            <div style="color:var(--text-secondary);">@contact.Email</div>
+                            <div style="color:var(--text-secondary);">@contact.Number</div>
+                        </li>
+                    }
+                </ul>
+            }
+            else
+            {
+                <p style="color:var(--text-tertiary);">No contacts associated.</p>
+            }
+        </section>
+        <!-- Deals Section -->
+        <section style="flex:1; background:var(--bg-secondary);border-radius:var(--border-radius-lg);box-shadow:var(--shadow-sm);padding:var(--space-lg);margin-bottom:var(--space-lg);">
+            <div style="display:flex;justify-content:space-between;align-items:center;">
+                <h3 style="font-size:var(--fs-lg);color:var(--color-accent1);margin-bottom:var(--space-md);">Deals</h3>
+                <a href="@Url.Action("AddDeal", "Company", new { id = Model.Id })" class="btn btn-custom">+ Add Deal</a>
+            </div>
+            @if (Model.Deals != null && Model.Deals.Any())
+            {
+                <ul style="list-style:none;padding:0;">
+                    @foreach (var deal in Model.Deals)
+                    {
+                        <li style="border-bottom:1px solid var(--border-color);padding:var(--space-md) 0;">
+                            <span style="margin-right:var(--space-sm);"><i class="fas fa-briefcase"></i></span>
+                            <b>@deal.Id</b> - <span style="color:var(--text-secondary);">@deal.CreatedAt?.ToString("MM/dd/yyyy hh:mm tt")</span>
+                            <div style="color:var(--text-secondary);">@deal.Stage.Name</div>
+                        </li>
+                    }
+                </ul>
+            }
+            else
+            {
+                <p style="color:var(--text-tertiary);">No deals associated.</p>
+            }
+        </section>
+    </div>
+</div>
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+<script>
+    function showTab(tabName) {
+        document.getElementById('tab-content-overview').style.display = 'none';
+        document.getElementById('tab-content-activities').style.display = 'none';
+
+        document.getElementById('tab-' + tabName).classList.add('active');
+        ['overview', 'activities'].forEach(function(tab) {
+            if (tab !== tabName) document.getElementById('tab-' + tab).classList.remove('active');
+        });
+        document.getElementById('tab-content-' + tabName).style.display = 'block';
+    }
+
+    // Modal logic for selecting a contact to add to the company
+    function openContactModal() {
+        $.get('/Contact/GetAll', function(response) {
+            var list = $('#contactList');
+            list.empty();
+            (response.data || []).forEach(function(contact) {
+                list.append(
+                    `<li style="padding:8px; border-bottom:1px solid var(--border-color); cursor:pointer;" onclick="selectContact(${contact.id})">
+                        <b>${contact.name ?? 'Unnamed Contact'}</b>
+                        <span style="color:var(--text-secondary); font-size:var(--fs-sm);">${contact.email ?? ''}</span>
+                    </li>`
+                );
+            });
+            $('#contactModal').css('display', 'flex');
+        });
+    }
+    function closeContactModal() {
+        $('#contactModal').hide();
+    }
+    function selectContact(contactId) {
+        $.ajax({
+            url: '/Contact/AssociateContactToCompany',
+            type: 'POST',
+            data: { contactId: contactId, companyId: '@Model.Id' },
+            success: function() {
+                closeContactModal();
+                location.reload();
+            }
+        });
+    }
+</script>
