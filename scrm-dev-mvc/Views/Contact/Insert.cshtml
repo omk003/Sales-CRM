@@ -186,7 +186,8 @@
             <form id="contactForm" asp-action="Insert" method="post">
                 <!-- Email (Required) -->
                 <div class="form-group">
-                    <label asp-for="Contact.Email"></label>
+                    <label asp-for="Contact.Email" style="display: inline-block; margin-right: 0.25rem;"></label>
+                    <span class="text-danger" style="display: inline-block;">*</span>
                     <input asp-for="Contact.Email" class="form-control focused-input" />
                     <span asp-validation-for="Contact.Email" class="text-danger"></span>
                 </div>

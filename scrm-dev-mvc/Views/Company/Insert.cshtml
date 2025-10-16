@@ -186,14 +186,16 @@
             <form id="CompanyForm" asp-action="Insert" method="post">
                 <!-- Email (Required) -->
                 <div class="form-group">
-                    <label asp-for="Company.Name"></label>
+                    <label asp-for="Company.Name" style="display: inline-block; margin-right: 0.25rem;"></label>
+                    <span class="text-danger" style="display: inline-block;">*</span>
                     <input asp-for="Company.Name" class="form-control focused-input" />
                     <span asp-validation-for="Company.Name" class="text-danger"></span>
                 </div>
 
                 <!-- First Name -->
                 <div class="form-group">
-                    <label asp-for="Company.Domain"></label>
+                    <label asp-for="Company.Domain" style="display: inline-block; margin-right: 0.25rem;"></label>
+                    <span class="text-danger" style="display: inline-block;">*</span>
                     <input asp-for="Company.Domain" class="form-control" />
                     <span asp-validation-for="Company.Domain" class="text-danger"></span>
                 </div>
