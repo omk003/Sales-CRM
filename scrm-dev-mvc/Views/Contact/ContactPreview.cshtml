@@ -45,19 +45,19 @@
 </div>
     <!-- Company Select Modal -->
     <!-- Modal ... -->
-    <div id="companyModal" class="modal" tabindex="-1" style="display:none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.3); z-index: 9999; align-items: center; justify-content: center;">
-        <div class="modal-dialog" style="max-width: 400px; margin: 4rem auto;">
-            <div class="modal-content" style="background:var(--bg-primary);border-radius:var(--border-radius-lg);padding:var(--space-lg);">
-                <div class="modal-header" style="display: flex; justify-content: space-between; align-items: center;">
-                    <h5 class="modal-title">Select a Company</h5>
-                    <button type="button" class="btn-close" onclick="closeCompanyModal()"></button>
-                </div>
-                <div class="modal-body">
-                    <ul id="companyList" style="list-style:none;padding:0;"></ul>
-                </div>
+<div id="companyModal" class="modal" tabindex="-1" style="display:none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.3); z-index: 9999; align-items: center; justify-content: center;">
+    <div class="modal-dialog" style="max-width: 400px; margin: 4rem auto;">
+        <div class="modal-content" style="background:var(--bg-primary);border-radius:var(--border-radius-lg);padding:var(--space-lg);">
+            <div class="modal-header" style="display: flex; justify-content: space-between; align-items: center;">
+                <h5 class="modal-title">Select a Company</h5>
+                <button type="button" class="btn-close" onclick="closeCompanyModal()"></button>
+            </div>
+            <div class="modal-body" style="max-height: 350px; overflow-y: auto;">
+                <ul id="companyList" style="list-style:none;padding:0;margin:0;"></ul>
             </div>
         </div>
     </div>
+</div>
 
 <!-- Call Contact Modal -->
 <div id="callModal" class="modal" tabindex="-1"
