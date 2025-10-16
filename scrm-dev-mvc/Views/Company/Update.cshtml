@@ -224,17 +224,6 @@
                 </div>
 
                 <!-- Contact Owner -->
-                @* <div class="form-group">
-                    <label asp-for="Contact.OwnerId"></label>
-                    <select asp-for="Contact.OwnerId"
-                            asp-items="@(new SelectList(Model.Users, "Id", "FirstName"))"
-                            class="form-control">
-                        <option value="">-- Select Owner --</option>
-                    </select>
-                    <span asp-validation-for="Contact.OwnerId" class="text-danger"></span>
-                </div> *@
-                
-
                 <div class="form-group">
                     <label asp-for="Company.userId"></label>
                     <select asp-for="Company.userId" class="form-control">

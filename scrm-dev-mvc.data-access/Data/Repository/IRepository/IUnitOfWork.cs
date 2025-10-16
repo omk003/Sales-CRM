@@ -18,6 +18,8 @@ namespace scrm_dev_mvc.Data.Repository.IRepository
         ICompanyRepository Company { get; }
 
         IInvitationRepository Invitations { get; }
+
+        IActivityRepository Activities { get; }
         Task SaveChangesAsync();
     }
 }

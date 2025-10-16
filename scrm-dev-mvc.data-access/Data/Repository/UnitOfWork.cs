@@ -21,6 +21,7 @@ namespace scrm_dev_mvc.Data.Repository
 
         public IInvitationRepository Invitations { get; private set; }
 
+        public IActivityRepository Activities { get; private set; }
         public UnitOfWork(ApplicationDbContext context)
         {
             _context = context;
@@ -32,6 +33,7 @@ namespace scrm_dev_mvc.Data.Repository
             Organization = new OrganizationRepository(_context);
             Company = new CompanyRepository(_context);
             Invitations = new InvitationRepository(_context);
+            Activities = new ActivityRepository(_context);
         }
         public async Task SaveChangesAsync()
         {
