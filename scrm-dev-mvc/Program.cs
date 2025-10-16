@@ -18,7 +18,6 @@ Log.Logger = new LoggerConfiguration()
     .CreateLogger();
 
 builder.Host.UseSerilog();
-// Add services to the container.
 builder.Services.AddControllersWithViews();
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
@@ -52,6 +51,8 @@ try
     var app = builder.Build();
 
     app.UseForwardedHeaders();
+
+    app.UseSerilogRequestLogging();
     // Configure the HTTP request pipeline.
     if (!app.Environment.IsDevelopment())
     {
@@ -63,38 +64,40 @@ try
         // In development, you want to see the detailed developer exception page.
         app.UseDeveloperExceptionPage();
     }
-    app.Use(async (context, next) =>
-    {
-        Log.Information("HTTP {Method} {Path} invoked by {IP}",
-            context.Request.Method,
-            context.Request.Path,
-            context.Connection.RemoteIpAddress);
+    
+    app.UseHttpsRedirection();
 
-        await next.Invoke();
 
-        Log.Information("Response {StatusCode} for {Path}",
-            context.Response.StatusCode, context.Request.Path);
-    });
+    app.UseStaticFiles();
+
+    //app.Use(async (context, next) =>
+    //{
+    //    Log.Information("HTTP {Method} {Path} invoked by {IP}",
+    //        context.Request.Method,
+    //        context.Request.Path,
+    //        context.Connection.RemoteIpAddress);
+
+    //    await next.Invoke();
+
+    //    Log.Information("Response {StatusCode} for {Path}",
+    //        context.Response.StatusCode, context.Request.Path);
+    //});
 
     app.UseMiddleware<ExceptionHandlingMiddleware>();
-    app.UseHttpsRedirection();
+
     app.UseRouting();
     app.UseAuthentication();
 
     app.UseAuthorization();
 
-    app.MapStaticAssets();
-
     app.MapControllerRoute(
         name: "default",
-        pattern: "{controller=Home}/{action=LandingPage}/{id?}")
-        .WithStaticAssets();
-
-
+        pattern: "{controller=Home}/{action=LandingPage}/{id?}");
     app.Run();
 }
 catch (Exception ex)
 {
     // Log and fail gracefully
     Console.WriteLine($"Critical error starting the app: {ex.Message}");
+    Log.Fatal(ex, "Critical error starting the app");
 }
