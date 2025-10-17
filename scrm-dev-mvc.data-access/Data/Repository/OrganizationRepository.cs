@@ -16,5 +16,9 @@ namespace scrm_dev_mvc.data_access.Data.Repository
         {
             _db = db;
         }
+        public void Update(Organization organization)
+        {
+            _db.Organizations.Update(organization);
+        }
     }
 }

@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using scrm_dev_mvc.Models;
 using scrm_dev_mvc.Models.ViewModels;
 using scrm_dev_mvc.services;
@@ -101,5 +102,23 @@ namespace scrm_dev_mvc.Controllers
             return RedirectToAction("Index"); // Redirect to refresh the data
         }
 
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ChangeUserRole(int organizationId, Guid userId, string newRole)
+        {
+            // You may want to check if the current user has permission to change roles here.
+
+            var success = await _userService.ChangeUserRoleAsync(userId, organizationId, newRole);
+            if (!success)
+            {
+                TempData["Message"] = "Failed to update user role.";
+                return RedirectToAction("OrganizationView", "Organization",new { id = organizationId });
+            }
+            TempData["Message"] = "User role updated successfully.";
+            return RedirectToAction("OrganizationView", "Organization", new { id = organizationId });
+        }
+
+        
     }
 }

@@ -22,5 +22,6 @@ namespace scrm_dev_mvc.services
         Task<bool> AssignUserToOrganizationAsync(Guid userId, int organizationId, int roleId);
 
         Task<User> GetFirstOrDefault(System.Linq.Expressions.Expression<Func<User, bool>> predicate, string? Include);
+        Task<bool> ChangeUserRoleAsync(Guid userId, int organizationId, string newRole);
     }
 }

@@ -1,4 +1,5 @@
-﻿using scrm_dev_mvc.Data.Repository;
+﻿using Microsoft.EntityFrameworkCore;
+using scrm_dev_mvc.Data.Repository;
 using scrm_dev_mvc.Data.Repository.IRepository;
 using scrm_dev_mvc.Models;
 using System;
@@ -67,6 +68,26 @@ namespace scrm_dev_mvc.services
             await unitOfWork.SaveChangesAsync();
 
             // Operation was successful
+            return true;
+        }
+
+        public async Task<bool> ChangeUserRoleAsync(Guid userId, int organizationId, string newRole)
+        {
+            var user = await unitOfWork.Users
+                .FirstOrDefaultAsync(u => u.Id == userId && u.OrganizationId == organizationId);
+
+            if (user == null || user.RoleId == 4)
+                return false;
+
+            // Map role string to RoleId or set the Role navigation property
+            if (newRole == "SalesAdmin")
+                user.RoleId = 3; // <-- Use your actual admin RoleId
+            else if (newRole == "SalesUser")
+                user.RoleId = 4; // <-- Use your actual user RoleId
+            else
+                return false;
+
+            await unitOfWork.SaveChangesAsync();
             return true;
         }
     }

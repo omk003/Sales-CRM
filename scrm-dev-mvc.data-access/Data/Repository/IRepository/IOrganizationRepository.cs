@@ -1,6 +1,9 @@
-﻿namespace scrm_dev_mvc.Data.Repository.IRepository
+﻿using scrm_dev_mvc.Models;
+
+namespace scrm_dev_mvc.Data.Repository.IRepository
 {
     public interface IOrganizationRepository: IRepository<scrm_dev_mvc.Models.Organization>
     {
+        void Update(Organization organization);
     }
 }

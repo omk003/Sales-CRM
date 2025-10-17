@@ -1,0 +1,91 @@
+﻿@model scrm_dev_mvc.Models.ViewModels.OrganizationViewModel
+
+<div class="container" style="max-width: 800px; margin: 2rem auto;">
+    <h2>@Model.OrganizationName - Members</h2>
+
+    @if (Model.CurrentUserRole == "SalesAdminSuper")
+    {
+        <nav style="margin-bottom: 1rem;">
+            <a class="btn btn-info"
+               asp-controller="Organization"
+               asp-action="UpdateDetails"
+               asp-route-organizationId="@Model.OrganizationId">
+                <i class="bi bi-pencil"></i> Update Organization Details
+            </a>
+        </nav>
+    }
+
+    <table style="width: 100%; background: var(--bg-secondary); border-radius: var(--border-radius-md); box-shadow: var(--shadow-sm); margin-top: 1.5rem;">
+        <thead>
+            <tr>
+                <th style="padding:12px;">Name</th>
+                <th style="padding:12px;">Email</th>
+                <th style="padding:12px;">Role</th>
+                @if (Model.CurrentUserRole == "superadmin")
+                {
+                    <th style="padding:12px;">Change Role</th>
+                }
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var user in Model.Users)
+            {
+                <tr>
+                    <td style="padding:12px;">@user.FullName</td>
+                    <td style="padding:12px;">@user.Email</td>
+                    <td style="padding:12px;">
+                        @{
+                            string roleDisplay = user.Role == "SalesAdminSuper" ? "Owner" :
+                            user.Role == "SalesAdmin" ? "Admin" : "Normal User";
+                        }
+                        <span>@roleDisplay</span>
+                    </td>
+                    @if (Model.CurrentUserRole == "SalesAdminSuper")
+                    {
+                        <td style="padding:12px;">
+                            @if (user.Role != "SalesAdminSuper")
+                            {
+                                <form method="post" asp-action="ChangeUserRole" asp-controller="User" style="display:inline;">
+                                    <input type="hidden" name="organizationId" value="@Model.OrganizationId" />
+                                    <input type="hidden" name="userId" value="@user.UserId" />
+                                    <select name="newRole" style="margin-right:8px;">
+                                        @if (user.Role == "SalesAdmin")
+                                        {
+                                            <option value="SalesAdmin" selected="selected">Admin</option>
+                                        }
+                                        else
+                                        {
+                                            <option value="SalesAdmin">Admin</option>
+                                        }
+                                        @if (user.Role == "SalesUser")
+                                        {
+                                            <option value="SalesUser" selected="selected">Normal User</option>
+                                        }
+                                        else
+                                        {
+                                            <option value="SalesUser">Normal User</option>
+                                        }
+                                    </select>
+                                    <button type="submit" class="btn btn-primary btn-sm">Update</button>
+                                </form>
+
+                                <!-- Delete Button -->
+                                <form method="post" asp-action="DeleteUser" asp-controller="Organization" style="display:inline;" onsubmit="return confirm('Are you sure you want to delete this user?');">
+                                    <input type="hidden" name="organizationId" value="@Model.OrganizationId" />
+                                    <input type="hidden" name="userId" value="@user.UserId" />
+                                    <button type="submit" class="btn btn-danger btn-sm">
+                                        <i class="bi bi-trash"></i> Delete
+                                    </button>
+                                </form>
+                            }
+                            else
+                            {
+                                <span style="color:gray;">-</span>
+                            }
+                        </td>
+                    }
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>

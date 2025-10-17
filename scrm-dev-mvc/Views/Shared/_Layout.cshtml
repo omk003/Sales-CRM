@@ -276,10 +276,24 @@
                 {
                     <a asp-controller="Organization" asp-action="Register"><i class="bi bi-building"></i> Register Org</a>
                 }
-                else if (User.IsInRole("SalesAdmin") || User.IsInRole("SalesAdminSuper") || User.IsInRole("ApplicationAdmin"))
+                else if (User.IsInRole("SalesAdmin") || User.IsInRole("SalesAdminSuper"))
                 {
                     <a asp-controller="Organization" asp-action="Register"><i class="bi bi-people"></i> Invite Team</a>
+                } 
+                else if (User.IsInRole("ApplicationAdmin"))
+                {
+                    <a asp-controller="Organization" asp-action="OrganizationViewAdmin"><i class="bi bi-people"></i> View Org</a>
                 }
+                
+                if (User.IsInRole("SalesAdmin") || User.IsInRole("SalesAdminSuper"))
+                {
+                    <a asp-controller="Organization" asp-action="OrganizationView"><i class="bi bi-shield-lock"></i> Manage Org</a>
+                }
+                if (User.IsInRole("SalesUser"))
+                {
+                    <a asp-controller="Organization" asp-action="OrganizationView"><i class="bi bi-shield-lock"></i> View Org</a>
+                }
+                
 
                 <a asp-controller="Auth" asp-action="Logout" class="logout-btn"><i class="bi bi-box-arrow-right"></i> Sign Out</a>
             }
