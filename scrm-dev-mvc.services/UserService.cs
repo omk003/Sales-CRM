@@ -76,7 +76,7 @@ namespace scrm_dev_mvc.services
             var user = await unitOfWork.Users
                 .FirstOrDefaultAsync(u => u.Id == userId && u.OrganizationId == organizationId);
 
-            if (user == null || user.RoleId == 4)
+            if (user == null)
                 return false;
 
             // Map role string to RoleId or set the Role navigation property
