@@ -67,6 +67,7 @@ namespace scrm_dev_mvc.Controllers
         }
 
         [HttpPost]
+        [Authorize(Roles ="SalesAdminSuper,SalesAdmin")]
         public async Task<IActionResult> SendInvitation(string email, int roleId)
         {
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
@@ -85,7 +86,7 @@ namespace scrm_dev_mvc.Controllers
 
             // 1. Create the invitation in the database
             var invitation = await invitationService.CreateInvitationAsync(email, organization.Id, roleId);
-            string? adminId = configuration["Gmail:AdminUserId"];
+            string? adminId = configuration["Gmail:AdminEmailId"];
             // 2. Send the invitation via email
             await gmailService.SendEmailAsync(Guid.Parse(adminId ?? ""),email,"Invitation from SCRM",$"Hey, you just got invited to SCRM in {organization.Name}, log in to the SCRM using this link - {"https://maudlinly-nonreactive-arturo.ngrok-free.dev/auth/login?invitationcode=" + invitation.InvitationCode}   ,            if new user use this link {"https://maudlinly-nonreactive-arturo.ngrok-free.dev/auth/register?invitationcode=" + invitation.InvitationCode}","");
 

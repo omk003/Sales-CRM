@@ -1,0 +1,370 @@
+﻿@model scrm_dev_mvc.Models.ViewModels.DealPreviewViewModel
+
+@{
+    ViewData["Title"] = $"Deal: {Model.Deal.Name}";
+}
+
+<!-- Back Link -->
+<div style="padding: 0 0 0 var(--space-md);">
+    <a href="@Url.Action("KanbanBoard", "Deal")" style="display: inline-block; color: var(--color-primary); font-size: var(--fs-sm); font-family: var(--font-primary); font-weight: var(--fw-bold); text-decoration: none; letter-spacing: 0.03em; transition: var(--transition-base); border-radius: var(--border-radius-sm);"
+       onmouseover="this.style.backgroundColor=window.getComputedStyle(document.body).getPropertyValue('--bg-secondary')"
+       onmouseout="this.style.backgroundColor='transparent'">
+        &lt; Back to Deals
+    </a>
+</div>
+
+<!-- ========================= -->
+<!-- NEW: Contact Select Modal -->
+<!-- ========================= -->
+<div id="contactModal" class="modal" tabindex="-1" style="display:none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.3); z-index: 9999; align-items: center; justify-content: center;">
+    <div class="modal-dialog" style="max-width: 400px; margin: 4rem auto;">
+        <div class="modal-content" style="background:var(--bg-primary);border-radius:var(--border-radius-lg);padding:var(--space-lg);">
+            <div class="modal-header" style="display: flex; justify-content: space-between; align-items: center;">
+                <h5 class="modal-title">Select a Contact to Associate</h5>
+                <button type="button" class="btn-close" onclick="closeContactModal()"></button>
+            </div>
+            <div class="modal-body" style="max-height: 350px; overflow-y: auto;">
+                <ul id="contactList" style="list-style:none;padding:0;margin:0;">
+                    <!-- Contacts will be loaded here by JavaScript -->
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- ========================= -->
+<!-- END: Contact Select Modal -->
+<!-- ========================= -->
+
+
+<div class="container-fluid" style="max-width: var(--container-width); margin: var(--space-xl) auto;">
+    <div class="row" style="display: flex; gap: var(--space-lg);">
+
+        <!-- Column 1: Deal Profile & Actions -->
+        <aside style="flex: 1; min-width: 280px;">
+            <!-- ... (Your existing Deal Profile & About sections) ... -->
+            <section style="background: var(--bg-secondary); border-radius: var(--border-radius-lg); padding: var(--space-lg); box-shadow: var(--shadow-sm); margin-bottom: var(--space-lg); text-align: center;">
+
+                <!-- Deal Icon & Name -->
+                <div style="display: flex; align-items: center; justify-content: center; gap: var(--space-md); margin-bottom: var(--space-sm);">
+                    <span class="rounded-circle" style="display:inline-block;width:80px;height:80px;background:var(--color-accent2);color:var(--color-secondary);text-align:center;line-height:80px; font-size: 2.5rem;">
+                        <i class="fas fa-dollar-sign"></i>
+                    </span>
+                    <h2 style="font-size: var(--fs-h3); margin: 0;">@Model.Deal.Name</h2>
+                </div>
+
+                <!-- Deal Value -->
+                <p style="color: var(--color-accent1); margin-bottom: var(--space-sm); font-size: 1.25rem; font-weight: 600;">
+                    @Model.Deal.Value?.ToString("C0")
+                </p>
+
+                <!-- Deal Stage -->
+                <p style="color: var(--text-secondary);">
+                    Stage: <span style="font-weight: 600; color: var(--color-accent1);">@Model.Deal.Stage?.Name</span>
+                </p>
+
+                <!-- Action Buttons -->
+                <div style="display:flex; justify-content:center; gap:var(--space-md); margin-bottom: var(--space-md);">
+                    <a href="@Url.Action("Update", "Deal", new { id = Model.Deal.Id })" title="Edit Deal" style="color: var(--color-secondary);">
+                        <i class="fas fa-edit"></i>
+                    </a>
+                    <a href="@Url.Action("Create", "Task", new { dealId = Model.Deal.Id })" title="Add Task" style="color: var(--color-primary);">
+                        <i class="fas fa-tasks"></i>
+                    </a>
+                </div>
+            </section>
+
+            <!-- About this Deal -->
+            <section style="background: var(--bg-secondary); border-radius: var(--border-radius-lg); box-shadow: var(--shadow-sm); padding: var(--space-lg);">
+                <h3 style="font-size: var(--fs-lg); color: var(--color-accent1); margin-bottom: var(--space-md);">About this Deal</h3>
+                <div style="font-size:var(--fs-base);color:var(--text-secondary);">
+                    <div><b>Owner:</b> @Model.Deal.Owner?.FirstName @Model.Deal.Owner?.LastName</div>
+                    <div><b>Company:</b> @Model.Deal.Company?.Name</div>
+                    <div><b>Close Date:</b> @Model.Deal.CloseDate?.ToString("MM/dd/yyyy")</div>
+                    <div><b>Created At:</b> @Model.Deal.CreatedAt?.ToString("MM/dd/yyyy hh:mm tt")</div>
+                </div>
+            </section>
+        </aside>
+
+        <!-- Column 2: Tabs (Overview/Activities) -->
+        <main style="flex: 2; min-width: 520px;">
+            <!-- ... (Your existing Tabs and Overview/Activities sections) ... -->
+            <nav class="nav-tabs" style="display:flex; gap:var(--space-md); border-bottom:1px solid var(--border-color); margin-bottom: var(--space-lg);">
+                <button type="button" class="nav-box active" id="tab-overview" style="background:none;border:none;padding:var(--space-sm) var(--space-md);font-size:var(--fs-lg);color:var(--color-accent1);" onclick="showTab('overview')">Overview</button>
+                <button type="button" class="nav-box" id="tab-activities" style="background:none;border:none;padding:var(--space-sm) var(--space-md);font-size:var(--fs-lg);color:var(--color-accent1);" onclick="showTab('activities')">Activities</button>
+            </nav>
+
+            <!-- Overview Tab -->
+            <section id="tab-content-overview" class="tab-content" style="display:block;">
+                <div style="background:var(--bg-secondary);border-radius:var(--border-radius-lg);box-shadow:var(--shadow-sm);padding:var(--space-lg);margin-bottom:var(--space-lg);">
+                    <h3 style="font-size:var(--fs-lg);color:var(--color-accent1);margin-bottom:var(--space-md);">Data Highlights</h3>
+                    <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:var(--space-lg);color:var(--text-secondary);">
+                        <div>
+                            <b>Deal Name:</b><br /> @Model.Deal.Name
+                        </div>
+                        <div>
+                            <b>Value:</b><br /> @Model.Deal.Value?.ToString("C0")
+                        </div>
+                        <div>
+                            <b>Stage:</b><br /> @Model.Deal.Stage?.Name
+                        </div>
+                        <div>
+                            <b>Close Date:</b><br /> @Model.Deal.CloseDate?.ToString("MM/dd/yyyy")
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Activities Tab -->
+            @* <section id="tab-content-activities" class="tab-content" style="display:none;">
+                <div style="background:var(--bg-secondary);border-radius:var(--border-radius-lg);box-shadow:var(--shadow-sm);padding:var(--space-lg);">
+                    <h3 style="font-size:var(--fs-lg);color:var(--color-accent1);margin-bottom:var(--space-md);">Recent Activities</h3>
+                    @if (Model.Activities != null && Model.Activities.Any())
+                    {
+                        <ul style="list-style:none;padding:0;margin:0;">
+                            @foreach (var act in Model.Activities)
+                            {
+                                <li style="border-bottom:1px solid var(--border-color);padding:var(--space-md) 0;">
+                                    <span style="margin-right:var(--space-sm);">
+                                        <i class="fas fa-@act.ActivityType?.Name?.ToLower()"></i>
+                                    </span>
+                                    <b>@act.ActivityType?.Name</b> - <span style="color:var(--text-secondary);">@act.ActivityDate?.ToString("MM/dd/yyyy hh:mm tt")</span>
+                                    <div style="color:var(--text-secondary);">@act.Notes</div>
+                                </li>
+                            }
+                        </ul>
+                    }
+                    else
+                    {
+                        <p style="color:var(--text-tertiary);">No recent activities for this deal.</p>
+                    }
+                </div>
+            </section> *@
+            <section id="tab-content-activities" class="tab-content" style="display:none;">
+                <div style="background:var(--bg-secondary);border-radius:var(--border-radius-lg);box-shadow:var(--shadow-sm);padding:var(--space-lg);">
+                    <h3 style="font-size:var(--fs-lg);color:var(--color-accent1);margin-bottom:var(--space-md);">Recent Activities</h3>
+                    @if (Model.Activities != null && Model.Activities.Any())
+                    {
+                        <ul style="list-style:none;padding:0;margin:0; max-height: 300px; overflow-y: auto;">
+                            @foreach (var act in Model.Activities.OrderByDescending(a => a.ActivityDate))
+                            {
+                                // Set default icon and name in case ActivityType is null
+                                var activityName = act.ActivityType?.Name ?? "Activity";
+                                var icon = "tasks"; // Default icon
+                                if (activityName.Equals("Email", StringComparison.OrdinalIgnoreCase))
+                                {
+                                    icon = "envelope";
+                                }
+                                else if (activityName.Equals("Call", StringComparison.OrdinalIgnoreCase))
+                                {
+                                    icon = "phone";
+                                }
+
+                                <li style="border-bottom:1px solid var(--border-color); padding:var(--space-md) 0; display:flex; gap: var(--space-md); align-items: flex-start;">
+
+                                    <!-- Icon -->
+                                    <div style="font-size: 1.25rem; color: var(--color-primary); margin-top: 3px;">
+                                        <i class="fas fa-@icon"></i>
+                                    </div>
+
+                                    <!-- Activity Details -->
+                                    <div style="flex-grow: 1;">
+
+                                        <!-- Header: Activity Type & Date -->
+                                        <div style="display:flex; justify-content: space-between; align-items: center; margin-bottom: 0.25rem;">
+                                            <h6 style="font-weight:var(--fw-bold); color: var(--color-accent1); margin: 0;">
+                                                @activityName
+                                            </h6>
+                                            <span style="color:var(--text-secondary); font-size: var(--fs-sm);">
+                                                @act.ActivityDate?.ToString("dd MMM yyyy")
+                                            </span>
+                                        </div>
+
+                                        <!-- Notes -->
+                                        <div style="color:var(--text-secondary); font-size: 0.95rem;">
+                                            @act.Notes
+                                        </div>
+
+                                        <!-- Status (if it's a task with a due date) -->
+                                        @if (act.ActivityType?.Name == "Task" && act.DueDate.HasValue)
+                                        {
+                                            <div style="font-size: 0.85rem; margin-top: 0.5rem;">
+                                                <span style="font-weight: 500;">Due: @act.DueDate.Value.ToString("dd MMM yyyy")</span>
+                                                - <span style="color: var(--color-accent);">Status: @act.Status</span>
+                                            </div>
+                                        }
+
+                                    </div>
+                                </li>
+                            }
+                        </ul>
+                    }
+                    else
+                    {
+                        <p style="color:var(--text-tertiary);">No recent activities for this deal.</p>
+                    }
+                </div>
+            </section>
+        </main>
+
+        <!-- Column 3: Company & Contacts -->
+        <aside style="flex:1; min-width: 280px;">
+            <!-- Company Section -->
+            <section style="background:var(--bg-secondary);border-radius:var(--border-radius-lg);box-shadow:var(--shadow-sm);padding:var(--space-lg);margin-bottom:var(--space-lg);">
+                <div style="display:flex;justify-content:space-between;align-items:center;">
+                    <h3 style="font-size:var(--fs-lg);color:var(--color-accent1);margin-bottom:var(--space-md);">Company</h3>
+                </div>
+                @if (Model.Deal.Company != null)
+                {
+                    <div style="background:var(--bg-primary);border-radius:var(--border-radius-sm);padding:var(--space-md);box-shadow:var(--shadow-sm);margin-bottom:var(--space-sm);">
+                        <div style="font-weight:var(--fw-bold);margin-bottom:var(--space-xs);">@Model.Deal.Company.Name</div>
+                        <span style="color:var(--text-secondary);font-size:var(--fs-sm);">Domain: @Model.Deal.Company.Domain</span>
+                    </div>
+                }
+                else
+                {
+                    <p style="color:var(--text-tertiary);">No company associated.</p>
+                }
+            </section>
+
+            <!-- Contacts Section -->
+            <section style="background:var(--bg-secondary);border-radius:var(--border-radius-lg);box-shadow:var(--shadow-sm);padding:var(--space-lg);">
+                <div style="display:flex;justify-content:space-between;align-items:center;">
+                    <h3 style="font-size:var(--fs-lg);color:var(--color-accent1);margin-bottom:var(--space-md);">Contacts</h3>
+                    <!-- --- MODIFIED: Added an "Associate" button --- -->
+                    <div style="display:flex; gap: 5px;">
+                        <button class="btn btn-custom" type="button"
+                                style="font-size:var(--fs-sm);padding:var(--space-xs) var(--space-sm);"
+                                onclick="openContactModal()">
+                            + Add
+                        </button>
+                        @* <a href="@Url.Action("Create", "Contact", new { dealId = Model.Deal.Id, companyId = Model.Deal.CompanyId })" class="btn btn-custom" style="font-size:var(--fs-sm);padding:var(--space-xs) var(--space-sm);">+ New</a> *@
+                    </div>
+                </div>
+                @if (Model.Contacts != null && Model.Contacts.Any())
+                {
+                    @foreach (var contact in Model.Contacts)
+                    {
+                        <div style="background:var(--bg-primary);border-radius:var(--border-radius-sm);padding:var(--space-md);box-shadow:var(--shadow-sm);margin-bottom:var(--space-sm);">
+                            <a href="@Url.Action("Preview", "Contact", new { id = contact.Id })" style="font-weight:var(--fw-bold);margin-bottom:var(--space-xs); text-decoration:none;">
+                                @contact.FirstName @contact.LastName
+                            </a>
+                            <div style="color:var(--text-secondary);font-size:var(--fs-sm);">@contact.Email</div>
+                        </div>
+                    }
+                }
+                else
+                {
+                    <p style="color:var(--text-tertiary);">No contacts associated with this deal.</p>
+                }
+            </section>
+        </aside>
+    </div>
+</div>
+
+<!-- FontAwesome for icons (if not already included) -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+@Html.AntiForgeryToken() @* Add token for AJAX POST *@
+
+<script>
+    function showTab(tabName) {
+        // ... (Your existing showTab function)
+        document.getElementById('tab-content-overview').style.display = 'none';
+        document.getElementById('tab-content-activities').style.display = 'none';
+
+        document.getElementById('tab-overview').classList.remove('active');
+        document.getElementById('tab-activities').classList.remove('active');
+
+        document.getElementById('tab-' + tabName).classList.add('active');
+        document.getElementById('tab-content-' + tabName).style.display = 'block';
+    }
+        // ... inside <script> tag ...
+
+    function openContactModal() {
+        // Fetch contacts from server
+        $.get('@Url.Action("GetAll", "Contact")', function (response) {
+            var list = $('#contactList');
+            list.empty();
+
+            if (response.data && response.data.length > 0) {
+                response.data.forEach(function (contact) {
+                    list.append(
+                        `<li style="padding:8px; border-bottom:1px solid var(--border-color); cursor:pointer;" onclick="selectContact(${contact.id})">
+                            <b>${contact.name ?? 'Unnamed Contact'}</b>
+                            <span style="color:var(--text-secondary); font-size:var(--fs-sm); display:block;">${contact.email ?? ''}</span>
+                        </li>`
+                    );
+                });
+            } else {
+                list.append('<li>No contacts found.</li>');
+            }
+            $('#contactModal').css('display', 'flex');
+        });
+    }
+
+    function closeContactModal() {
+        $('#contactModal').hide();
+    }
+
+    function selectContact(contactId) {
+        // Get the current Deal ID from the model
+        var dealId = @Model.Deal.Id;
+
+        // Get the AntiForgeryToken
+        var token = $('input[name="__RequestVerificationToken"]').val();
+
+        $.ajax({
+            url: '@Url.Action("AssociateContactToDeal", "Contact")', // Action we created
+            type: 'POST',
+            data: {
+                contactId: contactId,
+                dealId: dealId
+            },
+            headers: {
+                "RequestVerificationToken": token // Send the token
+            },
+            success: function () {
+                closeContactModal();
+                location.reload(); // Reload the page to show the new association
+            },
+            error: function(xhr) {
+                alert("Failed to associate contact: " + (xhr.responseJSON?.message || xhr.responseText));
+            }
+        });
+    }
+
+    // --- ADD THESE FUNCTIONS ---
+
+    function closeContactModal() {
+        $('#contactModal').hide();
+    }
+
+    function selectContact(contactId) {
+        // Get the current Deal ID from the model
+        var dealId = @Model.Deal.Id;
+
+        // Get the AntiForgeryToken
+        var token = $('input[name="__RequestVerificationToken"]').val();
+
+        $.ajax({
+            url: '@Url.Action("AssociateContactToDeal", "Contact")', // Action we created
+            type: 'POST',
+            data: {
+                contactId: contactId,
+                dealId: dealId
+            },
+            headers: {
+                "RequestVerificationToken": token // Send the token
+            },
+            success: function () {
+                closeContactModal();
+                location.reload(); // Reload the page to show the new association
+            },
+            error: function(xhr) {
+                alert("Failed to associate contact: " + (xhr.responseJSON?.message || xhr.responseText));
+            }
+        });
+    }
+    // --- END ADDED FUNCTIONS ---
+
+</script>
+

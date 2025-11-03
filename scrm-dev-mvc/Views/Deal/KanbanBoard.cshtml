@@ -1,11 +1,11 @@
-﻿@model scrm_dev_mvc.Models.ViewModels.KanbanBoardViewModel
+﻿@* @model scrm_dev_mvc.Models.ViewModels.KanbanBoardViewModel
 
 <div class="kanban-container">
     <div class="kanban-header">
         <h2 style="font-size:1.2rem; margin:0;">Deals Board</h2>
-        <button class="btn btn-primary btn-custom" id="create-deal-btn" style="padding:0.3rem 1rem;">
+        <a class="btn btn-primary btn-custom" style="padding:0.3rem 1rem;" asp-action="Create" asp-controller="Deal">
             + Create Deal
-        </button>
+        </a>
     </div>
 
     <div class="kanban-board">
@@ -20,13 +20,13 @@
                     @foreach (var deal in Model.DealsByStage[stage])
                     {
                         <div class="kanban-card" data-dealid="@deal.Id">
-                            <div class="deal-title">@deal.Id</div>
+                            <div class="deal-title">@deal.Name</div>
                             <div class="deal-info">
                                 <span class="deal-value">@deal.Value?.ToString("C0")</span>
                                 <span class="deal-owner">@deal.Owner?.FirstName</span>
                             </div>
                             <div class="deal-actions">
-                                <a href="@Url.Action("Details", "Deals", new { id = deal.Id })" class="btn btn-sm btn-custom">View</a>
+                                <a href="@Url.Action("Details", "Deal", new { id = deal.Id })" class="btn btn-sm btn-custom">View</a>
                             </div>
                         </div>
                     }
@@ -54,4 +54,358 @@
             // TODO: Trigger AJAX/move deal stage backend update
         });
     });
+</script> *@
+
+@* @model scrm_dev_mvc.Models.ViewModels.KanbanBoardViewModel
+@Html.AntiForgeryToken() <!-- ADD THIS FOR SECURITY -->
+
+<div class="kanban-container">
+    <div class="kanban-header">
+        <h2 style="font-size:1.2rem; margin:0;">Deals Board</h2>
+        <a class="btn btn-primary btn-custom" style="padding:0.3rem 1rem;" asp-action="Create" asp-controller="Deal">
+            + Create Deal
+        </a>
+    </div>
+
+    <div class="kanban-board">
+        @foreach (var stage in Model.DealStages)
+        {
+            <div class="kanban-column" data-stage-name="@stage">
+                <!-- Changed to data-stage-name -->
+                <div class="kanban-column-header">
+                    <span class="column-title">@stage</span>
+                    <span class="column-count">@Model.DealsByStage[stage].Count</span>
+                </div>
+                <div class="kanban-column-body">
+                    @foreach (var deal in Model.DealsByStage[stage])
+                    {
+                        <div class="kanban-card" data-deal-id="@deal.Id" draggable="true">
+                            <!-- Added draggable="true" -->
+                            <div class="deal-title">@deal.Name</div>
+                            <div class="deal-info">
+                                <span class="deal-value">@deal.Value?.ToString("C0")</span>
+                                <span class="deal-owner">@deal.Owner?.FirstName</span>
+                            </div>
+                            <div class="deal-actions">
+                                <a href="@Url.Action("Details", "Deal", new { id = deal.Id })" class="btn btn-sm btn-custom">View</a>
+                            </div>
+                        </div>
+                    }
+                </div>
+                <div class="kanban-column-footer">
+                    <strong>Total:</strong>
+                    <!-- Added data-stage-total attribute -->
+                    <span class="column-total-value" data-stage-total="@stage">
+                        @Model.StageTotals[stage].ToString("C0")
+                    </span>
+                </div>
+            </div>
+        }
+    </div>
+</div>
+
+<!-- REPLACE YOUR SCRIPT BLOCK WITH THIS -->
+<script>
+    document.addEventListener('DOMContentLoaded', (event) => {
+
+        const cards = document.querySelectorAll('.kanban-card');
+        const columns = document.querySelectorAll('.kanban-column-body');
+        let draggedCard = null;
+
+        // --- Drag Start ---
+        cards.forEach(card => {
+            card.addEventListener('dragstart', function(e) {
+                draggedCard = this;
+                e.dataTransfer.setData('text/plain', this.dataset.dealId);
+                setTimeout(() => {
+                    this.style.opacity = '0.5'; // Make it semi-transparent
+                }, 0);
+            });
+
+            card.addEventListener('dragend', function() {
+                this.style.opacity = '1'; // Reset opacity
+                draggedCard = null;
+            });
+        });
+
+        // --- Drag Over ---
+        columns.forEach(col => {
+            col.addEventListener('dragover', function(e) {
+                e.preventDefault(); // This is necessary to allow dropping
+            });
+        });
+
+        // --- Drop ---
+        columns.forEach(col => {
+            col.addEventListener('drop', function(e) {
+                e.preventDefault();
+
+                if (!draggedCard) return;
+
+                // Find the column element to get the stage name
+                const column = this.closest('.kanban-column');
+                const newStageName = column.dataset.stageName;
+                const dealId = draggedCard.dataset.dealId;
+
+                // Get the anti-forgery token from the page
+                const token = document.querySelector('input[name="__RequestVerificationToken"]')?.value;
+
+                if (dealId && newStageName) {
+                    // Call the backend to update the stage
+                    updateDealStageOnServer(dealId, newStageName, draggedCard, this, token);
+                }
+            });
+        });
+
+        /**
+         * Sends the update to the server via AJAX (fetch)
+         */
+        async function updateDealStageOnServer(dealId, newStageName, cardElement, newColumnBody, token) {
+
+            // Optimistic UI: Move card immediately
+            // newColumnBody.appendChild(cardElement);
+
+            try {
+                const response = await fetch('@Url.Action("UpdateDealStage", "Deal")', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'RequestVerificationToken': token // Send the token
+                    },
+                    body: JSON.stringify({
+                        DealId: parseInt(dealId),
+                        NewStageName: newStageName
+                    })
+                });
+
+                if (response.ok) {
+                    // Pessimistic UI: Move card only on success
+                    newColumnBody.appendChild(cardElement);
+
+                    updateColumnSummary(oldStageName); // Update the old column
+            updateColumnSummary(newStageName);
+                    console.log(`Deal ${dealId} moved to ${newStageName}`);
+                    // TODO: You could also update the column counts here
+                } else {
+                    const error = await response.json();
+                    alert(`Failed to move deal: ${error.message || 'Server error'}`);
+                    // Note: If the UI was optimistic, you'd move the card back here
+                }
+            } catch (error) {
+                console.error('Error updating deal stage:', error);
+                alert('An error occurred. Please refresh the page.');
+            }
+        }
+            function updateColumnSummary(stageName) {
+                const column = document.querySelector(`.kanban-column[data-stage-name="${stageName}"]`);
+                if (!column) return;
+
+                const countSpan = column.querySelector('.column-count');
+                const totalSpan = column.querySelector('.column-total-value');
+                const cardsInColumn = column.querySelectorAll('.kanban-card'); // Find all cards *currently* in this column
+
+                // 1. Update Count
+                countSpan.textContent = cardsInColumn.length;
+
+                // 2. Update Total
+                let totalValue = 0;
+                cardsInColumn.forEach(card => {
+                    totalValue += parseFloat(card.dataset.value || 0); // Sum the values
+                });
+
+                // 3. Format and display the new total
+                totalSpan.textContent = new Intl.NumberFormat('en-IN', {
+                    style: 'currency',
+                    currency: 'INR',
+                    minimumFractionDigits: 0,
+                    maximumFractionDigits: 0
+                }).format(totalValue);
+    }
+    });
+</script> *@
+
+
+@model scrm_dev_mvc.Models.ViewModels.KanbanBoardViewModel
+@Html.AntiForgeryToken() <!-- ADD THIS FOR SECURITY -->
+
+<div class="kanban-container">
+    <div class="kanban-header">
+        <h2 style="font-size:1.2rem; margin:0;">Deals Board</h2>
+        <a class="btn btn-primary btn-custom" style="padding:0.3rem 1rem;" asp-action="Create" asp-controller="Deal">
+            + Create Deal
+        </a>
+    </div>
+
+    <div class="kanban-board">
+        @foreach (var stage in Model.DealStages)
+        {
+            <div class="kanban-column" data-stage-name="@stage">
+                <!-- Changed to data-stage-name -->
+                <div class="kanban-column-header">
+                    <span class="column-title">@stage</span>
+                    <!-- Added data-stage-count attribute for easy selection -->
+                    <span class="column-count" data-stage-count="@stage">@Model.DealsByStage[stage].Count</span>
+                </div>
+                <!-- Added data-stage-body attribute -->
+                <div class="kanban-column-body" data-stage-body="@stage">
+                    @foreach (var deal in Model.DealsByStage[stage])
+                    {
+                        <!-- Added data-value attribute -->
+                        <div class="kanban-card" data-deal-id="@deal.Id" data-value="@(deal.Value ?? 0)" draggable="true">
+                            <div class="deal-title">@deal.Name</div>
+                            <div class="deal-info">
+                                <span class="deal-value">@deal.Value?.ToString("C0")</span>
+                                <span class="deal-owner">@deal.Owner?.FirstName</span>
+                            </div>
+                            <div class="deal-actions">
+                                <a href="@Url.Action("Details", "Deal", new { id = deal.Id })" class="btn btn-sm btn-custom">View</a>
+                            </div>
+                        </div>
+                    }
+                </div>
+                <!-- NEW: Column Footer for Total -->
+                <div class="kanban-column-footer">
+                    <strong>Total:</strong>
+                    <!-- Added data-stage-total attribute -->
+                    <span class="column-total-value" data-stage-total="@stage">
+                        @Model.StageTotals[stage].ToString("C0")
+                    </span>
+                </div>
+            </div>
+        }
+    </div>
+</div>
+
+<!-- UPDATED SCRIPT BLOCK -->
+<script>
+    document.addEventListener('DOMContentLoaded', (event) => {
+
+        const cards = document.querySelectorAll('.kanban-card');
+        const columns = document.querySelectorAll('.kanban-column-body');
+        let draggedCard = null;
+        let originalColumn = null; // --- Store the original column here
+
+        // --- Drag Start ---
+        cards.forEach(card => {
+            card.addEventListener('dragstart', function(e) {
+                draggedCard = this;
+                originalColumn = this.closest('.kanban-column'); // --- FIX: Remember where it came from
+                e.dataTransfer.setData('text/plain', this.dataset.dealId);
+                setTimeout(() => {
+                    this.style.opacity = '0.5';
+                }, 0);
+            });
+
+            card.addEventListener('dragend', function() {
+                this.style.opacity = '1';
+                draggedCard = null;
+                originalColumn = null; // --- FIX: Clear original column
+            });
+        });
+
+        // --- Drag Over ---
+        columns.forEach(col => {
+            col.addEventListener('dragover', function(e) {
+                e.preventDefault();
+            });
+        });
+
+        // --- Drop ---
+        columns.forEach(col => {
+            col.addEventListener('drop', function(e) {
+                e.preventDefault();
+
+                if (!draggedCard || !originalColumn) return; // Make sure we have both
+
+                // Find the column element to get the stage name
+                const newColumn = this.closest('.kanban-column'); // 'this' is the kanban-column-body
+                const newStageName = newColumn.dataset.stageName;
+                const dealId = draggedCard.dataset.dealId;
+
+                // Get the anti-forgery token from the page
+                const token = document.querySelector('input[name="__RequestVerificationToken"]')?.value;
+
+                // --- FIX: Check if we are dropping in a new column ---
+                if (dealId && newStageName && newColumn !== originalColumn) {
+                    // Call the backend to update the stage
+                    updateDealStageOnServer(dealId, newStageName, draggedCard, originalColumn, newColumn, token);
+                } else {
+                    // Dropped in the same column, do nothing.
+                    console.log("Dropped in the same column.");
+                }
+            });
+        });
+
+        /**
+         * Sends the update to the server via AJAX (fetch)
+         */
+        // --- FIX: Updated function signature to accept old and new column elements ---
+        async function updateDealStageOnServer(dealId, newStageName, cardElement, oldColumnEl, newColumnEl, token) {
+
+            const oldStageName = oldColumnEl.dataset.stageName; // Get name from the old column
+            const newColumnBody = newColumnEl.querySelector('.kanban-column-body');
+
+            try {
+                const response = await fetch('@Url.Action("UpdateDealStage", "Deal")', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'RequestVerificationToken': token
+                    },
+                    body: JSON.stringify({
+                        DealId: parseInt(dealId),
+                        NewStageName: newStageName
+                    })
+                });
+
+                if (response.ok) {
+                    // Pessimistic UI: Move card only on success
+                    newColumnBody.appendChild(cardElement);
+
+                    // --- FIX: Now these functions will update the correct columns ---
+                    updateColumnSummary(oldStageName); // Update the old column
+                    updateColumnSummary(newStageName); // Update the new column
+
+                    console.log(`Deal ${dealId} moved to ${newStageName}`);
+                } else {
+                    const error = await response.json();
+                    alert(`Failed to move deal: ${error.message || 'Server error'}`);
+                }
+            } catch (error) {
+                console.error('Error updating deal stage:', error);
+                alert('An error occurred. Please refresh the page.');
+            }
+        }
+
+        /**
+         * --- This function is correct. It recalculates totals on the client side ---
+         */
+        function updateColumnSummary(stageName) {
+            const column = document.querySelector(`.kanban-column[data-stage-name="${stageName}"]`);
+            if (!column) return;
+
+            const countSpan = column.querySelector('.column-count');
+            const totalSpan = column.querySelector('.column-total-value');
+            // Find all cards *currently* in this column's body
+            const cardsInColumn = column.querySelectorAll('.kanban-column-body .kanban-card');
+
+            // 1. Update Count
+            countSpan.textContent = cardsInColumn.length;
+
+            // 2. Update Total
+            let totalValue = 0;
+            cardsInColumn.forEach(card => {
+                totalValue += parseFloat(card.dataset.value || 0); // Sum the values
+            });
+
+            // 3. Format and display the new total
+            totalSpan.textContent = new Intl.NumberFormat('en-IN', {
+                style: 'currency',
+                currency: 'INR',
+                minimumFractionDigits: 0,
+                maximumFractionDigits: 0
+            }).format(totalValue);
+        }
+    });
 </script>
+

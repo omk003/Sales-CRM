@@ -37,6 +37,6 @@ namespace scrm_dev_mvc.Models.ViewModels
 
         public virtual User? User { get; set; }
 
-        public virtual List<Activity> Activities { get; set; }
+        public virtual IEnumerable<Activity> Activities { get; set; } = new List<Activity>();
     }
 }

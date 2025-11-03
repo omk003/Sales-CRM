@@ -2,16 +2,18 @@
 using Microsoft.AspNetCore.Mvc;
 using SCRM_dev.Services;
 using scrm_dev_mvc.Data.Repository;
+using scrm_dev_mvc.Data.Repository.IRepository;
 using scrm_dev_mvc.Models;
 using scrm_dev_mvc.Models.ViewModels;
 using scrm_dev_mvc.services;
 using scrm_dev_mvc.Services;
+using System.Security.Claims;
 using System.Web;
 
 namespace scrm_dev_mvc.Controllers
 {
     [Authorize]
-    public class ContactController(ICallService callService,IContactService contactService, IUserService userService, IOrganizationService organizationService, IGmailService gmailService, IConfiguration configuration) : Controller
+    public class ContactController(ICallService callService,IContactService contactService, IUserService userService,IEmailService emailService, IOrganizationService organizationService, IGmailService gmailService, IConfiguration configuration, ILogger<ContactController> _logger) : Controller
     {
         public IActionResult Index()
         {
@@ -188,22 +190,137 @@ namespace scrm_dev_mvc.Controllers
             return Ok();
         }
 
+        //[HttpPost]
+        //public async Task<IActionResult> SendEmail(string contactEmail, string subject, string body)
+        //{
+        //    // Your email sending logic here
+        //    string? adminId = configuration["Data:AdminEmailId"];
+        //    await gmailService.SendEmailAsync(Guid.Parse(adminId ?? ""), contactEmail, subject, body,"");
+        //    return Ok();
+        //}
+
         [HttpPost]
         public async Task<IActionResult> SendEmail(string contactEmail, string subject, string body)
         {
-            // Your email sending logic here
-            string? adminId = configuration["Data:AdminEmailId"];
-            await gmailService.SendEmailAsync(Guid.Parse(adminId ?? ""), contactEmail, subject, body,"");
-            return Ok();
+            // 1. Get User ID
+            var userIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (!Guid.TryParse(userIdStr, out Guid currentUserId))
+            {
+                return StatusCode(401, new { message = "User is not authenticated." });
+            }
+
+            // 2. Get Redirect URI
+            string redirectUri = Url.Action("YourGoogleCallbackMethod", "Auth", null, Request.Scheme);
+            // --- IMPORTANT: Replace with your actual callback URL/method ---
+
+            // 3. Call the service (passing contactEmail, not contact.Id)
+            var result = await emailService.SendEmailAsync(
+                currentUserId,
+                contactEmail, // <-- Pass the email string directly
+                subject,
+                body,
+                redirectUri
+            );
+
+            // 4. Handle the detailed result
+            if (result.IsSuccess)
+            {
+                return Ok(new { message = "Email sent and activity logged.", data = result.SentMessage });
+            }
+
+            if (result.IsNotFound) // <-- Handle the new property
+            {
+                return NotFound(new { message = result.ErrorMessage });
+            }
+
+            if (result.AuthenticationRequired)
+            {
+                return StatusCode(401, new
+                {
+                    message = "Authentication required.",
+                    authenticationUrl = result.AuthenticationUrl
+                });
+            }
+
+            // Catch-all for other failures
+            return StatusCode(500, new { message = result.ErrorMessage ?? "An unknown error occurred." });
+        }
+
+        //[HttpPost]
+        //public async Task<IActionResult> CallContact(string phoneNumber)
+        //{
+        //    var decodedNumber = HttpUtility.HtmlDecode(phoneNumber);
+        //    var sid = await callService.MakeCallAsync(decodedNumber);
+        //    return Ok(sid); // Or return Ok() if you don't want to display SID
+        //}
+
+       
+        // Make sure your ICallService is injected, e.g., as _callService
+        // Make sure your ILogger is injected, e.g., as _logger
+
+        [HttpPost]
+        // Recommended for POST actions
+                                   // 1. Update signature to accept contactId
+        public async Task<IActionResult> CallContact(string phoneNumber, int contactId)
+        {
+            // 2. Get the current user's ID
+            var userIdString = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrEmpty(userIdString) || !Guid.TryParse(userIdString, out Guid userId))
+            {
+                _logger.LogWarning("CallContact: Could not find valid User ID in claims.");
+                return Unauthorized("User is not authenticated.");
+            }
+
+            if (string.IsNullOrEmpty(phoneNumber) || contactId <= 0)
+            {
+                return BadRequest("Phone number and contact ID are required.");
+            }
+
+            try
+            {
+                var decodedNumber = HttpUtility.HtmlDecode(phoneNumber);
+
+                // 3. Call the updated service method with all required parameters
+                var sid = await callService.MakeCallAsync(decodedNumber, userId, contactId);
+
+                _logger.LogInformation("CallContact successful for User: {UserId}, Contact: {ContactId}, SID: {CallSid}", userId, contactId, sid);
+                return Ok(new { callSid = sid });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "CallContact failed for User: {UserId}, Contact: {ContactId}, Phone: {PhoneNumber}", userId, contactId, phoneNumber);
+                return StatusCode(500, "An error occurred while making the call.");
+            }
         }
 
 
+        // In Controllers/ContactController.cs
+
+        // (Make sure you have injected IContactService in your controller's constructor)
+        // private readonly IContactService _contactService;
+        // public ContactController(..., IContactService contactService)
+        // {
+        //    _contactService = contactService;
+        // }
+
         [HttpPost]
-        public async Task<IActionResult> CallContact(string phoneNumber)
+        public async Task<IActionResult> AssociateContactToDeal(int contactId, int dealId)
         {
-            var decodedNumber = HttpUtility.HtmlDecode(phoneNumber);
-            var sid = await callService.MakeCallAsync(decodedNumber);
-            return Ok(sid); // Or return Ok() if you don't want to display SID
+            if (contactId <= 0 || dealId <= 0)
+            {
+                return BadRequest(new { success = false, message = "Invalid IDs provided." });
+            }
+
+            var success = await contactService.AssociateContactToDealAsync(contactId, dealId);
+
+            if (success)
+            {
+                return Ok(new { success = true, message = "Contact associated with deal successfully." });
+            }
+            else
+            {
+                return StatusCode(500, new { success = false, message = "An error occurred while associating the contact with the deal." });
+            }
         }
     }
 }

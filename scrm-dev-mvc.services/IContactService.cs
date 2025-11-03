@@ -19,6 +19,8 @@ namespace scrm_dev_mvc.Services
 
         Task<bool> AssociateContactToCompany(int contactId, int companyId);
 
+        Task<bool> AssociateContactToDealAsync(int contactId, int dealId);
+
         //Task<(List<ContactResponseViewModel> Result, long WithTrackingMs, long WithoutTrackingMs)> GetAllContactsPerformanceTest(Guid userId);
     }
 }

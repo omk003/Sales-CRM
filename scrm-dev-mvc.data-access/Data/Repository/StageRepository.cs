@@ -9,15 +9,13 @@ using System.Threading.Tasks;
 
 namespace scrm_dev_mvc.data_access.Data.Repository
 {
-    public class ActivityRepository: Repository<scrm_dev_mvc.Models.Activity>, IActivityRepository 
+    public class StageRepository: Repository<scrm_dev_mvc.Models.Stage>, IStageRepository 
     {
         private readonly ApplicationDbContext _context;
-
-        public ActivityRepository(ApplicationDbContext context): base(context)
+        public StageRepository(ApplicationDbContext context): base(context)
         {
             _context = context;
         }
-
-
+    
     }
 }

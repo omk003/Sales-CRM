@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace scrm_dev_mvc.data_access.Data.Repository.IRepository
 {
-    public interface IActivityRepository: IRepository<scrm_dev_mvc.Models.Activity>
+    public interface IStageRepository: IRepository<scrm_dev_mvc.Models.Stage>
     {
     }
 }

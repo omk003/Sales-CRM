@@ -5,7 +5,7 @@ using scrm_dev_mvc.services;
 
 namespace scrm_dev_mvc.Controllers
 {
-    public class CompanyController(IOrganizationService organizationService, IUserService userService, ICompanyService companyService) : Controller
+    public class CompanyController(IOrganizationService organizationService, IUserService userService, ICompanyService companyService, ILogger<CompanyController> _logger) : Controller
     {
         public IActionResult Index()
         {
@@ -129,9 +129,25 @@ namespace scrm_dev_mvc.Controllers
         }
 
 
-        public IActionResult CompanyPreview(int id)
+        public async Task<IActionResult> CompanyPreview(int id)
         {
-            var company =  companyService.GetCompanyById(id);
+            var company = await companyService.GetCompanyForPreviewAsync(id);
+
+            if (company == null)
+            {
+                _logger.LogWarning("CompanyPreview: Company with ID {CompanyId} not found.", id);
+                return NotFound();
+            }
+
+            // --- THIS COMPLETES THE TODO ---
+            // 2. Flatten the activities from all contacts into one list
+            var allActivities = company.Contacts?
+                .SelectMany(c => c.Activities) // Get all activities from all contacts
+                .OrderByDescending(a => a.ActivityDate) // Order them
+                .ToList() ?? new List<scrm_dev_mvc.Models.Activity>();
+            // --- END TODO ---
+
+            // 3. Create the ViewModel
             var model = new CompanyPreviewViewModel()
             {
                 Id = id,
@@ -142,7 +158,9 @@ namespace scrm_dev_mvc.Controllers
                 CreatedAt = company.CreatedAt,
                 City = company.City,
                 Country = company.Country,
+                Activities = allActivities // Assign the new flattened list
             };
+
             return View(model);
         }
     }

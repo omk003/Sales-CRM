@@ -10,5 +10,7 @@ namespace scrm_dev_mvc.Models.ViewModels
     {
         public List<string> DealStages { get; set; }
         public Dictionary<string, List<Deal>> DealsByStage { get; set; }
+
+        public Dictionary<string, decimal> StageTotals { get; set; }
     }
 }

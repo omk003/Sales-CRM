@@ -152,7 +152,7 @@ namespace SCRM_dev.Services
 
         public Contact GetContactById(int id)
         {
-            var contact = unitOfWork.Contacts.FirstOrDefaultAsync(c => c.Id == id, "LeadStatus,LifeCycleStage,Company,Deals,Activities").Result;
+            var contact = unitOfWork.Contacts.FirstOrDefaultAsync(c => c.Id == id, "LeadStatus,LifeCycleStage,Company,Deals,Activities.ActivityType").Result;
             return contact;
         }
 
@@ -179,6 +179,52 @@ namespace SCRM_dev.Services
             {
                 // Log the exception here (if you have a logger)
                 Debug.WriteLine($"Error associating contact to company: {ex.Message}");
+                return false;
+            }
+        }
+
+        public async Task<bool> AssociateContactToDealAsync(int contactId, int dealId)
+        {
+            // 1. Fetch the contact and include its existing deals
+            var contact = await unitOfWork.Contacts.FirstOrDefaultAsync(
+                c => c.Id == contactId,
+                include: "Deals" // Eager load the Deals collection
+            );
+
+            if (contact == null)
+            {
+                Debug.WriteLine($"AssociateContactToDeal: Contact with ID {contactId} not found.");
+                return false;
+            }
+
+            // 2. Fetch the deal
+            var deal = await unitOfWork.Deals.FirstOrDefaultAsync(d=> d.Id == dealId);
+            if (deal == null)
+            {
+                Debug.WriteLine($"AssociateContactToDeal: Deal with ID {dealId} not found.");
+                return false;
+            }
+
+            // 3. Check if the association already exists
+            if (contact.Deals.Any(d => d.Id == dealId))
+            {
+                Debug.WriteLine($"AssociateContactToDeal: Contact {contactId} is already associated with Deal {dealId}.");
+                return true; // Already associated, so it's "successful"
+            }
+
+            // 4. Create the association
+            contact.Deals.Add(deal);
+            unitOfWork.Contacts.Update(contact);
+
+            // 5. Save
+            try
+            {
+                await unitOfWork.SaveChangesAsync();
+                return true;
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"Error associating contact to deal: {ex.Message}");
                 return false;
             }
         }

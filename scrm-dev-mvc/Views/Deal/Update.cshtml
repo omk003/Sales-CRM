@@ -1,0 +1,242 @@
+﻿@using scrm_dev_mvc.Models.ViewModels
+@model DealFormViewModel
+
+@{
+    ViewData["Title"] = "Update Deal";
+}
+
+<style>
+    /* Copied styles from your Contact Update page */
+    .contact-page {
+        height: 100vh;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .contact-header {
+        background-color: var(--bg-primary);
+        color: var(--color-accent1);
+        padding: 1.5rem 2rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+        .contact-header h1 {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin: 0;
+        }
+
+    .form-container {
+        flex: 1;
+        overflow-y: auto;
+        padding: 2rem;
+        background: linear-gradient(to bottom, #F8F5F5, #ffffff);
+    }
+
+    .form-content {
+        max-width: 700px;
+        margin: 0;
+    }
+
+    .form-group {
+        margin-bottom: 1.5rem;
+    }
+
+        .form-group label {
+            display: block;
+            color: #33475b;
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+            font-size: 0.9rem;
+        }
+
+        .form-group input[type="text"],
+        .form-group input[type="email"],
+        .form-group input[type="tel"],
+        .form-group input[type="number"],
+        .form-group input[type="date"],
+        .form-group select {
+            width: 100%;
+            padding: 0.75rem;
+            border: 2px solid #cbd5e0;
+            border-radius: 4px;
+            font-size: 1rem;
+            transition: border-color 0.2s;
+            background-color: white;
+        }
+
+            .form-group input:focus,
+            .form-group select:focus {
+                outline: none;
+                border-color: #0891b2;
+            }
+
+    .focused-input {
+        border-color: #0891b2;
+    }
+
+    .form-group select {
+        cursor: pointer;
+        appearance: none;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23333' d='M6 9L1 4h10z'/%3E%3C/svg%3E");
+        background-repeat: no-repeat;
+        background-position: right 0.75rem center;
+        padding-right: 2.5rem;
+    }
+
+    .button-group {
+        position: sticky;
+        bottom: 0;
+        background-color: white;
+        display: flex;
+        gap: 1rem;
+        padding: 1.5rem 2rem;
+        border-top: 1px solid #e5e7eb;
+        box-shadow: 0 -2px 8px rgba(0,0,0,0.1);
+    }
+
+    .btn {
+        padding: 0.75rem 1.5rem;
+        border-radius: 4px;
+        font-size: 0.95rem;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.2s;
+        border: none;
+    }
+
+    .btn-primary {
+        background-color: var(--color-secondary);
+        color: white;
+    }
+
+        .btn-primary:hover {
+            background-color: var(--color-secondary);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .btn-primary:disabled {
+            background-color: #cbd5e0;
+            cursor: not-allowed;
+        }
+
+    .btn-cancel {
+        background-color: white;
+        color: #ef4444;
+        border: 2px solid #ef4444;
+    }
+
+        .btn-cancel:hover {
+            background-color: #f0f9ff;
+            color: var(--color-secondary);
+            border: 2px solid #ef4444;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        }
+
+    .text-danger {
+        color: #dc3545;
+        font-size: 0.875em;
+    }
+</style>
+
+<div class="contact-page">
+    <div class="contact-header">
+        <h1>Update Deal</h1>
+    </div>
+
+    <div class="form-container">
+        <div class="form-content">
+            <form id="dealForm" asp-controller="Deal" asp-action="Update" method="post">
+                @Html.AntiForgeryToken()
+                <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+                <!-- Hidden fields to preserve data -->
+                <input type="hidden" asp-for="Deal.Id" />
+                <input type="hidden" asp-for="Deal.CreatedAt" />
+                <input type="hidden" asp-for="Deal.IsDeleted" />
+
+                <!-- Deal Name (Required) -->
+                <div class="form-group">
+                    <label asp-for="Deal.Name" style="display: inline-block; margin-right: 0.25rem;"></label>
+                    <span class="text-danger" style="display: inline-block;">*</span>
+                    <input asp-for="Deal.Name" class="form-control focused-input" />
+                    <span asp-validation-for="Deal.Name" class="text-danger"></span>
+                </div>
+
+                <!-- Deal Value -->
+                <div class="form-group">
+                    <label asp-for="Deal.Value"></label>
+                    <input asp-for="Deal.Value" type="number" step="0.01" class="form-control" />
+                    <span asp-validation-for="Deal.Value" class="text-danger"></span>
+                </div>
+
+                <!-- Deal Stage (Required) -->
+                <div class="form-group">
+                    <label asp-for="Deal.StageId" style="display: inline-block; margin-right: 0.25rem;"></label>
+                    <span class="text-danger" style="display: inline-block;">*</span>
+                    <select asp-for="Deal.StageId"
+                            asp-items="@(new SelectList(Model.Stages, "Id", "Name"))"
+                            class="form-control">
+                        <option value="">-- Select Stage --</option>
+                    </select>
+                    <span asp-validation-for="Deal.StageId" class="text-danger"></span>
+                </div>
+
+                <!-- Company -->
+                <div class="form-group">
+                    <label asp-for="Deal.CompanyId"></label>
+                    <select asp-for="Deal.CompanyId"
+                            asp-items="@(new SelectList(Model.Companies, "Id", "Name"))"
+                            class="form-control">
+                        <option value="">-- Select Company --</option>
+                    </select>
+                    <span asp-validation-for="Deal.CompanyId" class="text-danger"></span>
+                </div>
+
+                <!-- Deal Owner -->
+                <div class="form-group">
+                    <label asp-for="Deal.OwnerId">Deal Owner</label>
+                    <select asp-for="Deal.OwnerId" class="form-control">
+                        <option value="">-- Select Owner --</option>
+                        @foreach (var user in Model.Users)
+                        {
+                            <option value="@user.Id">@user.FirstName (@user.Email)</option>
+                        }
+                    </select>
+                    <span asp-validation-for="Deal.OwnerId" class="text-danger"></span>
+                </div>
+
+                <!-- Close Date -->
+                <div class="form-group">
+                    <label asp-for="Deal.CloseDate"></label>
+                    <input asp-for="Deal.CloseDate" type="date" class="form-control" asp-format="{0:yyyy-MM-dd}" />
+                    <span asp-validation-for="Deal.CloseDate" class="text-danger"></span>
+                </div>
+            </form>
+
+            <div class="button-group">
+                <button type="submit" form="dealForm" class="btn btn-primary">Update</button>
+                <button type="button" class="btn btn-cancel" onclick="closeForm()">Cancel</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+
+    <script>
+        function closeForm() {
+            if (confirm('Are you sure you want to close? Any unsaved changes will be lost.')) {
+                window.location.href = '@Url.Action("KanbanBoard", "Deal")'; // Redirect to Deal board
+            }
+        }
+    </script>
+}
+

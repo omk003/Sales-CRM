@@ -30,7 +30,7 @@
 </div>
 
 <!-- Add Contact Modal -->
-<div id="contactModal" class="modal" tabindex="-1"
+<div id="contactModal" class.modal" tabindex="-1"
      style="display:none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.3); z-index: 9999; align-items: center; justify-content: center;">
     <div class="modal-dialog" style="max-width: 400px; margin: 4rem auto;">
         <div class="modal-content" style="background:var(--bg-primary);border-radius:var(--border-radius-lg);padding:var(--space-lg);">
@@ -94,29 +94,78 @@
                 </div>
             </section>
 
-            <!-- Activities Tab -->
+            <!-- --- UPDATED ACTIVITIES TAB --- -->
             <section id="tab-content-activities" class="tab-content" style="display:none;">
                 <div style="background:var(--bg-secondary);border-radius:var(--border-radius-lg);box-shadow:var(--shadow-sm);padding:var(--space-lg);">
                     <h3 style="font-size:var(--fs-lg);color:var(--color-accent1);margin-bottom:var(--space-md);">Recent Activities</h3>
                     @if (Model.Activities != null && Model.Activities.Any())
                     {
-                        <ul style="list-style:none;padding:0;margin:0;">
+                        <ul style="list-style:none;padding:0;margin:0; max-height: 300px; overflow-y: auto;">
                             @foreach (var act in Model.Activities.OrderByDescending(a => a.ActivityDate))
                             {
-                                <li style="border-bottom:1px solid var(--border-color);padding:var(--space-md) 0;">
-                                    <span style="margin-right:var(--space-sm);"><i class="fas fa-@act.ActivityType.Name.ToLower()"></i></span>
-                                    <b>@act.Id</b> - <span style="color:var(--text-secondary);">@act.ActivityDate.Value.ToString("MM/dd/yyyy hh:mm tt")</span>
-                                    <div style="color:var(--text-secondary);">@act.Notes</div>
+                                // Set default icon and name in case ActivityType is null
+                                var activityName = act.ActivityType?.Name ?? "Activity";
+                                var icon = "tasks"; // Default icon
+                                if (activityName.Equals("Email", StringComparison.OrdinalIgnoreCase))
+                                {
+                                    icon = "envelope";
+                                }
+                                else if (activityName.Equals("Call", StringComparison.OrdinalIgnoreCase))
+                                {
+                                    icon = "phone";
+                                }
+
+                                <li style="border-bottom:1px solid var(--border-color); padding:var(--space-md) 0; display:flex; gap: var(--space-md); align-items: flex-start;">
+
+                                    <!-- Icon -->
+                                    <div style="font-size: 1.25rem; color: var(--color-primary); margin-top: 3px;">
+                                        <i class="fas fa-@icon"></i>
+                                    </div>
+
+                                    <!-- Activity Details -->
+                                    <div style="flex-grow: 1;">
+
+                                        <!-- Header: Activity Type & Date -->
+                                        <div style="display:flex; justify-content: space-between; align-items: center; margin-bottom: 0.25rem;">
+                                            <h6 style="font-weight:var(--fw-bold); color: var(--color-accent1); margin: 0;">
+                                                @activityName
+                                                <!-- NEW: Show Owner -->
+                                                <span style="color:var(--text-secondary); font-weight: 500; font-size: 0.9em;">
+                                                    by @(act.Owner?.Email ?? "Unknown")
+                                                </span>
+                                            </h6>
+                                            <span style="color:var(--text-secondary); font-size: var(--fs-sm);">
+                                                @act.ActivityDate?.ToString("dd MMM yyyy")
+                                            </span>
+                                        </div>
+
+                                        <!-- Notes -->
+                                        <div style="color:var(--text-secondary); font-size: 0.95rem;">
+                                            @act.Notes
+                                        </div>
+
+                                        <!-- Status (if it's a task with a due date) -->
+                                        @if (act.ActivityType?.Name == "Task" && act.DueDate.HasValue)
+                                        {
+                                            <div style="font-size: 0.85rem; margin-top: 0.5rem;">
+                                                <span style="font-weight: 500;">Due: @act.DueDate.Value.ToString("dd MMM yyyy")</span>
+                                                - <span style="color: var(--color-accent);">Status: @act.Status</span>
+                                            </div>
+                                        }
+
+                                    </div>
                                 </li>
                             }
                         </ul>
                     }
                     else
                     {
-                        <p style="color:var(--text-tertiary);">No recent activities.</p>
+                        <p style="color:var(--text-tertiary);">No recent activities for this company's contacts.</p>
                     }
                 </div>
             </section>
+            <!-- --- END UPDATED SECTION --- -->
+
         </main>
     </div>
     <!-- Separate rows for Contacts and Deals, similar to ContactPreview -->
@@ -125,7 +174,7 @@
         <section style="flex:1; background:var(--bg-secondary);border-radius:var(--border-radius-lg);box-shadow:var(--shadow-sm);padding:var(--space-lg);margin-bottom:var(--space-lg);">
             <div style="display:flex;justify-content:space-between;align-items:center;">
                 <h3 style="font-size:var(--fs-lg);color:var(--color-accent1);margin-bottom:var(--space-md);">Contacts</h3>
-                <button class="btn btn-custom" type="button" onclick="openContactModal()">+ Add Contact</button>
+                <a href="@Url.Action("Create", "Contact", new { companyId = Model.Id })" class="btn btn-custom" style="font-size:var(--fs-sm);padding:var(--space-xs) var(--space-sm);">+ Add Contact</a>
             </div>
             @if (Model.Contacts != null && Model.Contacts.Any())
             {
@@ -133,10 +182,12 @@
                     @foreach (var contact in Model.Contacts)
                     {
                         <li style="border-bottom:1px solid var(--border-color);padding:var(--space-md) 0;">
-                            <span style="margin-right:var(--space-sm);"><i class="fas fa-user"></i></span>
-                            <b>@contact.FirstName</b> - <span style="color:var(--text-secondary);">@contact.JobTitle</span>
-                            <div style="color:var(--text-secondary);">@contact.Email</div>
-                            <div style="color:var(--text-secondary);">@contact.Number</div>
+                            <a href="@Url.Action("Preview", "Contact", new { id = contact.Id })" style="font-weight:var(--fw-bold); text-decoration: none; color: var(--color-accent1);">
+                                <span style="margin-right:var(--space-sm);"><i class="fas fa-user"></i></span>
+                                @contact.FirstName @contact.LastName
+                            </a>
+                            <div style="color:var(--text-secondary); font-size: 0.9rem; padding-left: 28px;">@contact.JobTitle</div>
+                            <div style="color:var(--text-secondary); font-size: 0.9rem; padding-left: 28px;">@contact.Email</div>
                         </li>
                     }
                 </ul>
@@ -150,7 +201,7 @@
         <section style="flex:1; background:var(--bg-secondary);border-radius:var(--border-radius-lg);box-shadow:var(--shadow-sm);padding:var(--space-lg);margin-bottom:var(--space-lg);">
             <div style="display:flex;justify-content:space-between;align-items:center;">
                 <h3 style="font-size:var(--fs-lg);color:var(--color-accent1);margin-bottom:var(--space-md);">Deals</h3>
-                <a href="@Url.Action("AddDeal", "Company", new { id = Model.Id })" class="btn btn-custom">+ Add Deal</a>
+                <a href="@Url.Action("Create", "Deal", new { companyId = Model.Id })" class="btn btn-custom" style="font-size:var(--fs-sm);padding:var(--space-xs) var(--space-sm);">+ Add Deal</a>
             </div>
             @if (Model.Deals != null && Model.Deals.Any())
             {
@@ -158,9 +209,12 @@
                     @foreach (var deal in Model.Deals)
                     {
                         <li style="border-bottom:1px solid var(--border-color);padding:var(--space-md) 0;">
-                            <span style="margin-right:var(--space-sm);"><i class="fas fa-briefcase"></i></span>
-                            <b>@deal.Id</b> - <span style="color:var(--text-secondary);">@deal.CreatedAt?.ToString("MM/dd/yyyy hh:mm tt")</span>
-                            <div style="color:var(--text-secondary);">@deal.Stage.Name</div>
+                            <a href="@Url.Action("Details", "Deal", new { id = deal.Id })" style="font-weight:var(--fw-bold); text-decoration: none; color: var(--color-accent1);">
+                                <span style="margin-right:var(--space-sm);"><i class="fas fa-dollar-sign"></i></span>
+                                @deal.Name
+                            </a>
+                            <div style="color:var(--text-secondary); font-size: 0.9rem; padding-left: 28px;">@deal.Value?.ToString("C0")</div>
+                            <div style="color:var(--text-secondary); font-size: 0.9rem; padding-left: 28px;">Stage: @deal.Stage?.Name</div>
                         </li>
                     }
                 </ul>
@@ -174,6 +228,7 @@
 </div>
 
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+@Html.AntiForgeryToken() @* Add token for AJAX POST *@
 
 <script>
     function showTab(tabName) {
@@ -188,15 +243,21 @@
     }
 
     // Modal logic for selecting a contact to add to the company
+    // This button/modal doesn't seem to be in this view, but leaving the functions
+    // in case you add an "Associate Contact" button.
     function openContactModal() {
-        $.get('/Contact/GetAll', function(response) {
+        $.get('@Url.Action("GetAll", "Contact")', function(response) {
             var list = $('#contactList');
             list.empty();
             (response.data || []).forEach(function(contact) {
+                var contactId = contact.id;
+                var contactName = contact.name || `${contact.firstName || ''} ${contact.lastName || ''}`;
+                var contactEmail = contact.email;
+
                 list.append(
-                    `<li style="padding:8px; border-bottom:1px solid var(--border-color); cursor:pointer;" onclick="selectContact(${contact.id})">
-                        <b>${contact.name ?? 'Unnamed Contact'}</b>
-                        <span style="color:var(--text-secondary); font-size:var(--fs-sm);">${contact.email ?? ''}</span>
+                    `<li style="padding:8px; border-bottom:1px solid var(--border-color); cursor:pointer;" onclick="selectContact(${contactId})">
+                        <b>${contactName.trim() || 'Unnamed Contact'}</b>
+                        <span style="color:var(--text-secondary); font-size:var(--fs-sm);">${contactEmail ?? ''}</span>
                     </li>`
                 );
             });
@@ -207,13 +268,23 @@
         $('#contactModal').hide();
     }
     function selectContact(contactId) {
+        var token = $('input[name="__RequestVerificationToken"]').val();
         $.ajax({
-            url: '/Contact/AssociateContactToCompany',
+            url: '/Contact/AssociateContactToCompany', // This associates a contact *to* this company
             type: 'POST',
-            data: { contactId: contactId, companyId: '@Model.Id' },
+            data: {
+                contactId: contactId,
+                companyId: '@Model.Id'
+            },
+            headers: {
+                "RequestVerificationToken": token
+            },
             success: function() {
                 closeContactModal();
                 location.reload();
+            },
+            error: function(xhr) {
+                 alert("Failed to associate contact: " + (xhr.responseJSON?.message || xhr.responseText));
             }
         });
     }

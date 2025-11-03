@@ -1,4 +1,5 @@
-﻿using scrm_dev_mvc.Data.Repository;
+﻿using Microsoft.Extensions.Logging;
+using scrm_dev_mvc.Data.Repository;
 using scrm_dev_mvc.Data.Repository.IRepository;
 using scrm_dev_mvc.Models;
 using scrm_dev_mvc.Models.ViewModels;
@@ -11,7 +12,7 @@ using static Microsoft.EntityFrameworkCore.DbLoggerCategory.Database;
 
 namespace scrm_dev_mvc.services
 {
-    public class CompanyService(IUnitOfWork unitOfWork) : ICompanyService
+    public class CompanyService(IUnitOfWork unitOfWork,ILogger<CompanyService> logger) : ICompanyService
     {
         public async Task<string> CreateCompanyAsync(CompanyViewModel companyViewModel)
         {
@@ -155,7 +156,32 @@ namespace scrm_dev_mvc.services
             }
             return "Company updation Failed";
         }
+        public async Task<Company?> GetCompanyForPreviewAsync(int id)
+        {
+            try
+            {
+                // 1. Define the include string to get all nested data
+                // We use dot notation for .ThenInclude()
+                string includeProperties =
+                    "Deals," +
+                    "Contacts," +
+                    "Contacts.Activities," +
+                    "Contacts.Activities.ActivityType,"+ "Contacts.Activities.Owner";
 
+                // 2. Eagerly load ALL required navigation properties using your repository method
+                var company = await unitOfWork.Company.FirstOrDefaultAsync(
+                    predicate: c => c.Id == id,
+                    include: includeProperties
+                );
+
+                return company;
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, "Error getting company for preview with ID {CompanyId}", id);
+                return null;
+            }
+        }
         public Company GetCompanyById(int id)
         {
             var Company = unitOfWork.Company.FirstOrDefaultAsync(c => c.Id == id, "Deals,Contacts").Result;

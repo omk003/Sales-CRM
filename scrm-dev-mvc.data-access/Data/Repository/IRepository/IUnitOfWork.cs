@@ -20,6 +20,18 @@ namespace scrm_dev_mvc.Data.Repository.IRepository
         IInvitationRepository Invitations { get; }
 
         IActivityRepository Activities { get; }
+
+        IActivityTypeRepository ActivityTypes { get; }
+
+        IEmailMessageRepository EmailMessages { get; }
+
+        IEmailThreadRepository EmailThreads { get; }
+
+        ICallRepository Calls { get; }
+
+        IDealRepository Deals { get; }
+
+        IStageRepository Stages { get; }
         Task SaveChangesAsync();
     }
 }

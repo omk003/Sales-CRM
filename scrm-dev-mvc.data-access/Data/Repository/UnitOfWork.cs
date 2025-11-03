@@ -22,6 +22,18 @@ namespace scrm_dev_mvc.Data.Repository
         public IInvitationRepository Invitations { get; private set; }
 
         public IActivityRepository Activities { get; private set; }
+
+        public IActivityTypeRepository ActivityTypes { get; private set; }
+
+        public IEmailThreadRepository EmailThreads { get; private set; }
+
+        public IEmailMessageRepository EmailMessages { get; private set; }
+
+        public ICallRepository Calls { get; private set; }
+
+        public IDealRepository Deals { get; private set; }
+
+        public IStageRepository Stages { get; private set; }
         public UnitOfWork(ApplicationDbContext context)
         {
             _context = context;
@@ -34,6 +46,12 @@ namespace scrm_dev_mvc.Data.Repository
             Company = new CompanyRepository(_context);
             Invitations = new InvitationRepository(_context);
             Activities = new ActivityRepository(_context);
+            ActivityTypes = new ActivityTypeRepository(_context);
+            EmailThreads = new EmailThreadRepository(_context);
+            EmailMessages = new EmailMessageRepository(_context);
+            Calls = new CallRepository(_context);
+            Deals = new DealRepository(_context);
+            Stages = new StageRepository(_context);
         }
         public async Task SaveChangesAsync()
         {

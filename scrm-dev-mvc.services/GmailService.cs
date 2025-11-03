@@ -116,7 +116,8 @@ namespace scrm_dev_mvc.Services
                     FirstName = firstName,
                     LastName = lastName,
                     RoleId = 4, // default role
-                    GmailCred = new GmailCred()
+                    GmailCred = new GmailCred(),
+                    
                 };
                 await _unitOfWork.Users.AddAsync(user);
                 await _unitOfWork.SaveChangesAsync();
@@ -134,7 +135,7 @@ namespace scrm_dev_mvc.Services
             // Update first/last name if empty
             if (!string.IsNullOrEmpty(firstName)) user.FirstName = firstName;
             if (!string.IsNullOrEmpty(lastName)) user.LastName = lastName;
-
+            user.IsSyncedWithGoogle = true;
             _unitOfWork.Users.Update(user);
             await _unitOfWork.SaveChangesAsync();
 

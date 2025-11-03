@@ -82,6 +82,24 @@
         </div>
     </div>
 </div>
+
+<!-- Deal Select Modal -->
+<div id="dealModal" class="modal" tabindex="-1" style="display:none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.3); z-index: 9999; align-items: center; justify-content: center;">
+    <div class="modal-dialog" style="max-width: 400px; margin: 4rem auto;">
+        <div class="modal-content" style="background:var(--bg-primary);border-radius:var(--border-radius-lg);padding:var(--space-lg);">
+            <div class="modal-header" style="display: flex; justify-content: space-between; align-items: center;">
+                <h5 class="modal-title">Select a Deal</h5>
+                <button type="button" class="btn-close" onclick="closeDealModal()"></button>
+            </div>
+            <div class="modal-body" style="max-height: 350px; overflow-y: auto;">
+                <ul id="dealList" style="list-style:none;padding:0;margin:0;">
+                    <!-- Deals will be loaded here by JavaScript -->
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
 <div class="container-fluid" style="max-width: var(--container-width); margin: var(--space-xl) auto;">
     <div class="row" style="display: flex; gap: var(--space-lg);">
 
@@ -171,13 +189,57 @@
                     </div>
                     @if (Model.Activities != null && Model.Activities.Any())
                     {
-                        <ul style="list-style:none;padding:0;margin:0;">
+                        @* <ul style="list-style:none;padding:0;margin:0;">
                             @foreach (var act in Model.Activities.OrderByDescending(a => a.ActivityDate))
                             {
                                 <li style="border-bottom:1px solid var(--border-color);padding:var(--space-md) 0;">
-                                    <span style="margin-right:var(--space-sm);"><i class="fas fa-@act.ActivityType.Name.ToLower()"></i></span>
-                                    <b>@act.Id</b> - <span style="color:var(--text-secondary);">@act.ActivityDate.Value.ToString("MM/dd/yyyy hh:mm tt")</span>
-                                    <div style="color:var(--text-secondary);">@act.Notes</div>
+                                    <span style="margin-right:var(--space-sm);"><i class="fas fa-@act?.ActivityType?.Name.ToLower()"></i></span>
+                                    <span style="color:var(--text-secondary);">Sent on: @act?.ActivityDate.Value.ToString("MM/dd/yyyy hh:mm tt")</span>
+                                    <div style="color:var(--text-secondary);">Notes:  @act.Notes</div>
+                                </li>
+                            }
+                        </ul> *@
+                        <ul style="list-style:none;padding:0;margin:0; max-height: 300px; overflow-y: auto;">
+                            @foreach (var act in Model.Activities.OrderByDescending(a => a.ActivityDate))
+                            {
+                                var icon = act.ActivityType?.Name.ToLower() ?? "tasks";
+                                var activityName = act.ActivityType?.Name ?? "Activity";
+
+                                <li style="border-bottom:1px solid var(--border-color); padding:var(--space-md) 0; display:flex; gap: var(--space-md); align-items: flex-start;">
+
+                                    <!-- Icon -->
+                                    <div style="font-size: 1.25rem; color: var(--color-primary); margin-top: 3px;">
+                                        <i class="fas fa-@icon"></i>
+                                    </div>
+
+                                    <!-- Activity Details -->
+                                    <div style="flex-grow: 1;">
+
+                                        <!-- Header: Activity Type & Date -->
+                                        <div style="display:flex; justify-content: space-between; align-items: center; margin-bottom: 0.25rem;">
+                                            <h6 style="font-weight:var(--fw-bold); color: var(--color-accent1); margin: 0;">
+                                                @activityName
+                                            </h6>
+                                            <span style="color:var(--text-secondary); font-size: var(--fs-sm);">
+                                                @act.ActivityDate?.ToString("dd MMM yyyy")
+                                            </span>
+                                        </div>
+
+                                        <!-- Notes -->
+                                        <div style="color:var(--text-secondary); font-size: 0.95rem;">
+                                            @act.Notes
+                                        </div>
+
+                                        <!-- Status (if it's a task with a due date) -->
+                                        @if (act.ActivityType?.Name == "Task" && act.DueDate.HasValue)
+                                        {
+                                            <div style="font-size: 0.85rem; margin-top: 0.5rem;">
+                                                <span style="font-weight: 500;">Due: @act.DueDate.Value.ToString("dd MMM yyyy")</span>
+                                                - <span style="color: var(--color-accent);">Status: @act.Status</span>
+                                            </div>
+                                        }
+
+                                    </div>
                                 </li>
                             }
                         </ul>
@@ -215,18 +277,37 @@
             <section style="background:var(--bg-secondary);border-radius:var(--border-radius-lg);box-shadow:var(--shadow-sm);padding:var(--space-lg);">
                 <div style="display:flex;justify-content:space-between;align-items:center;">
                     <h3 style="font-size:var(--fs-lg);color:var(--color-accent1);margin-bottom:var(--space-md);">Deals</h3>
-                    <a href="@Url.Action("AddDeal", "Contact", new { id = Model.Id })" class="btn btn-custom" style="font-size:var(--fs-sm);padding:var(--space-xs) var(--space-sm);">+Add</a>
+                    <button class="btn btn-custom" type="button"
+                            style="font-size:var(--fs-sm);padding:var(--space-xs) var(--space-sm);"
+                            onclick="openDealModal()">
+                        + Add
+                    </button>
                 </div>
-                @if (Model.Deals != null)
+                @if (Model.Deals != null && Model.Deals.Any())
                 {
-                    <div style="background:var(--bg-primary);border-radius:var(--border-radius-sm);padding:var(--space-md);box-shadow:var(--shadow-sm);margin-bottom:var(--space-sm);">
-                        @* <div style="font-weight:var(--fw-bold);margin-bottom:var(--space-xs);">@Model.Deal.Company.Name</div> *@
-                        @* <span style="color:var(--text-secondary);font-size:var(--fs-sm);">@Model.Deal.CreatedAt</span> *@
-                    </div>
+                    <!-- Loop over each deal in the collection -->
+                    @foreach (var deal in Model.Deals)
+                    {
+                        <div style="background:var(--bg-primary);border-radius:var(--border-radius-sm);padding:var(--space-md);box-shadow:var(--shadow-sm);margin-bottom:var(--space-sm);">
+                            <div style="font-weight:var(--fw-bold);margin-bottom:var(--space-xs);">
+                                <!-- Link to the deal's detail page -->
+                                <a href="@Url.Action("Details", "Deal", new { id = deal.Id })" style="text-decoration:none;">
+                                    @deal.Name
+                                </a>
+                            </div>
+                            <!-- Show the deal's value and created date -->
+                            <span style="color:var(--text-secondary);font-size:var(--fs-sm);">
+                                @deal.Value?.ToString("C0")
+                            </span>
+                            <span style="color:var(--text-secondary);font-size:var(--fs-sm); display:block;">
+                                Created: @deal.CreatedAt?.ToString("MM/dd/yyyy")
+                            </span>
+                        </div>
+                    }
                 }
                 else
                 {
-                    <p style="color:var(--text-tertiary);">Track the revenue opportunities associated with this record.</p>
+                    <p style="color:var(--text-tertiary);">No deals associated.</p>
                 }
             </section>
         </aside>
@@ -287,6 +368,8 @@
             });
         }
 
+         
+
 
             function openEmailModal() {
         // Reset form fields
@@ -328,16 +411,77 @@
     }
     function makeCall() {
         var phoneNumber = '@Model.PhoneNumber';
+        var contactId = '@Model.Id';
         $.ajax({
             url: '/Contact/CallContact',
             type: 'POST',
-            data: { phoneNumber: phoneNumber },
+            data: { phoneNumber: phoneNumber, contactId: contactId },
             success: function(response) {
                 closeCallModal();
                 alert("Call initiated! (SID: " + response + ")");
             },
             error: function() {
                 alert("Failed to initiate call.");
+            }
+        });
+    }
+
+        // --- Add these functions inside your <script> tag ---
+
+    function openDealModal() {
+        // Fetch all deals from the server
+        $.get('@Url.Action("GetAll", "Deal")', function (response) { // Assuming you have a /Deal/GetAll endpoint
+            var list = $('#dealList');
+            list.empty();
+
+            if (response.data && response.data.length > 0) {
+                response.data.forEach(function (deal) {
+                    // Generate a formatted value, or "No Value"
+                    var dealValue = deal.value ?
+                        new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', minimumFractionDigits: 0 }).format(deal.value) :
+                        'No Value';
+
+                    list.append(
+                        `<li style="padding:8px; border-bottom:1px solid var(--border-color); cursor:pointer;" onclick="selectDeal(${deal.id})">
+                            <b>${deal.name ?? 'Unnamed Deal'}</b>
+                            <span style="color:var(--text-secondary); font-size:var(--fs-sm); display:block;">${dealValue}</span>
+                        </li>`
+                    );
+                });
+            } else {
+                list.append('<li>No deals found.</li>');
+            }
+            $('#dealModal').css('display', 'flex');
+        });
+    }
+
+    function closeDealModal() {
+        $('#dealModal').hide();
+    }
+
+    function selectDeal(dealId) {
+        // Get the current Contact ID from the model
+        var contactId = @Model.Id;
+
+        // Get the AntiForgeryToken
+        var token = $('input[name="__RequestVerificationToken"]').val();
+
+        $.ajax({
+            url: '@Url.Action("AssociateContactToDeal", "Contact")', // Action we created
+            type: 'POST',
+            data: {
+                contactId: contactId,
+                dealId: dealId
+            },
+            headers: {
+                "RequestVerificationToken": token // Send the token
+            },
+            success: function () {
+                closeDealModal();
+                location.reload(); // Reload the page to show the new association
+            },
+            error: function(xhr) {
+                alert("Failed to associate deal: " + xhr.responseText);
             }
         });
     }

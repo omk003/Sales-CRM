@@ -2,7 +2,7 @@
 {
     public interface ICallService
     {
-        Task<string> MakeCallAsync(string toPhoneNumber);
+        Task<string> MakeCallAsync(string toPhoneNumber, Guid userId, int contactId);
     }
 
 }

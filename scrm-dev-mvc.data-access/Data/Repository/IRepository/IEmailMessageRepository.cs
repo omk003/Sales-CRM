@@ -1,4 +1,5 @@
 ﻿using scrm_dev_mvc.Data.Repository.IRepository;
+using scrm_dev_mvc.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -7,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace scrm_dev_mvc.data_access.Data.Repository.IRepository
 {
-    public interface IActivityRepository: IRepository<scrm_dev_mvc.Models.Activity>
+    public interface IEmailMessageRepository : IRepository<EmailMessage>
     {
     }
 }

@@ -10,7 +10,7 @@ namespace scrm_dev_mvc.services
         Task<List<CompanyViewModel>> GetAllCompany(Guid userId);
         Task<bool> DeleteCompanyByIdsAsync(List<int> ids);
         Task<string> UpdateCompany(CompanyViewModel company);
-
+        Task<Company?> GetCompanyForPreviewAsync(int id);
         Company GetCompanyById(int id);
     }
 }

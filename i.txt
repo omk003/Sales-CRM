@@ -1,0 +1,19 @@
+Do you want to record your daily journals?
+Do you often forget what you did today or yesterday, and wish to analyze your habits to improve yourself?
+
+Journo is the productivity tool made just for you!
+It’s a Daily Journal platform where you can record your thoughts and reflections through video.
+
+Its AI automatically extracts key insights from your videos and generates weekly analysis to help you track your growth.
+
+Try it now at journo.qzz.io
+
+On the website, you can:
+
+-View all your past journals
+
+-Set a daily reminder time — receive an email notification to journal every day
+
+-Record your journal entries directly from the site
+
+Currently its under-development, so the self-hosted audio-to-text might be not accurate

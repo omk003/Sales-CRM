@@ -9,15 +9,16 @@ using System.Threading.Tasks;
 
 namespace scrm_dev_mvc.data_access.Data.Repository
 {
-    public class ActivityRepository: Repository<scrm_dev_mvc.Models.Activity>, IActivityRepository 
+    public class DealRepository: Repository<scrm_dev_mvc.Models.Deal>, IDealRepository
     {
         private readonly ApplicationDbContext _context;
-
-        public ActivityRepository(ApplicationDbContext context): base(context)
+        public DealRepository(ApplicationDbContext context): base(context)
         {
             _context = context;
         }
-
-
+        public void Update(scrm_dev_mvc.Models.Deal deal)
+        {
+            _context.Deals.Update(deal);
+        }
     }
 }

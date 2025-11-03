@@ -1,6 +1,7 @@
 ﻿using scrm_dev_mvc.Data.Repository;
 using scrm_dev_mvc.data_access.Data.Repository.IRepository;
 using scrm_dev_mvc.DataAccess.Data;
+using scrm_dev_mvc.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -9,15 +10,12 @@ using System.Threading.Tasks;
 
 namespace scrm_dev_mvc.data_access.Data.Repository
 {
-    public class ActivityRepository: Repository<scrm_dev_mvc.Models.Activity>, IActivityRepository 
+    public class EmailMessageRepository: Repository<EmailMessage>, IEmailMessageRepository
     {
         private readonly ApplicationDbContext _context;
-
-        public ActivityRepository(ApplicationDbContext context): base(context)
+        public EmailMessageRepository(ApplicationDbContext context) : base(context)
         {
             _context = context;
         }
-
-
     }
 }
