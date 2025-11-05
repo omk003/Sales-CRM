@@ -76,7 +76,7 @@ namespace scrm_dev_mvc.services
             if (user.RoleId == 2 || user.RoleId == 3)
             {
                 var organizationId = user.OrganizationId;
-                var CompanyList = await unitOfWork.Company.GetAllAsync(c => c.OrganizationId == organizationId);
+                var CompanyList = await unitOfWork.Company.GetAllAsync(c => c.OrganizationId == organizationId && c.IsDeleted == false);
 
                 List<CompanyViewModel> CompanyResponseViewModels = new List<CompanyViewModel>();
                 foreach (var company in CompanyList)

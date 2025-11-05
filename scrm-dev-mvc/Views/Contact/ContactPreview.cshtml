@@ -82,7 +82,9 @@
         </div>
     </div>
 </div>
-
+<div id="taskModalContainer">
+</div>
+<div id="taskUpdateModalContainer"></div>
 <!-- Deal Select Modal -->
 <div id="dealModal" class="modal" tabindex="-1" style="display:none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.3); z-index: 9999; align-items: center; justify-content: center;">
     <div class="modal-dialog" style="max-width: 400px; margin: 4rem auto;">
@@ -121,7 +123,12 @@
                     <a href="javascript:void(0);" title="Call" style="color: var(--color-accent);" onclick="openCallModal()">
                         <i class="fas fa-phone"></i>
                     </a>
-                        <a href="@Url.Action("CreateTask", "Task", new { contactId = Model.Id })" title="Task" style="color: var(--color-primary);"><i class="fas fa-tasks"></i></a>
+                    <a href="javascript:void(0);"
+                       title="Task"
+                       style="color: var(--color-primary);"
+                       onclick="openCreateTaskModal(@Model.Id, null, null)">
+                        <i class="fas fa-tasks"></i>
+                    </a>
                     </div>
                 </section>
             <section style="background: var(--bg-secondary); border-radius: var(--border-radius-lg); box-shadow: var(--shadow-sm); padding: var(--space-lg);">
@@ -159,26 +166,7 @@
                         </div>
                     </div>
                 </div>
-                @* <div style="margin-bottom:var(--space-lg);">
-                    @if (Model.Company == null)
-                    {
-                        <a href="@Url.Action("AddCompany", "Contact", new { id = Model.Id })" class="btn btn-custom" style="margin-right:var(--space-md);">+ Add Company</a>
-                    }
-                    else
-                    {
-                        <span style="color: var(--color-secondary); font-weight: var(--fw-bold);">Company: @Model.Company.Name</span>
-                    }
-                </div>
-                <div>
-                    @if (Model.Deal == null)
-                    {
-                        <a href="@Url.Action("AddDeal", "Contact", new { id = Model.Id })" class="btn btn-custom">+ Add Deal</a>
-                    }
-                    else
-                    {
-                        <span style="color: var(--color-accent); font-weight: var(--fw-bold);">Deal: @Model.Deal.Id</span>
-                    }
-                </div> *@
+                
             </section>
             <section id="tab-content-activities" class="tab-content" style="display:none;">
                 <div style="background:var(--bg-secondary);border-radius:var(--border-radius-lg);box-shadow:var(--shadow-sm);padding:var(--space-lg);">
@@ -187,35 +175,38 @@
                         <input type="text" style="width:70%;padding:var(--space-sm);border-radius:var(--border-radius-sm);border:1px solid var(--border-color);" placeholder="Search activities" />
                         <button class="btn btn-custom" style="margin-left:var(--space-sm);">Search</button>
                     </div>
+                    
                     @if (Model.Activities != null && Model.Activities.Any())
                     {
-                        @* <ul style="list-style:none;padding:0;margin:0;">
-                            @foreach (var act in Model.Activities.OrderByDescending(a => a.ActivityDate))
-                            {
-                                <li style="border-bottom:1px solid var(--border-color);padding:var(--space-md) 0;">
-                                    <span style="margin-right:var(--space-sm);"><i class="fas fa-@act?.ActivityType?.Name.ToLower()"></i></span>
-                                    <span style="color:var(--text-secondary);">Sent on: @act?.ActivityDate.Value.ToString("MM/dd/yyyy hh:mm tt")</span>
-                                    <div style="color:var(--text-secondary);">Notes:  @act.Notes</div>
-                                </li>
-                            }
-                        </ul> *@
+
                         <ul style="list-style:none;padding:0;margin:0; max-height: 300px; overflow-y: auto;">
                             @foreach (var act in Model.Activities.OrderByDescending(a => a.ActivityDate))
                             {
-                                var icon = act.ActivityType?.Name.ToLower() ?? "tasks";
                                 var activityName = act.ActivityType?.Name ?? "Activity";
+                                var icon = "tasks";
+                                if (activityName.Equals("Email", StringComparison.OrdinalIgnoreCase)) { icon = "envelope"; }
+                                else if (activityName.Equals("Call", StringComparison.OrdinalIgnoreCase)) { icon = "phone"; }
+                                
+                                // --- START OF LOGIC ---
+                                string onClickHandler = "";
+                                string liStyle = "border-bottom:1px solid var(--border-color); padding:var(--space-md) 0; display:flex; gap: var(--space-md); align-items: flex-start;";
 
-                                <li style="border-bottom:1px solid var(--border-color); padding:var(--space-md) 0; display:flex; gap: var(--space-md); align-items: flex-start;">
+                                // Check if it's a task and has a SubjectId to link to
+                                if (activityName == "Task" && act.SubjectId.HasValue)
+                                {
+                                    onClickHandler = $"openUpdateTaskModal({act.SubjectId.Value})";
+                                    liStyle += " cursor:pointer;"; // Make it look clickable
+                                }
+                                // --- END OF LOGIC ---
 
-                                    <!-- Icon -->
+                                <li style="@liStyle" onclick="@onClickHandler">
+
                                     <div style="font-size: 1.25rem; color: var(--color-primary); margin-top: 3px;">
                                         <i class="fas fa-@icon"></i>
                                     </div>
 
-                                    <!-- Activity Details -->
                                     <div style="flex-grow: 1;">
 
-                                        <!-- Header: Activity Type & Date -->
                                         <div style="display:flex; justify-content: space-between; align-items: center; margin-bottom: 0.25rem;">
                                             <h6 style="font-weight:var(--fw-bold); color: var(--color-accent1); margin: 0;">
                                                 @activityName
@@ -225,12 +216,10 @@
                                             </span>
                                         </div>
 
-                                        <!-- Notes -->
                                         <div style="color:var(--text-secondary); font-size: 0.95rem;">
                                             @act.Notes
                                         </div>
 
-                                        <!-- Status (if it's a task with a due date) -->
                                         @if (act.ActivityType?.Name == "Task" && act.DueDate.HasValue)
                                         {
                                             <div style="font-size: 0.85rem; margin-top: 0.5rem;">
@@ -256,24 +245,42 @@
         <!-- Column 3: Company & Deals -->
         <aside style="flex:1; min-width: 280px;">
             <section style="background:var(--bg-secondary);border-radius:var(--border-radius-lg);box-shadow:var(--shadow-sm);padding:var(--space-lg);margin-bottom:var(--space-lg);">
+
                 <div style="display:flex;justify-content:space-between;align-items:center;">
-                    <h3 style="font-size:var(--fs-lg);color:var(--color-accent1);margin-bottom:var(--space-md);">Companies</h3>
-                    @* <a href="@Url.Action("AddCompany", "Contact", new { id = Model.Id })" class="btn btn-custom" style="font-size:var(--fs-sm);padding:var(--space-xs) var(--space-sm);">+Add</a> *@
+                    <h3 style="font-size:var(--fs-lg);color:var(--color-accent1);margin-bottom:var(--space-md);">Company</h3>
+
+                    @if (Model.Company == null || Model.Company.Id <= 0)
+                    {
                         <button class="btn btn-custom" type="button" onclick="openCompanyModal()">+ Add</button>
+                    }
                 </div>
-                @if (Model.Company != null)
+
+                @if (Model.Company != null && Model.Company.Id > 0)
                 {
                     <div style="background:var(--bg-primary);border-radius:var(--border-radius-sm);padding:var(--space-md);box-shadow:var(--shadow-sm);margin-bottom:var(--space-sm);">
-                        <div style="font-weight:var(--fw-bold);margin-bottom:var(--space-xs);">@Model.Company.Name</div>
-                        @* <a href="mailto:@Model.Company.Email" style="color:var(--color-primary);font-size:var(--fs-sm);">@Model.Company.Email</a><br /> *@
+
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:var(--space-xs);">
+                            <div style="font-weight:var(--fw-bold);">
+                                @Model.Company.Name
+                            </div>
+
+                            <button type="button"
+                                    onclick="disassociateCompany()"
+                                    title="Disassociate Company"
+                                    style="background:none; border:none; color: var(--color-accent); cursor:pointer; font-size: 0.8rem; padding: 2px 5px;">
+                                <i class="fas fa-times"></i> Remove
+                            </button>
+                        </div>
+
                         <span style="color:var(--text-secondary);font-size:var(--fs-sm);">Domain: @Model.Company.Domain</span>
                     </div>
                 }
                 else
                 {
-                    <p style="color:var(--text-tertiary);">No company associated.</p> 
+                    <p style="color:var(--text-tertiary);">No company associated.</p>
                 }
             </section>
+
             <section style="background:var(--bg-secondary);border-radius:var(--border-radius-lg);box-shadow:var(--shadow-sm);padding:var(--space-lg);">
                 <div style="display:flex;justify-content:space-between;align-items:center;">
                     <h3 style="font-size:var(--fs-lg);color:var(--color-accent1);margin-bottom:var(--space-md);">Deals</h3>
@@ -285,17 +292,14 @@
                 </div>
                 @if (Model.Deals != null && Model.Deals.Any())
                 {
-                    <!-- Loop over each deal in the collection -->
                     @foreach (var deal in Model.Deals)
                     {
                         <div style="background:var(--bg-primary);border-radius:var(--border-radius-sm);padding:var(--space-md);box-shadow:var(--shadow-sm);margin-bottom:var(--space-sm);">
                             <div style="font-weight:var(--fw-bold);margin-bottom:var(--space-xs);">
-                                <!-- Link to the deal's detail page -->
                                 <a href="@Url.Action("Details", "Deal", new { id = deal.Id })" style="text-decoration:none;">
                                     @deal.Name
                                 </a>
                             </div>
-                            <!-- Show the deal's value and created date -->
                             <span style="color:var(--text-secondary);font-size:var(--fs-sm);">
                                 @deal.Value?.ToString("C0")
                             </span>
@@ -316,13 +320,129 @@
 
 <!-- FontAwesome for icons (if not already included) -->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+@Html.AntiForgeryToken()
+
 
 <script>
+    $('#taskUpdateModalContainer').on('submit', '#updateTaskForm', function (event) {
+    event.preventDefault(); 
+    var form = $(this);
+    if ($.validator && $.validator.unobtrusive && !form.valid()) {
+        return false;
+    }
+
+    $.ajax({
+        url: form.attr('action'),
+        type: form.attr('method'),
+        data: form.serialize(),
+        success: function (response) {
+            closeUpdateTaskModal();
+            alert(response.message || "Task updated successfully!");
+            location.reload(); 
+        },
+        error: function (xhr) {
+            var response = xhr.responseJSON;
+            if (response && response.errors) {
+                var errorMsg = "Update failed:\n" + response.errors.join("\n");
+                alert(errorMsg);
+            } else {
+                alert("An error occurred: " + (xhr.responseJSON?.message || xhr.responseText));
+            }
+        }
+    });
+});
+
+// --- NEW FUNCTION TO OPEN THE UPDATE MODAL ---
+function openUpdateTaskModal(taskId) {
+    var url = '@Url.Action("Update", "Task")' + '?taskId=' + taskId;
+    
+    $.get(url, function (data) {
+        $('#taskUpdateModalContainer').html(data);
+        
+        // This modal ID is 'updateTaskModal'
+        $('#updateTaskModal').css('display', 'flex'); 
+        
+        var form = $("#updateTaskForm");
+        if ($.validator && $.validator.unobtrusive) {
+            $.validator.unobtrusive.parse(form);
+        }
+    })
+    .fail(function(xhr) { 
+         alert("Error loading task for update: " + (xhr.responseJSON?.message || "Server error."));
+    });
+}
+
+// --- NEW FUNCTION TO CLOSE THE UPDATE MODAL ---
+function closeUpdateTaskModal() {
+    $('#taskUpdateModalContainer').html(''); 
+}
+
+
+       $('#taskModalContainer').on('submit', '#createTaskForm', function (event) {
+        // This will now correctly stop the default form submission
+        event.preventDefault(); 
+
+        var form = $(this);
+
+        // Check if validation scripts are loaded and if form is valid
+        // This check prevents errors if validation scripts are missing
+        if ($.validator && $.validator.unobtrusive && !form.valid()) {
+            return false;
+        }
+
+        $.ajax({
+            url: form.attr('action'),
+            type: form.attr('method'),
+            data: form.serialize(),
+            success: function (response) {
+                closeCreateTaskModal();
+                alert(response.message || "Task created successfully!");
+                location.reload(); // Reloads the original page
+            },
+            error: function (xhr) {
+                var response = xhr.responseJSON;
+                if (response && response.errors) {
+                    var errorMsg = "Validation failed:\n" + response.errors.join("\n");
+                    alert(errorMsg);
+                } else {
+                    alert("An error occurred while creating the task.");
+                }
+            }
+        });
+    });
+
+    function openCreateTaskModal(contactId, companyId, dealId) {
+        var url = '@Url.Action("Create", "Task")' +
+                    '?contactId=' + (contactId || '') +
+                    '&companyId=' + (companyId || '') +
+                    '&dealId=' + (dealId || '');
+
+        // 1. Load the partial view from the controller
+        $.get(url, function (data) {
+            // 2. Inject the HTML into our placeholder
+            $('#taskModalContainer').html(data);
+
+            // 3. Show the modal
+            $('#createTaskModal').css('display', 'flex');
+
+            // 4. We still need to parse validation for the new dynamic content
+            var form = $("#createTaskForm");
+            if ($.validator && $.validator.unobtrusive) {
+                $.validator.unobtrusive.parse(form);
+            }
+
+            // 5. REMOVED: We no longer call handleTaskFormSubmit() here.
+        });
+    }
+
+    function closeCreateTaskModal() {
+        $('#taskModalContainer').html(''); // Clear the HTML
+    }
 
     function showTab(tabName) {
         document.getElementById('tab-content-overview').style.display = 'none';
         document.getElementById('tab-content-activities').style.display = 'none';
-        
+
         document.getElementById('tab-' + tabName).classList.add('active');
         ['overview', 'activities'].forEach(function(tab) {
             if (tab !== tabName) document.getElementById('tab-' + tab).classList.remove('active');
@@ -355,23 +475,32 @@
             $('#companyModal').hide();
         }
 
+        // --- THIS IS THE UPDATED FUNCTION ---
         function selectCompany(companyId) {
+            // Get the AntiForgeryToken
+            var token = $('input[name="__RequestVerificationToken"]').val();
+
             // POST selected companyId and contactId to server
             $.ajax({
                 url: '/Contact/AssociateContactToCompany',
                 type: 'POST',
                 data: { contactId: '@Model.Id', companyId: companyId },
-                success: function () {
+                headers: {
+                    "RequestVerificationToken": token // <-- ADDED TOKEN
+                },
+                success: function (response) { // <-- Added 'response'
                     closeCompanyModal();
-                    location.reload(); // Or update UI as needed
+                    alert(response.message || "Company associated successfully!"); // Show success message
+                    location.reload();
+                },
+                error: function(xhr) { // <-- ADDED ERROR HANDLER
+                    // Show the error message from your controller
+                    alert("Failed to associate company: " + (xhr.responseJSON?.message || xhr.responseText));
                 }
             });
         }
 
-         
-
-
-            function openEmailModal() {
+        function openEmailModal() {
         // Reset form fields
         $('#emailSubject').val('');
         $('#emailBody').val('');
@@ -402,8 +531,7 @@
         });
     });
 
-
-            function openCallModal() {
+        function openCallModal() {
         $('#callModal').css('display', 'flex');
     }
     function closeCallModal() {
@@ -425,8 +553,6 @@
             }
         });
     }
-
-        // --- Add these functions inside your <script> tag ---
 
     function openDealModal() {
         // Fetch all deals from the server
@@ -482,6 +608,32 @@
             },
             error: function(xhr) {
                 alert("Failed to associate deal: " + xhr.responseText);
+            }
+        });
+    }
+    function disassociateCompany() {
+        // Get the AntiForgeryToken
+        var token = $('input[name="__RequestVerificationToken"]').val();
+
+        if (!confirm("Are you sure you want to remove this company from the contact?")) {
+            return;
+        }
+
+        $.ajax({
+            url: '@Url.Action("DisassociateCompany", "Contact")', // New controller action
+            type: 'POST',
+            data: {
+                contactId: '@Model.Id'
+            },
+            headers: {
+                "RequestVerificationToken": token
+            },
+            success: function (response) {
+                alert(response.message || "Company removed successfully!");
+                location.reload();
+            },
+            error: function(xhr) {
+                alert("Failed to remove company: " + (xhr.responseJSON?.message || xhr.responseText));
             }
         });
     }

@@ -12,7 +12,7 @@ namespace scrm_dev_mvc.Models.ViewModels
         public int OrganizationId { get; set; }
         public string Name { get; set; }
         public string? Address { get; set; }
-        [RegularExpression(@"^\+?[0-9]*$", ErrorMessage = "Phone number must contain only numbers and can start with a + sign.")]
+        [RegularExpression(@"^(\+91)?[0-9]{10}$", ErrorMessage = "Enter a valid 10-digit phone number.")]
         public string? PhoneNumber { get; set; }
     }
 }

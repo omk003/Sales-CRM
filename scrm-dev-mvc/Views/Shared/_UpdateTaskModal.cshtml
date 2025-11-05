@@ -1,0 +1,65 @@
+﻿@model scrm_dev_mvc.Models.ViewModels.TaskUpdateViewModel
+
+<div id="updateTaskModal" class="modal" tabindex="-1" style="display:flex; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.3); z-index: 9999; align-items: center; justify-content: center;">
+    <div class="modal-dialog" style="max-width: 500px; margin: 4rem auto;">
+        <div class="modal-content" style="background:var(--bg-primary);border-radius:var(--border-radius-lg);padding:var(--space-lg);">
+            <div class="modal-header" style="display: flex; justify-content: space-between; align-items: center;">
+                <h5 class="modal-title">Update Task</h5>
+                <button type="button" class="btn-close" onclick="closeUpdateTaskModal()"></button>
+            </div>
+            <div class="modal-body">
+
+                <form id="updateTaskForm" asp-action="Update" asp-controller="Task" method="post">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" asp-for="TaskId" />
+                    <input type="hidden" asp-for="ContactId" />
+                    <input type="hidden" asp-for="DealId" />
+
+                    <div style="margin-bottom:var(--space-md);">
+                        <label asp-for="Title" style="font-weight:var(--fw-bold);">Title</label>
+                        <input type="text" asp-for="Title" style="width:100%;padding:var(--space-sm);border-radius:var(--border-radius-sm);border:1px solid var(--border-color);" />
+                    </div>
+
+                    <div style="display:flex; gap: var(--space-md); margin-bottom:var(--space-md);">
+                        <div style="flex:1;">
+                            <label asp-for="DueDate" style="font-weight:var(--fw-bold);">Due Date</label>
+                            <input type="date" asp-for="DueDate" asp-format="{0:yyyy-MM-dd}" style="width:100%;padding:var(--space-sm);border-radius:var(--border-radius-sm);border:1px solid var(--border-color);" />
+                        </div>
+                        <div style="flex:1;">
+                            <label asp-for="StatusId" style="font-weight:var(--fw-bold);">Task Status</label>
+                            <select asp-for="StatusId" asp-items="@Model.TaskStatuses" style="width:100%;padding:var(--space-sm);border-radius:var(--border-radius-sm);border:1px solid var(--border-color);"></select>
+                        </div>
+                    </div>
+
+                    @if (Model.ContactId.HasValue)
+                    {
+                        <div style="margin-bottom:var(--space-md); padding: var(--space-md); background: var(--bg-secondary); border-radius: var(--border-radius-sm);">
+                            <label asp-for="CurrentContactLeadStatusId" style="font-weight:var(--fw-bold);">Contact: @Model.ContactName</label>
+                            <select asp-for="CurrentContactLeadStatusId" asp-items="@Model.LeadStatuses" style="width:100%;padding:var(--space-sm);border-radius:var(--border-radius-sm);border:1px solid var(--border-color);">
+                                <option value="">-- Change Lead Status --</option>
+                            </select>
+                        </div>
+                    }
+
+                    @if (Model.DealId.HasValue)
+                    {
+                        <div style="margin-bottom:var(--space-md); padding: var(--space-md); background: var(--bg-secondary); border-radius: var(--border-radius-sm);">
+                            <label asp-for="CurrentDealStageId" style="font-weight:var(--fw-bold);">Deal: @Model.DealName</label>
+                            <select asp-for="CurrentDealStageId" asp-items="@Model.DealStages" style="width:100%;padding:var(--space-sm);border-radius:var(--border-radius-sm);border:1px solid var(--border-color);">
+                                <option value="">-- Change Deal Stage --</option>
+                            </select>
+                        </div>
+                    }
+
+                    <div style="margin-bottom:var(--space-md);">
+                        <label asp-for="Description" style="font-weight:var(--fw-bold);">Description</label>
+                        <textarea asp-for="Description" rows="4" style="width:100%;padding:var(--space-sm);border-radius:var(--border-radius-sm);border:1px solid var(--border-color);"></textarea>
+                    </div>
+
+                    <button type="submit" class="btn btn-custom" style="width:100%;">Update Task</button>
+                </form>
+
+            </div>
+        </div>
+    </div>
+</div>

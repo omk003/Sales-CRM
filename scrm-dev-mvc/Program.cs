@@ -39,7 +39,7 @@ builder.Services.AddScoped<IEmailService, EmailService>();
 // In Program.cs, with your other services:
 
 builder.Services.AddScoped<IDealService, DealService>();
-
+builder.Services.AddScoped<ITaskService, TaskService>();
 builder.Services.AddHostedService<GmailPollingHostedService>();
 
 builder.Services.Configure<ForwardedHeadersOptions>(options =>

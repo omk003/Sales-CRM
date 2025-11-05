@@ -29,8 +29,7 @@
     </a>
 </div>
 
-<!-- Add Contact Modal -->
-<div id="contactModal" class.modal" tabindex="-1"
+<div id="contactModal" class="modal" tabindex="-1"
      style="display:none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.3); z-index: 9999; align-items: center; justify-content: center;">
     <div class="modal-dialog" style="max-width: 400px; margin: 4rem auto;">
         <div class="modal-content" style="background:var(--bg-primary);border-radius:var(--border-radius-lg);padding:var(--space-lg);">
@@ -44,10 +43,26 @@
         </div>
     </div>
 </div>
+
+<div id="dealModal" class="modal" tabindex="-1" style="display:none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.3); z-index: 9999; align-items: center; justify-content: center;">
+    <div class="modal-dialog" style="max-width: 400px; margin: 4rem auto;">
+        <div class="modal-content" style="background:var(--bg-primary);border-radius:var(--border-radius-lg);padding:var(--space-lg);">
+            <div class="modal-header" style="display: flex; justify-content: space-between; align-items: center;">
+                <h5 class="modal-title">Select a Deal</h5>
+                <button type="button" class="btn-close" onclick="closeDealModal()"></button>
+            </div>
+            <div class="modal-body" style="max-height: 350px; overflow-y: auto;">
+                <ul id="dealList" style="list-style:none;padding:0;margin:0;">
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+
 <div class="container-fluid" style="max-width: var(--container-width); margin: var(--space-xl) auto;">
     <div class="row" style="display: flex; gap: var(--space-lg);">
 
-        <!-- Column 1: Company Profile -->
         <aside style="flex: 1; min-width: 280px;">
             <section style="background: var(--bg-secondary); border-radius: var(--border-radius-lg); padding: var(--space-lg); box-shadow: var(--shadow-sm); margin-bottom: var(--space-lg); text-align: left;">
                 <div style="display: flex; align-items: center; gap: var(--space-md); margin-bottom: var(--space-sm);">
@@ -57,7 +72,6 @@
                     <h2 style="font-size: var(--fs-h3); margin: 0;">@Model.Name</h2>
                 </div>
                 <p style="color: var(--color-accent1); margin-bottom: var(--space-sm);">@Model.Domain</p>
-                <p style="color: var(--text-secondary);">@Model.Domain</p>
                 <p style="color: var(--text-secondary);">Location: @Model.City, @Model.Country</p>
             </section>
             <section style="background: var(--bg-secondary); border-radius: var(--border-radius-lg); box-shadow: var(--shadow-sm); padding: var(--space-lg);">
@@ -69,14 +83,12 @@
             </section>
         </aside>
 
-        <!-- Column 2: Tabs and Overview/Activities -->
         <main style="flex: 2; min-width: 520px;">
             <nav class="nav-tabs" style="display:flex; gap:var(--space-md); border-bottom:1px solid var(--border-color); margin-bottom: var(--space-lg);">
                 <button type="button" class="nav-box active" id="tab-overview" style="background:none;border:none;padding:var(--space-sm) var(--space-md);font-size:var(--fs-lg);color:var(--color-accent1);" onclick="showTab('overview')">Overview</button>
                 <button type="button" class="nav-box" id="tab-activities" style="background:none;border:none;padding:var(--space-sm) var(--space-md);font-size:var(--fs-lg);color:var(--color-accent1);" onclick="showTab('activities')">Activities</button>
             </nav>
 
-            <!-- Overview Tab -->
             <section id="tab-content-overview" class="tab-content" style="display:block;">
                 <div style="background:var(--bg-secondary);border-radius:var(--border-radius-lg);box-shadow:var(--shadow-sm);padding:var(--space-lg);margin-bottom:var(--space-lg);">
                     <h3 style="font-size:var(--fs-lg);color:var(--color-accent1);margin-bottom:var(--space-md);">Company Highlights</h3>
@@ -94,7 +106,6 @@
                 </div>
             </section>
 
-            <!-- --- UPDATED ACTIVITIES TAB --- -->
             <section id="tab-content-activities" class="tab-content" style="display:none;">
                 <div style="background:var(--bg-secondary);border-radius:var(--border-radius-lg);box-shadow:var(--shadow-sm);padding:var(--space-lg);">
                     <h3 style="font-size:var(--fs-lg);color:var(--color-accent1);margin-bottom:var(--space-md);">Recent Activities</h3>
@@ -103,33 +114,19 @@
                         <ul style="list-style:none;padding:0;margin:0; max-height: 300px; overflow-y: auto;">
                             @foreach (var act in Model.Activities.OrderByDescending(a => a.ActivityDate))
                             {
-                                // Set default icon and name in case ActivityType is null
                                 var activityName = act.ActivityType?.Name ?? "Activity";
-                                var icon = "tasks"; // Default icon
-                                if (activityName.Equals("Email", StringComparison.OrdinalIgnoreCase))
-                                {
-                                    icon = "envelope";
-                                }
-                                else if (activityName.Equals("Call", StringComparison.OrdinalIgnoreCase))
-                                {
-                                    icon = "phone";
-                                }
+                                var icon = "tasks";
+                                if (activityName.Equals("Email", StringComparison.OrdinalIgnoreCase)) { icon = "envelope"; }
+                                else if (activityName.Equals("Call", StringComparison.OrdinalIgnoreCase)) { icon = "phone"; }
 
                                 <li style="border-bottom:1px solid var(--border-color); padding:var(--space-md) 0; display:flex; gap: var(--space-md); align-items: flex-start;">
-
-                                    <!-- Icon -->
                                     <div style="font-size: 1.25rem; color: var(--color-primary); margin-top: 3px;">
                                         <i class="fas fa-@icon"></i>
                                     </div>
-
-                                    <!-- Activity Details -->
                                     <div style="flex-grow: 1;">
-
-                                        <!-- Header: Activity Type & Date -->
                                         <div style="display:flex; justify-content: space-between; align-items: center; margin-bottom: 0.25rem;">
                                             <h6 style="font-weight:var(--fw-bold); color: var(--color-accent1); margin: 0;">
                                                 @activityName
-                                                <!-- NEW: Show Owner -->
                                                 <span style="color:var(--text-secondary); font-weight: 500; font-size: 0.9em;">
                                                     by @(act.Owner?.Email ?? "Unknown")
                                                 </span>
@@ -138,13 +135,9 @@
                                                 @act.ActivityDate?.ToString("dd MMM yyyy")
                                             </span>
                                         </div>
-
-                                        <!-- Notes -->
                                         <div style="color:var(--text-secondary); font-size: 0.95rem;">
                                             @act.Notes
                                         </div>
-
-                                        <!-- Status (if it's a task with a due date) -->
                                         @if (act.ActivityType?.Name == "Task" && act.DueDate.HasValue)
                                         {
                                             <div style="font-size: 0.85rem; margin-top: 0.5rem;">
@@ -152,7 +145,6 @@
                                                 - <span style="color: var(--color-accent);">Status: @act.Status</span>
                                             </div>
                                         }
-
                                     </div>
                                 </li>
                             }
@@ -164,17 +156,14 @@
                     }
                 </div>
             </section>
-            <!-- --- END UPDATED SECTION --- -->
-
         </main>
     </div>
-    <!-- Separate rows for Contacts and Deals, similar to ContactPreview -->
+
     <div class="row" style="display: flex; gap: var(--space-lg); margin-top: var(--space-lg);">
-        <!-- Contacts Section -->
         <section style="flex:1; background:var(--bg-secondary);border-radius:var(--border-radius-lg);box-shadow:var(--shadow-sm);padding:var(--space-lg);margin-bottom:var(--space-lg);">
             <div style="display:flex;justify-content:space-between;align-items:center;">
                 <h3 style="font-size:var(--fs-lg);color:var(--color-accent1);margin-bottom:var(--space-md);">Contacts</h3>
-                <a href="@Url.Action("Create", "Contact", new { companyId = Model.Id })" class="btn btn-custom" style="font-size:var(--fs-sm);padding:var(--space-xs) var(--space-sm);">+ Add Contact</a>
+                <button type="button" class="btn btn-custom" style="font-size:var(--fs-sm);padding:var(--space-xs) var(--space-sm);" onclick="openContactModal()">+ Add</button>
             </div>
             @if (Model.Contacts != null && Model.Contacts.Any())
             {
@@ -182,7 +171,7 @@
                     @foreach (var contact in Model.Contacts)
                     {
                         <li style="border-bottom:1px solid var(--border-color);padding:var(--space-md) 0;">
-                            <a href="@Url.Action("Preview", "Contact", new { id = contact.Id })" style="font-weight:var(--fw-bold); text-decoration: none; color: var(--color-accent1);">
+                            <a href="@Url.Action("ContactPreview", "Contact", new { id = contact.Id })" style="font-weight:var(--fw-bold); text-decoration: none; color: var(--color-accent1);">
                                 <span style="margin-right:var(--space-sm);"><i class="fas fa-user"></i></span>
                                 @contact.FirstName @contact.LastName
                             </a>
@@ -197,11 +186,11 @@
                 <p style="color:var(--text-tertiary);">No contacts associated.</p>
             }
         </section>
-        <!-- Deals Section -->
+
         <section style="flex:1; background:var(--bg-secondary);border-radius:var(--border-radius-lg);box-shadow:var(--shadow-sm);padding:var(--space-lg);margin-bottom:var(--space-lg);">
             <div style="display:flex;justify-content:space-between;align-items:center;">
                 <h3 style="font-size:var(--fs-lg);color:var(--color-accent1);margin-bottom:var(--space-md);">Deals</h3>
-                <a href="@Url.Action("Create", "Deal", new { companyId = Model.Id })" class="btn btn-custom" style="font-size:var(--fs-sm);padding:var(--space-xs) var(--space-sm);">+ Add Deal</a>
+                <button type="button" class="btn btn-custom" style="font-size:var(--fs-sm);padding:var(--space-xs) var(--space-sm);" onclick="openDealModal()">+ Add</button>
             </div>
             @if (Model.Deals != null && Model.Deals.Any())
             {
@@ -242,9 +231,7 @@
         document.getElementById('tab-content-' + tabName).style.display = 'block';
     }
 
-    // Modal logic for selecting a contact to add to the company
-    // This button/modal doesn't seem to be in this view, but leaving the functions
-    // in case you add an "Associate Contact" button.
+    // --- Contact Modal Functions ---
     function openContactModal() {
         $.get('@Url.Action("GetAll", "Contact")', function(response) {
             var list = $('#contactList');
@@ -274,7 +261,7 @@
             type: 'POST',
             data: {
                 contactId: contactId,
-                companyId: '@Model.Id'
+                companyId: '@Model.Id' // This is the Company ID
             },
             headers: {
                 "RequestVerificationToken": token
@@ -285,6 +272,62 @@
             },
             error: function(xhr) {
                  alert("Failed to associate contact: " + (xhr.responseJSON?.message || xhr.responseText));
+            }
+        });
+    }
+
+    // --- Deal Modal Functions ---
+    function openDealModal() {
+        // Fetch all deals from the server
+        $.get('@Url.Action("GetAll", "Deal")', function (response) {
+            var list = $('#dealList');
+            list.empty();
+
+            if (response.data && response.data.length > 0) {
+                response.data.forEach(function (deal) {
+                    var dealValue = deal.value ?
+                        new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', minimumFractionDigits: 0 }).format(deal.value) :
+                        'No Value';
+
+                    list.append(
+                        `<li style="padding:8px; border-bottom:1px solid var(--border-color); cursor:pointer;" onclick="selectDeal(${deal.id})">
+                            <b>${deal.name ?? 'Unnamed Deal'}</b>
+                            <span style="color:var(--text-secondary); font-size:var(--fs-sm); display:block;">${dealValue}</span>
+                        </li>`
+                    );
+                });
+            } else {
+                list.append('<li>No deals found.</li>');
+            }
+            $('#dealModal').css('display', 'flex');
+        });
+    }
+
+    function closeDealModal() {
+        $('#dealModal').hide();
+    }
+
+    function selectDeal(dealId) {
+        var companyId = @Model.Id;
+        var token = $('input[name="__RequestVerificationToken"]').val();
+
+        $.ajax({
+            // You will need to create this endpoint in your CompanyController
+            url: '@Url.Action("AssociateDealToCompany", "Company")',
+            type: 'POST',
+            data: {
+                companyId: companyId,
+                dealId: dealId
+            },
+            headers: {
+                "RequestVerificationToken": token
+            },
+            success: function () {
+                closeDealModal();
+                location.reload();
+            },
+            error: function(xhr) {
+                alert("Failed to associate deal: " + xhr.responseText);
             }
         });
     }

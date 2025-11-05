@@ -34,6 +34,12 @@ namespace scrm_dev_mvc.Data.Repository
         public IDealRepository Deals { get; private set; }
 
         public IStageRepository Stages { get; private set; }
+
+        public ITaskStatusRepository TaskStatuses { get; private set; }
+
+        public ITaskRepository Tasks { get; private set; }
+
+        public IPriorityRepository Priorities { get; private set; }
         public UnitOfWork(ApplicationDbContext context)
         {
             _context = context;
@@ -52,6 +58,9 @@ namespace scrm_dev_mvc.Data.Repository
             Calls = new CallRepository(_context);
             Deals = new DealRepository(_context);
             Stages = new StageRepository(_context);
+            Tasks = new TaskRepository(_context);
+            TaskStatuses = new TaskStatusRepository(_context);
+            Priorities = new PriorityRepository(_context);
         }
         public async Task SaveChangesAsync()
         {

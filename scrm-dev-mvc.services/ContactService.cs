@@ -156,30 +156,45 @@ namespace SCRM_dev.Services
             return contact;
         }
 
-        public async Task<bool> AssociateContactToCompany(int contactId, int companyId)
+        public async Task<(bool Success, string Message)> AssociateContactToCompany(int contactId, int companyId)
         {
             var contact = await unitOfWork.Contacts.FirstOrDefaultAsync(c => c.Id == contactId);
             if (contact == null)
-                return false;
+                return (false, "Contact not found.");
 
             // Optional: Check if company exists
             var companyExists = await unitOfWork.Company.AnyAsync(c => c.Id == companyId);
             if (!companyExists)
-                return false;
+                return (false, "Company not found.");
 
+            // Check if the contact is already associated
+            if (contact.CompanyId != null)
+            {
+                if (contact.CompanyId == companyId)
+                {
+                    // This is a success, just no work was needed.
+                    return (true, "Contact is already associated with this company.");
+                }
+                else
+                {
+                    // This is the specific error you wanted to propagate.
+                    return (false, "Contact already belongs to another company.");
+                }
+            }
+
+            // If we are here, contact.CompanyId is null, so we can associate.
             contact.CompanyId = companyId;
             unitOfWork.Contacts.Update(contact);
 
             try
             {
                 await unitOfWork.SaveChangesAsync();
-                return true;
+                return (true, "Contact associated successfully.");
             }
             catch (Exception ex)
             {
-                // Log the exception here (if you have a logger)
                 Debug.WriteLine($"Error associating contact to company: {ex.Message}");
-                return false;
+                return (false, "A database error occurred.");
             }
         }
 
@@ -226,6 +241,34 @@ namespace SCRM_dev.Services
             {
                 Debug.WriteLine($"Error associating contact to deal: {ex.Message}");
                 return false;
+            }
+        }
+
+        public async Task<(bool Success, string Message)> DisassociateCompany(int contactId)
+        {
+            var contact = await unitOfWork.Contacts.FirstOrDefaultAsync(c => c.Id == contactId);
+
+            // 1. Check if contact exists
+            if (contact == null)
+                return (false, "Contact not found.");
+
+            // 2. Check if it's already disassociated
+            if (contact.CompanyId == null)
+                return (true, "Contact is already not associated with any company.");
+
+            // 3. Perform the disassociation
+            contact.CompanyId = null;
+            unitOfWork.Contacts.Update(contact);
+
+            try
+            {
+                await unitOfWork.SaveChangesAsync();
+                return (true, "Company disassociated successfully.");
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"Error disassociating company: {ex.Message}");
+                return (false, "A database error occurred.");
             }
         }
     }

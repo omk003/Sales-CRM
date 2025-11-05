@@ -32,6 +32,12 @@ namespace scrm_dev_mvc.Data.Repository.IRepository
         IDealRepository Deals { get; }
 
         IStageRepository Stages { get; }
+
+        ITaskRepository Tasks { get; }
+
+        ITaskStatusRepository TaskStatuses { get; }
+
+        IPriorityRepository Priorities { get; }
         Task SaveChangesAsync();
     }
 }

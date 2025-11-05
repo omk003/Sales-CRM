@@ -1,0 +1,36 @@
+﻿using Microsoft.AspNetCore.Mvc.Rendering;
+using System.ComponentModel.DataAnnotations;
+
+namespace scrm_dev_mvc.Models.ViewModels
+{
+    public class TaskUpdateViewModel
+    {
+        public int TaskId { get; set; }
+
+        [Required]
+        [StringLength(200)]
+        public string Title { get; set; }
+
+        public string? Description { get; set; }
+
+        [Required(ErrorMessage = "Task status is required.")]
+        public int StatusId { get; set; } // Task's status (Pending, Completed)
+
+        public DateTime? DueDate { get; set; }
+
+        // Dropdown for Task Status
+        public IEnumerable<SelectListItem> TaskStatuses { get; set; } = new List<SelectListItem>();
+
+        // --- Contact-Specific Fields ---
+        public int? ContactId { get; set; }
+        public string? ContactName { get; set; }
+        public int? CurrentContactLeadStatusId { get; set; } // Contact's Lead Status
+        public IEnumerable<SelectListItem> LeadStatuses { get; set; } = new List<SelectListItem>();
+
+        // --- Deal-Specific Fields ---
+        public int? DealId { get; set; }
+        public string? DealName { get; set; }
+        public int? CurrentDealStageId { get; set; } // Deal's Stage
+        public IEnumerable<SelectListItem> DealStages { get; set; } = new List<SelectListItem>();
+    }
+}

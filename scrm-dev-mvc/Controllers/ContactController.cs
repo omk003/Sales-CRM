@@ -183,21 +183,24 @@ namespace scrm_dev_mvc.Controllers
         }
 
         [HttpPost]
+        [ValidateAntiForgeryToken] 
         public async Task<IActionResult> AssociateContactToCompany(int contactId, int companyId)
         {
-            // Your logic to associate contact to company
-            await contactService.AssociateContactToCompany(contactId, companyId);
-            return Ok();
+            var result = await contactService.AssociateContactToCompany(contactId, companyId);
+
+            if (result.Success)
+            {
+                // Send a success response
+                return Ok(new { message = result.Message });
+            }
+            else
+            {
+                // Send a 400 Bad Request response with the error message
+                return BadRequest(new { message = result.Message });
+            }
         }
 
-        //[HttpPost]
-        //public async Task<IActionResult> SendEmail(string contactEmail, string subject, string body)
-        //{
-        //    // Your email sending logic here
-        //    string? adminId = configuration["Data:AdminEmailId"];
-        //    await gmailService.SendEmailAsync(Guid.Parse(adminId ?? ""), contactEmail, subject, body,"");
-        //    return Ok();
-        //}
+      
 
         [HttpPost]
         public async Task<IActionResult> SendEmail(string contactEmail, string subject, string body)
@@ -246,21 +249,8 @@ namespace scrm_dev_mvc.Controllers
             return StatusCode(500, new { message = result.ErrorMessage ?? "An unknown error occurred." });
         }
 
-        //[HttpPost]
-        //public async Task<IActionResult> CallContact(string phoneNumber)
-        //{
-        //    var decodedNumber = HttpUtility.HtmlDecode(phoneNumber);
-        //    var sid = await callService.MakeCallAsync(decodedNumber);
-        //    return Ok(sid); // Or return Ok() if you don't want to display SID
-        //}
-
-       
-        // Make sure your ICallService is injected, e.g., as _callService
-        // Make sure your ILogger is injected, e.g., as _logger
 
         [HttpPost]
-        // Recommended for POST actions
-                                   // 1. Update signature to accept contactId
         public async Task<IActionResult> CallContact(string phoneNumber, int contactId)
         {
             // 2. Get the current user's ID
@@ -294,14 +284,7 @@ namespace scrm_dev_mvc.Controllers
         }
 
 
-        // In Controllers/ContactController.cs
-
-        // (Make sure you have injected IContactService in your controller's constructor)
-        // private readonly IContactService _contactService;
-        // public ContactController(..., IContactService contactService)
-        // {
-        //    _contactService = contactService;
-        // }
+   
 
         [HttpPost]
         public async Task<IActionResult> AssociateContactToDeal(int contactId, int dealId)
@@ -320,6 +303,22 @@ namespace scrm_dev_mvc.Controllers
             else
             {
                 return StatusCode(500, new { success = false, message = "An error occurred while associating the contact with the deal." });
+            }
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> DisassociateCompany(int contactId)
+        {
+            var result = await contactService.DisassociateCompany(contactId);
+
+            if (result.Success)
+            {
+                return Ok(new { message = result.Message });
+            }
+            else
+            {
+                return BadRequest(new { message = result.Message });
             }
         }
     }

@@ -1,0 +1,59 @@
+﻿@model scrm_dev_mvc.Models.ViewModels.TaskCreateViewModel
+
+<div id="createTaskModal" class="modal" tabindex="-1" style="display:none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.3); z-index: 9999; align-items: center; justify-content: center;">
+    <div class="modal-dialog" style="max-width: 500px; margin: 4rem auto;">
+        <div class="modal-content" style="background:var(--bg-primary);border-radius:var(--border-radius-lg);padding:var(--space-lg);">
+            <div class="modal-header" style="display: flex; justify-content: space-between; align-items: center;">
+                <h5 class="modal-title">Create New Task</h5>
+                <button type="button" class="btn-close" onclick="closeCreateTaskModal()"></button>
+            </div>
+            <div class="modal-body">
+
+                <form id="createTaskForm" asp-action="Create" asp-controller="Task" method="post">
+
+                    @Html.AntiForgeryToken()
+
+                    <input type="hidden" asp-for="ContactId" />
+                    <input type="hidden" asp-for="CompanyId" />
+                    <input type="hidden" asp-for="DealId" />
+
+                    <div style="margin-bottom:var(--space-md);">
+                        <label asp-for="Title" style="font-weight:var(--fw-bold);">Title</label>
+                        <input type="text" asp-for="Title" style="width:100%;padding:var(--space-sm);border-radius:var(--border-radius-sm);border:1px solid var(--border-color);" />
+                        <span asp-validation-for="Title" style="color:var(--color-accent);font-size:var(--fs-sm);"></span>
+                    </div>
+
+                    <div style="margin-bottom:var(--space-md);">
+                        <label asp-for="Description" style="font-weight:var(--fw-bold);">Description</label>
+                        <textarea asp-for="Description" rows="4" style="width:100%;padding:var(--space-sm);border-radius:var(--border-radius-sm);border:1px solid var(--border-color);"></textarea>
+                    </div>
+
+                    <div style="margin-bottom:var(--space-md);">
+                        <label asp-for="DueDate" style="font-weight:var(--fw-bold);">Due Date</label>
+                        <input type="date" asp-for="DueDate" asp-format="{0:yyyy-MM-dd}" style="width:100%;padding:var(--space-sm);border-radius:var(--border-radius-sm);border:1px solid var(--border-color);" />
+                    </div>
+
+                    <div style="display:flex; gap: var(--space-md); margin-bottom:var(--space-lg);">
+                        <div style="flex:1;">
+                            <label asp-for="PriorityId" style="font-weight:var(--fw-bold);">Priority</label>
+                            <select asp-for="PriorityId" asp-items="@Model.Priorities" style="width:100%;padding:var(--space-sm);border-radius:var(--border-radius-sm);border:1px solid var(--border-color);">
+                                <option value="">-- Select Priority --</option>
+                            </select>
+                            <span asp-validation-for="PriorityId" style="color:var(--color-accent);font-size:var(--fs-sm);"></span>
+                        </div>
+                        <div style="flex:1;">
+                            <label asp-for="StatusId" style="font-weight:var(--fw-bold);">Status</label>
+                            <select asp-for="StatusId" asp-items="@Model.Statuses" style="width:100%;padding:var(--space-sm);border-radius:var(--border-radius-sm);border:1px solid var(--border-color);">
+                                <option value="">-- Select Status --</option>
+                            </select>
+                            <span asp-validation-for="StatusId" style="color:var(--color-accent);font-size:var(--fs-sm);"></span>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn btn-custom" style="width:100%;">Create Task</button>
+                </form>
+
+            </div>
+        </div>
+    </div>
+</div>

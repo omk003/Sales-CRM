@@ -1,0 +1,465 @@
+﻿<!--
+This is a self-contained page for your Workspace.
+It includes:
+1. Tailwind CSS for styling.
+2. Chart.js for graphs.
+3. Mock data and all necessary JavaScript to make the page interactive.
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Workspace</title>
+    <!-- 1. Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- 2. Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- 3. Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        /* Custom styles for a dark/light theme */
+        :root {
+            --bg-primary: #ffffff;
+            --bg-secondary: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-primary: #111827;
+            --text-secondary: #6b7280;
+            --text-accent: #ef4444;
+            --brand-primary: #3b82f6;
+            --brand-secondary: #10b981;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-secondary);
+            color: var(--text-primary);
+        }
+
+        /* Custom tab styles */
+        .tab-btn {
+            padding: 8px 16px;
+            border: 1px solid transparent;
+            background-color: transparent;
+            color: var(--text-secondary);
+            font-weight: 600;
+            cursor: pointer;
+            border-radius: 6px;
+            transition: all 0.2s ease;
+        }
+
+            .tab-btn.active,
+            .tab-btn:hover {
+                background-color: var(--bg-primary);
+                color: var(--brand-primary);
+                box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+            }
+
+        .task-tab-btn.active {
+            color: var(--text-primary);
+            border-bottom: 2px solid var(--brand-primary);
+            font-weight: 700;
+            border-radius: 0;
+        }
+
+        .task-list-item:hover {
+            background-color: #fefcbf; /* A light yellow highlight */
+        }
+    </style>
+</head>
+<body class="p-4 md:p-8">
+
+    <div class="max-w-7xl mx-auto space-y-8">
+
+        <h1 class="text-3xl font-bold text-gray-900">My Workspace</h1>
+
+        <!-- ================================== -->
+        <!-- Section 1: Tasks -->
+        <!-- ================================== -->
+        <div class="bg-white p-4 sm:p-6 rounded-lg shadow-sm border border-gray-200">
+            <h2 class="text-xl font-semibold mb-4">My Tasks</h2>
+
+            <!-- Task Tabs: Pending / Due -->
+            <div class="border-b border-gray-200 mb-4">
+                <nav class="-mb-px flex space-x-6" aria-label="Tabs">
+                    <button id="tab-btn-pending" class="tab-btn task-tab-btn active" onclick="switchTaskTab('pending')">
+                        Pending
+                    </button>
+                    <button id="tab-btn-due" class="tab-btn task-tab-btn" onclick="switchTaskTab('due')">
+                        Due <span id="due-count-badge" class="ml-1.5 inline-block bg-red-100 text-red-700 text-xs font-bold px-2 py-0.5 rounded-full"></span>
+                    </button>
+                </nav>
+            </div>
+
+            <!-- Task Lists -->
+            <div id="task-list-container">
+                <!-- Pending Tasks (Visible by default) -->
+                <div id="task-list-pending" class="space-y-3 max-h-96 overflow-y-auto pr-2">
+                    <!-- Tasks will be rendered here by JavaScript -->
+                </div>
+
+                <!-- Due Tasks (Hidden by default) -->
+                <div id="task-list-due" class="hidden space-y-3 max-h-96 overflow-y-auto pr-2">
+                    <!-- Tasks will be rendered here by JavaScript -->
+                </div>
+            </div>
+        </div>
+
+        <!-- ================================== -->
+        <!-- Section 2: My Stats (Line Chart) -->
+        <!-- ================================== -->
+        <div class="bg-white p-4 sm:p-6 rounded-lg shadow-sm border border-gray-200">
+            <div class="flex flex-col sm:flex-row justify-between sm:items-center mb-4">
+                <h2 class="text-xl font-semibold">My Activity</h2>
+                <div class="flex space-x-2 mt-3 sm:mt-0" id="my-stats-tabs">
+                    <button class="tab-btn active" data-type="tasks">Tasks</button>
+                    <button class="tab-btn" data-type="emails">Emails</button>
+                    <button class="tab-btn" data-type="calls">Calls</button>
+                </div>
+            </div>
+            <div class="h-80">
+                <canvas id="myStatsChart"></canvas>
+            </div>
+        </div>
+
+        <!-- ================================== -->
+        <!-- Section 3: Admin Stats (Bar Chart) -->
+        <!-- ================================== -->
+        <!-- This entire section is hidden if user is not an admin -->
+        <div id="admin-stats-section" class="bg-white p-4 sm:p-6 rounded-lg shadow-sm border border-gray-200" style="display: none;">
+            <div class="flex flex-col sm:flex-row justify-between sm:items-center mb-4">
+                <h2 class="text-xl font-semibold">Team Performance</h2>
+                <div class="flex space-x-2 mt-3 sm:mt-0" id="admin-stats-tabs">
+                    <button class="tab-btn active" data-type="tasks">Tasks</button>
+                    <button class="tab-btn" data-type="emails">Emails</button>
+                    <button class="tab-btn" data-type="calls">Calls</button>
+                </div>
+            </div>
+            <div class="h-96">
+                <canvas id="adminStatsChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- ================================== -->
+    <!-- Task Update Modal (Mock-up) -->
+    <!-- ================================== -->
+    <!-- This container is hidden but ready to be filled -->
+    <div id="taskUpdateModalContainer">
+        <!--
+            When a task is clicked, this container will be filled with the
+            _UpdateTaskModal partial view, and the modal will be displayed.
+            For this demo, we'll just show a pre-filled mock modal.
+        -->
+        <div id="updateTaskModal" class="modal" tabindex="-1" style="display:none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.3); z-index: 9999; align-items: center; justify-content: center;">
+            <div class="modal-dialog" style="max-width: 500px; margin: 4rem auto;">
+                <div class="modal-content" style="background:var(--bg-primary);border-radius: 0.5rem; padding: 1.5rem; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1);">
+                    <div class="modal-header" style="display: flex; justify-content: space-between; align-items: center;">
+                        <h5 class="modal-title" style="font-size: 1.25rem; font-weight: 600;">Update Task</h5>
+                        <button type="button" class="btn-close" onclick="closeUpdateTaskModal()" style="background:none; border:none; font-size: 1.5rem; cursor:pointer;">&times;</button>
+                    </div>
+                    <div class="modal-body" style="margin-top: 1rem;">
+                        <form id="updateTaskForm" onsubmit="event.preventDefault(); alert('Task updated! (Demo)'); closeUpdateTaskModal();">
+
+                            <!-- Title -->
+                            <div style="margin-bottom: 1rem;">
+                                <label style="font-weight: 600; display:block; margin-bottom: 0.25rem;">Title</label>
+                                <input type="text" id="mock-task-title" style="width:100%;padding: 0.5rem; border-radius: 0.375rem; border:1px solid var(--border-color);" />
+                            </div>
+
+                            <!-- Due Date & Task Status -->
+                            <div style="display:flex; gap: 1rem; margin-bottom: 1rem;">
+                                <div style="flex:1;">
+                                    <label style="font-weight: 600; display:block; margin-bottom: 0.25rem;">Due Date</label>
+                                    <input type="date" value="2025-11-06" style="width:100%;padding: 0.5rem; border-radius: 0.375rem; border:1px solid var(--border-color);" />
+                                </div>
+                                <div style="flex:1;">
+                                    <label style="font-weight: 600; display:block; margin-bottom: 0.25rem;">Task Status</label>
+                                    <select style="width:100%;padding: 0.5rem; border-radius: 0.375rem; border:1px solid var(--border-color);">
+                                        <option>Pending</option>
+                                        <option selected>In Progress</option>
+                                        <option>Completed</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <!-- Related Record -->
+                            <div style="margin-bottom: 1rem; padding: 1rem; background: var(--bg-secondary); border-radius: 0.375rem;">
+                                <label id="mock-related-label" style="font-weight: 600; display:block; margin-bottom: 0.25rem;">Contact: Jane Doe</label>
+                                <select style="width:100%;padding: 0.5rem; border-radius: 0.375rem; border:1px solid var(--border-color);">
+                                    <option>New</option>
+                                    <option selected>Contacted</option>
+                                    <option>Qualified</option>
+                                </select>
+                            </div>
+
+                            <button type="submit" style="width:100%; padding: 0.75rem; border-radius: 0.375rem; background-color: var(--brand-primary); color: white; font-weight: 600; cursor:pointer;">Update Task</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ================================== -->
+    <!-- SCRIPT BLOCK -->
+    <!-- ================================== -->
+    <script>
+        // --- 1. MOCK DATA ---
+        // This data would come from your WorkspaceViewModel
+
+        const mockIsAdmin = true; // Set to 'true' to see the admin chart, 'false' to hide it
+
+        const mockPendingTasks = [
+            { id: 101, title: "Follow up with Jane Doe", dueDate: "2025-11-06", relatedTo: "Jane Doe (Contact)" },
+            { id: 102, title: "Send proposal to Acme Inc", dueDate: "2025-11-06", relatedTo: "Acme Inc (Deal)" },
+            { id: 103, title: "Call John Smith about renewal", dueDate: "2025-11-07", relatedTo: "John Smith (Contact)" },
+        ];
+
+        const mockDueTasks = [
+            { id: 104, title: "Review contract for BigCorp", dueDate: "2025-11-04", relatedTo: "BigCorp (Deal)" },
+            { id: 105, title: "Send follow-up email", dueDate: "2025-11-01", relatedTo: "Tim Brown (Contact)" },
+        ];
+
+        // Data for My Stats (Line Chart)
+        const myChartData = {
+            tasks: [
+                { date: "2025-11-01", count: 2 }, { date: "2025-11-02", count: 1 }, { date: "2025-11-03", count: 3 },
+                { date: "2025-11-04", count: 2 }, { date: "2025-11-05", count: 4 }, { date: "2025-11-06", count: 1 },
+            ],
+            emails: [
+                { date: "2025-11-01", count: 5 }, { date: "2025-11-02", count: 8 }, { date: "2025-11-03", count: 4 },
+                { date: "2025-11-04", count: 7 }, { date: "2025-11-05", count: 6 }, { date: "2025-11-06", count: 9 },
+            ],
+            calls: [
+                { date: "2025-11-01", count: 3 }, { date: "2025-11-02", count: 2 }, { date: "2025-11-03", count: 5 },
+                { date: "2025-11-04", count: 1 }, { date: "2025-11-05", count: 4 }, { date: "2025-11-06", count: 2 },
+            ]
+        };
+
+        // Data for Admin Stats (Bar Chart)
+        const adminChartData = {
+            tasks: [
+                { user: "You", count: 13 }, { user: "Sarah", count: 10 }, { user: "Mark", count: 8 }, { user: "Admin", count: 5 },
+            ],
+            emails: [
+                { user: "You", count: 39 }, { user: "Sarah", count: 45 }, { user: "Mark", count: 30 }, { user: "Admin", count: 12 },
+            ],
+            calls: [
+                { user: "You", count: 17 }, { user: "Sarah", count: 12 }, { user: "Mark", count: 22 }, { user: "Admin", count: 8 },
+            ]
+        };
+
+        // Chart.js instances
+        let myStatsChartInstance = null;
+        let adminStatsChartInstance = null;
+
+        // --- 2. TASK RENDERING ---
+
+        function renderTasks() {
+            const pendingList = document.getElementById('task-list-pending');
+            const dueList = document.getElementById('task-list-due');
+
+            pendingList.innerHTML = '';
+            dueList.innerHTML = '';
+
+            if (mockPendingTasks.length === 0) {
+                pendingList.innerHTML = '<p class="text-gray-500">No pending tasks. Great job!</p>';
+            } else {
+                mockPendingTasks.forEach(task => {
+                    pendingList.innerHTML += createTaskElement(task, 'pending');
+                });
+            }
+
+            if (mockDueTasks.length === 0) {
+                dueList.innerHTML = '<p class="text-gray-500">No overdue tasks!</p>';
+            } else {
+                mockDueTasks.forEach(task => {
+                    dueList.innerHTML += createTaskElement(task, 'due');
+                });
+            }
+
+            // Update due count badge
+            const badge = document.getElementById('due-count-badge');
+            if (mockDueTasks.length > 0) {
+                badge.textContent = mockDueTasks.length;
+                badge.style.display = 'inline-block';
+            } else {
+                badge.style.display = 'none';
+            }
+        }
+
+        function createTaskElement(task, type) {
+            const isDue = type === 'due';
+            const dateColor = isDue ? 'text-red-600' : 'text-gray-600';
+            const icon = isDue ? 'fa-exclamation-circle' : 'fa-clock';
+
+            // Format date as "Nov 6"
+            const date = new Date(task.dueDate);
+            const formattedDate = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', timeZone: 'UTC' });
+
+            return `
+                <div class="task-list-item flex items-center justify-between p-3 rounded-lg cursor-pointer border border-transparent hover:border-yellow-300 hover:bg-yellow-50"
+                     onclick="openUpdateTaskModal(${task.id}, '${task.title}', '${task.relatedTo}')">
+                    <div class="flex items-center space-x-3">
+                        <i class="fas fa-task text-blue-500 fa-lg"></i>
+                        <div>
+                            <p class="font-semibold text-gray-800">${task.title}</p>
+                            <p class="text-sm text-gray-500">${task.relatedTo}</p>
+                        </div>
+                    </div>
+                    <div class="text-right">
+                        <p class="text-sm font-semibold ${dateColor} flex items-center">
+                            <i class="far ${icon} mr-1.5"></i>
+                            ${formattedDate}
+                        </p>
+                    </div>
+                </div>
+            `;
+        }
+
+        function switchTaskTab(tab) {
+            document.getElementById('task-list-pending').classList.toggle('hidden', tab !== 'pending');
+            document.getElementById('tab-btn-pending').classList.toggle('active', tab === 'pending');
+
+            document.getElementById('task-list-due').classList.toggle('hidden', tab !== 'due');
+            document.getElementById('tab-btn-due').classList.toggle('active', tab === 'due');
+        }
+
+        // --- 3. CHART RENDERING ---
+
+        function renderMyStatsChart(type) {
+            const data = myChartData[type];
+            const labels = data.map(d => new Date(d.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', timeZone: 'UTC' }));
+            const counts = data.map(d => d.count);
+
+            const ctx = document.getElementById('myStatsChart').getContext('2d');
+
+            if (myStatsChartInstance) {
+                myStatsChartInstance.destroy();
+            }
+
+            myStatsChartInstance = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: `My ${type[0].toUpperCase() + type.slice(1)}`,
+                        data: counts,
+                        borderColor: 'rgb(59, 130, 246)',
+                        backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                        fill: true,
+                        tension: 0.3,
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: { beginAtZero: true, grid: { color: '#e5e7eb' } },
+                        x: { grid: { display: false } }
+                    },
+                    plugins: { legend: { display: false } }
+                }
+            });
+        }
+
+        function renderAdminStatsChart(type) {
+            const data = adminChartData[type];
+            const labels = data.map(d => d.user);
+            const counts = data.map(d => d.count);
+
+            const ctx = document.getElementById('adminStatsChart').getContext('2d');
+
+            if (adminStatsChartInstance) {
+                adminStatsChartInstance.destroy();
+            }
+
+            adminStatsChartInstance = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: `Team ${type[0].toUpperCase() + type.slice(1)}`,
+                        data: counts,
+                        backgroundColor: [
+                            'rgba(59, 130, 246, 0.7)',
+                            'rgba(16, 185, 129, 0.7)',
+                            'rgba(239, 68, 68, 0.7)',
+                            'rgba(245, 158, 11, 0.7)',
+                        ],
+                        borderColor: [
+                            'rgb(59, 130, 246)',
+                            'rgb(16, 185, 129)',
+                            'rgb(239, 68, 68)',
+                            'rgb(245, 158, 11)',
+                        ],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    indexAxis: 'y', // <-- This makes it horizontal
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: { beginAtZero: true, grid: { color: '#e5e7eb' } },
+                        y: { grid: { display: false } }
+                    },
+                    plugins: { legend: { display: false } }
+                }
+            });
+        }
+
+        // --- 4. MODAL FUNCTIONS ---
+
+        function openUpdateTaskModal(taskId, title, relatedTo) {
+            // Pre-fill the mock modal
+            document.getElementById('mock-task-title').value = title;
+            document.getElementById('mock-related-label').textContent = relatedTo;
+
+            // Show the modal
+            document.getElementById('updateTaskModal').style.display = 'flex';
+        }
+
+        function closeUpdateTaskModal() {
+            document.getElementById('updateTaskModal').style.display = 'none';
+        }
+
+        // --- 5. INITIALIZATION ---
+
+        document.addEventListener('DOMContentLoaded', () => {
+            // Render all task lists
+            renderTasks();
+
+            // Init "My Stats" chart
+            renderMyStatsChart('tasks');
+
+            // Init "Admin Stats" chart
+            if (mockIsAdmin) {
+                document.getElementById('admin-stats-section').style.display = 'block';
+                renderAdminStatsChart('tasks');
+            }
+
+            // Add tab listeners
+            document.getElementById('my-stats-tabs').addEventListener('click', (e) => {
+                if (e.target.classList.contains('tab-btn')) {
+                    document.querySelectorAll('#my-stats-tabs .tab-btn').forEach(btn => btn.classList.remove('active'));
+                    e.target.classList.add('active');
+                    renderMyStatsChart(e.target.dataset.type);
+                }
+            });
+
+            document.getElementById('admin-stats-tabs').addEventListener('click', (e) => {
+                if (e.target.classList.contains('tab-btn')) {
+                    document.querySelectorAll('#admin-stats-tabs .tab-btn').forEach(btn => btn.classList.remove('active'));
+                    e.target.classList.add('active');
+                    renderAdminStatsChart(e.target.dataset.type);
+                }
+            });
+        });
+
+    </script>
+</body>
+</html>

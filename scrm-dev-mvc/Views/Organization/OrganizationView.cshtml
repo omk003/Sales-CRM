@@ -1,9 +1,9 @@
 ﻿@model scrm_dev_mvc.Models.ViewModels.OrganizationViewModel
 @if (TempData["Message"] != null)
 {
-    // Added an id="tempDataMessage" to the div
-    <div id="tempDataMessage" class="alert alert-info">
+    <div id="tempDataMessage" class="alert alert-info alert-dismissible fade show" role="alert">
         @TempData["Message"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
     </div>
 }
 <div class="container" style="max-width: 800px; margin: 2rem auto;">
