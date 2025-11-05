@@ -12,6 +12,8 @@ public partial class Task
     public DateTime? DueDate { get; set; }
     public DateTime? CompletedAt { get; set; }
 
+    public Guid OwnerId { get; set; }
+
     // --- ADD THESE NEW PROPERTIES ---
     public int? ContactId { get; set; }
     public int? CompanyId { get; set; }

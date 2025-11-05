@@ -40,6 +40,8 @@ namespace scrm_dev_mvc.Data.Repository
         public ITaskRepository Tasks { get; private set; }
 
         public IPriorityRepository Priorities { get; private set; }
+
+        public IAuditRepository Audits { get; private set; }
         public UnitOfWork(ApplicationDbContext context)
         {
             _context = context;
@@ -61,6 +63,7 @@ namespace scrm_dev_mvc.Data.Repository
             Tasks = new TaskRepository(_context);
             TaskStatuses = new TaskStatusRepository(_context);
             Priorities = new PriorityRepository(_context);
+            Audits = new AuditRepository(_context);
         }
         public async Task SaveChangesAsync()
         {

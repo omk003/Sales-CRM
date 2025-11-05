@@ -13,19 +13,21 @@ namespace scrm_dev_mvc.services
     public class TaskService : ITaskService
     {
         private readonly IUnitOfWork _unitOfWork;
-        private readonly IActivityService _activityService; // <-- INJECT THIS
+        private readonly IActivityService _activityService; 
         private readonly ILogger<TaskService> _logger;
+        private readonly IAuditService _auditService; // <-- Audit service
 
         public TaskService(IUnitOfWork unitOfWork,
-                           IActivityService activityService, // <-- ADD THIS
-                           ILogger<TaskService> logger)
+                           IActivityService activityService, 
+                           ILogger<TaskService> logger, IAuditService auditService)
         {
             _unitOfWork = unitOfWork;
-            _activityService = activityService; // <-- ADD THIS
+            _activityService = activityService; 
             _logger = logger;
+            _auditService = auditService; 
         }
 
-        // No changes to this method
+       
         public async Task<TaskCreateViewModel> GetTaskCreateViewModelAsync(int? contactId, int? companyId, int? dealId)
         {
             // ... (same as before)
@@ -157,23 +159,90 @@ namespace scrm_dev_mvc.services
         }
 
         // --- NEW METHOD: POST ---
-        public async Task<(bool Success, string Message)> UpdateTaskAndEntitiesAsync(TaskUpdateViewModel viewModel)
+        //public async Task<(bool Success, string Message)> UpdateTaskAndEntitiesAsync(TaskUpdateViewModel viewModel)
+        //{
+        //    try
+        //    {
+        //        var task = await _unitOfWork.Tasks.FirstOrDefaultAsync(u => u.Id == viewModel.TaskId, include:"Status");
+        //        if (task == null) return (false, "Task not found.");
+
+        //        // 1. Update the Task itself
+        //        task.Title = viewModel.Title;
+        //        task.Description = viewModel.Description;
+        //        task.DueDate = viewModel.DueDate;
+
+        //        // Check if status changed
+        //        if (task.StatusId != viewModel.StatusId)
+        //        {
+        //            task.StatusId = viewModel.StatusId;
+        //            // If new status is "Completed", mark it
+        //            var completedStatus = await _unitOfWork.TaskStatuses.FirstOrDefaultAsync(s => s.StatusName == "Completed");
+        //            if (completedStatus != null && task.StatusId == completedStatus.Id)
+        //            {
+        //                task.CompletedAt = DateTime.UtcNow;
+        //            }
+        //        }
+        //        _unitOfWork.Tasks.Update(task);
+
+        //        // 2. Update the related Contact, if any
+        //        if (viewModel.ContactId.HasValue && viewModel.CurrentContactLeadStatusId.HasValue)
+        //        {
+        //            var contact = await _unitOfWork.Contacts.FirstOrDefaultAsync(u=>u.Id == viewModel.ContactId.Value);
+        //            if (contact != null)
+        //            {
+        //                contact.LeadStatusId = viewModel.CurrentContactLeadStatusId.Value;
+        //                _unitOfWork.Contacts.Update(contact);
+        //            }
+        //        }
+
+        //        // 3. Update the related Deal, if any
+        //        if (viewModel.DealId.HasValue && viewModel.CurrentDealStageId.HasValue)
+        //        {
+        //            var deal = await _unitOfWork.Deals.FirstOrDefaultAsync(u => u.Id == viewModel.DealId.Value);
+        //            if (deal != null)
+        //            {
+        //                deal.StageId = viewModel.CurrentDealStageId.Value;
+        //                _unitOfWork.Deals.Update(deal);
+        //            }
+        //        }
+        //        var activity = await _unitOfWork.Activities.FirstOrDefaultAsync(u => u.SubjectId == task.Id);
+
+        //        activity.Status = task.Status.StatusName;
+
+        //        // 4. Save all changes in one transaction
+        //        await _unitOfWork.SaveChangesAsync();
+        //        return (true, "Task updated successfully!");
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        _logger.LogError(ex, "Error updating task and entities.");
+        //        return (false, "A database error occurred.");
+        //    }
+        //}
+
+        public async Task<(bool Success, string Message)> UpdateTaskAndEntitiesAsync(
+        TaskUpdateViewModel viewModel, Guid ownerId) 
         {
             try
             {
-                var task = await _unitOfWork.Tasks.FirstOrDefaultAsync(u => u.Id == viewModel.TaskId, include:"Status");
+                var task = await _unitOfWork.Tasks.FirstOrDefaultAsync(u=>u.Id == viewModel.TaskId);
                 if (task == null) return (false, "Task not found.");
 
-                // 1. Update the Task itself
-                task.Title = viewModel.Title;
-                task.Description = viewModel.Description;
-                task.DueDate = viewModel.DueDate;
-
-                // Check if status changed
+                // --- 1. AUDIT LOGIC: Compare Task fields ---
                 if (task.StatusId != viewModel.StatusId)
                 {
-                    task.StatusId = viewModel.StatusId;
-                    // If new status is "Completed", mark it
+                    await _auditService.LogChangeAsync(new AuditLogDto
+                    {
+                        OwnerId = ownerId,
+                        RecordId = task.Id,
+                        TableName = "Task",
+                        FieldName = "StatusId",
+                        OldValue = task.StatusId.ToString(),
+                        NewValue = viewModel.StatusId.ToString()
+                    });
+                    task.StatusId = viewModel.StatusId; // Apply change
+
+                    // Check if new status is "Completed"
                     var completedStatus = await _unitOfWork.TaskStatuses.FirstOrDefaultAsync(s => s.StatusName == "Completed");
                     if (completedStatus != null && task.StatusId == completedStatus.Id)
                     {
@@ -182,32 +251,47 @@ namespace scrm_dev_mvc.services
                 }
                 _unitOfWork.Tasks.Update(task);
 
-                // 2. Update the related Contact, if any
+                // --- 2. AUDIT LOGIC: Compare Contact fields ---
                 if (viewModel.ContactId.HasValue && viewModel.CurrentContactLeadStatusId.HasValue)
                 {
-                    var contact = await _unitOfWork.Contacts.FirstOrDefaultAsync(u=>u.Id == viewModel.ContactId.Value);
-                    if (contact != null)
+                    var contact = await _unitOfWork.Contacts.FirstOrDefaultAsync(u => u.Id == viewModel.ContactId.Value);
+                    if (contact != null && contact.LeadStatusId != viewModel.CurrentContactLeadStatusId.Value)
                     {
-                        contact.LeadStatusId = viewModel.CurrentContactLeadStatusId.Value;
+                        await _auditService.LogChangeAsync(new AuditLogDto
+                        {
+                            OwnerId = ownerId,
+                            RecordId = contact.Id,
+                            TableName = "Contact",
+                            FieldName = "LeadStatusId",
+                            OldValue = contact.LeadStatusId.ToString(),
+                            NewValue = viewModel.CurrentContactLeadStatusId.Value.ToString()
+                        });
+                        contact.LeadStatusId = viewModel.CurrentContactLeadStatusId.Value; // Apply change
                         _unitOfWork.Contacts.Update(contact);
                     }
                 }
 
-                // 3. Update the related Deal, if any
+                // --- 3. AUDIT LOGIC: Compare Deal fields ---
                 if (viewModel.DealId.HasValue && viewModel.CurrentDealStageId.HasValue)
                 {
                     var deal = await _unitOfWork.Deals.FirstOrDefaultAsync(u => u.Id == viewModel.DealId.Value);
-                    if (deal != null)
+                    if (deal != null && deal.StageId != viewModel.CurrentDealStageId.Value)
                     {
-                        deal.StageId = viewModel.CurrentDealStageId.Value;
+                        await _auditService.LogChangeAsync(new AuditLogDto
+                        {
+                            OwnerId = ownerId,
+                            RecordId = deal.Id,
+                            TableName = "Deal",
+                            FieldName = "StageId",
+                            OldValue = deal.StageId.ToString(),
+                            NewValue = viewModel.CurrentDealStageId.Value.ToString()
+                        });
+                        deal.StageId = viewModel.CurrentDealStageId.Value; // Apply change
                         _unitOfWork.Deals.Update(deal);
                     }
                 }
-                var activity = await _unitOfWork.Activities.FirstOrDefaultAsync(u => u.SubjectId == task.Id);
 
-                activity.Status = task.Status.StatusName;
-
-                // 4. Save all changes in one transaction
+                // 4. Save all changes (Task, Contact, Deal, AND Audit logs) in one transaction
                 await _unitOfWork.SaveChangesAsync();
                 return (true, "Task updated successfully!");
             }

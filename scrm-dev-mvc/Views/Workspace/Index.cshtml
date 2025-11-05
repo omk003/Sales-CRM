@@ -1,9 +1,6 @@
-﻿<!--
-This is a self-contained page for your Workspace.
-It includes:
-1. Tailwind CSS for styling.
-2. Chart.js for graphs.
-3. Mock data and all necessary JavaScript to make the page interactive.
+﻿@model scrm_dev_mvc.Models.ViewModels.WorkspaceViewModel
+<!--
+This page is now updated with the "Completed" tasks tab.
 -->
 <!DOCTYPE html>
 <html lang="en">
@@ -17,9 +14,11 @@ It includes:
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <!-- 3. Font Awesome for icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- 4. jQuery (required for partial view loading) -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 
     <style>
-        /* Custom styles for a dark/light theme */
+        /* ... (all your existing <style> tags) ... */
         :root {
             --bg-primary: #ffffff;
             --bg-secondary: #f9fafb;
@@ -27,7 +26,8 @@ It includes:
             --text-primary: #111827;
             --text-secondary: #6b7280;
             --text-accent: #ef4444;
-            --brand-primary: #3b82f6;
+            --brand-primary: hsl(347.78, 100%, 57.65%);
+            
             --brand-secondary: #10b981;
         }
 
@@ -80,7 +80,7 @@ It includes:
         <div class="bg-white p-4 sm:p-6 rounded-lg shadow-sm border border-gray-200">
             <h2 class="text-xl font-semibold mb-4">My Tasks</h2>
 
-            <!-- Task Tabs: Pending / Due -->
+            <!-- *** UPDATED: Task Tabs: Pending / Due / Completed *** -->
             <div class="border-b border-gray-200 mb-4">
                 <nav class="-mb-px flex space-x-6" aria-label="Tabs">
                     <button id="tab-btn-pending" class="tab-btn task-tab-btn active" onclick="switchTaskTab('pending')">
@@ -88,6 +88,10 @@ It includes:
                     </button>
                     <button id="tab-btn-due" class="tab-btn task-tab-btn" onclick="switchTaskTab('due')">
                         Due <span id="due-count-badge" class="ml-1.5 inline-block bg-red-100 text-red-700 text-xs font-bold px-2 py-0.5 rounded-full"></span>
+                    </button>
+                    <!-- *** NEW TAB BUTTON *** -->
+                    <button id="tab-btn-completed" class="tab-btn task-tab-btn" onclick="switchTaskTab('completed')">
+                        Completed
                     </button>
                 </nav>
             </div>
@@ -101,6 +105,12 @@ It includes:
 
                 <!-- Due Tasks (Hidden by default) -->
                 <div id="task-list-due" class="hidden space-y-3 max-h-96 overflow-y-auto pr-2">
+                    <!-- Tasks will be rendered here by JavaScript -->
+                </div>
+
+                <!-- *** NEW LIST CONTAINER *** -->
+                <!-- Completed Tasks (Hidden by default) -->
+                <div id="task-list-completed" class="hidden space-y-3 max-h-96 overflow-y-auto pr-2">
                     <!-- Tasks will be rendered here by JavaScript -->
                 </div>
             </div>
@@ -126,130 +136,45 @@ It includes:
         <!-- ================================== -->
         <!-- Section 3: Admin Stats (Bar Chart) -->
         <!-- ================================== -->
-        <!-- This entire section is hidden if user is not an admin -->
-        <div id="admin-stats-section" class="bg-white p-4 sm:p-6 rounded-lg shadow-sm border border-gray-200" style="display: none;">
-            <div class="flex flex-col sm:flex-row justify-between sm:items-center mb-4">
-                <h2 class="text-xl font-semibold">Team Performance</h2>
-                <div class="flex space-x-2 mt-3 sm:mt-0" id="admin-stats-tabs">
-                    <button class="tab-btn active" data-type="tasks">Tasks</button>
-                    <button class="tab-btn" data-type="emails">Emails</button>
-                    <button class="tab-btn" data-type="calls">Calls</button>
+        @if (Model.IsAdmin)
+        {
+            <div id="admin-stats-section" class="bg-white p-4 sm:p-6 rounded-lg shadow-sm border border-gray-200">
+                <div class="flex flex-col sm:flex-row justify-between sm:items-center mb-4">
+                    <h2 class="text-xl font-semibold">Team Performance</h2>
+                    <div class="flex space-x-2 mt-3 sm:mt-0" id="admin-stats-tabs">
+                        <button class="tab-btn active" data-type="tasks">Tasks</button>
+                        <button class="tab-btn" data-type="emails">Emails</button>
+                        <button class="tab-btn" data-type="calls">Calls</button>
+                    </div>
+                </div>
+                <div class="h-96">
+                    <canvas id="adminStatsChart"></canvas>
                 </div>
             </div>
-            <div class="h-96">
-                <canvas id="adminStatsChart"></canvas>
-            </div>
-        </div>
+        }
     </div>
 
     <!-- ================================== -->
-    <!-- Task Update Modal (Mock-up) -->
+    <!-- Task Update Modal (Real) -->
     <!-- ================================== -->
-    <!-- This container is hidden but ready to be filled -->
     <div id="taskUpdateModalContainer">
-        <!--
-            When a task is clicked, this container will be filled with the
-            _UpdateTaskModal partial view, and the modal will be displayed.
-            For this demo, we'll just show a pre-filled mock modal.
-        -->
-        <div id="updateTaskModal" class="modal" tabindex="-1" style="display:none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.3); z-index: 9999; align-items: center; justify-content: center;">
-            <div class="modal-dialog" style="max-width: 500px; margin: 4rem auto;">
-                <div class="modal-content" style="background:var(--bg-primary);border-radius: 0.5rem; padding: 1.5rem; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1);">
-                    <div class="modal-header" style="display: flex; justify-content: space-between; align-items: center;">
-                        <h5 class="modal-title" style="font-size: 1.25rem; font-weight: 600;">Update Task</h5>
-                        <button type="button" class="btn-close" onclick="closeUpdateTaskModal()" style="background:none; border:none; font-size: 1.5rem; cursor:pointer;">&times;</button>
-                    </div>
-                    <div class="modal-body" style="margin-top: 1rem;">
-                        <form id="updateTaskForm" onsubmit="event.preventDefault(); alert('Task updated! (Demo)'); closeUpdateTaskModal();">
-
-                            <!-- Title -->
-                            <div style="margin-bottom: 1rem;">
-                                <label style="font-weight: 600; display:block; margin-bottom: 0.25rem;">Title</label>
-                                <input type="text" id="mock-task-title" style="width:100%;padding: 0.5rem; border-radius: 0.375rem; border:1px solid var(--border-color);" />
-                            </div>
-
-                            <!-- Due Date & Task Status -->
-                            <div style="display:flex; gap: 1rem; margin-bottom: 1rem;">
-                                <div style="flex:1;">
-                                    <label style="font-weight: 600; display:block; margin-bottom: 0.25rem;">Due Date</label>
-                                    <input type="date" value="2025-11-06" style="width:100%;padding: 0.5rem; border-radius: 0.375rem; border:1px solid var(--border-color);" />
-                                </div>
-                                <div style="flex:1;">
-                                    <label style="font-weight: 600; display:block; margin-bottom: 0.25rem;">Task Status</label>
-                                    <select style="width:100%;padding: 0.5rem; border-radius: 0.375rem; border:1px solid var(--border-color);">
-                                        <option>Pending</option>
-                                        <option selected>In Progress</option>
-                                        <option>Completed</option>
-                                    </select>
-                                </div>
-                            </div>
-
-                            <!-- Related Record -->
-                            <div style="margin-bottom: 1rem; padding: 1rem; background: var(--bg-secondary); border-radius: 0.375rem;">
-                                <label id="mock-related-label" style="font-weight: 600; display:block; margin-bottom: 0.25rem;">Contact: Jane Doe</label>
-                                <select style="width:100%;padding: 0.5rem; border-radius: 0.375rem; border:1px solid var(--border-color);">
-                                    <option>New</option>
-                                    <option selected>Contacted</option>
-                                    <option>Qualified</option>
-                                </select>
-                            </div>
-
-                            <button type="submit" style="width:100%; padding: 0.75rem; border-radius: 0.375rem; background-color: var(--brand-primary); color: white; font-weight: 600; cursor:pointer;">Update Task</button>
-                        </form>
-                    </div>
-                </div>
-            </div>
-        </div>
+        <!-- The _UpdateTaskModal partial view will be loaded here -->
     </div>
 
     <!-- ================================== -->
     <!-- SCRIPT BLOCK -->
     <!-- ================================== -->
     <script>
-        // --- 1. MOCK DATA ---
-        // This data would come from your WorkspaceViewModel
+        // --- 1. REAL DATA (from @Model) ---
 
-        const mockIsAdmin = true; // Set to 'true' to see the admin chart, 'false' to hide it
+        const pendingTasks = @Html.Raw(Json.Serialize(Model.PendingTasks));
+        const dueTasks = @Html.Raw(Json.Serialize(Model.DueTasks));
+        // *** NEW DATA ***
+        const completedTasks = @Html.Raw(Json.Serialize(Model.CompletedTasks));
 
-        const mockPendingTasks = [
-            { id: 101, title: "Follow up with Jane Doe", dueDate: "2025-11-06", relatedTo: "Jane Doe (Contact)" },
-            { id: 102, title: "Send proposal to Acme Inc", dueDate: "2025-11-06", relatedTo: "Acme Inc (Deal)" },
-            { id: 103, title: "Call John Smith about renewal", dueDate: "2025-11-07", relatedTo: "John Smith (Contact)" },
-        ];
-
-        const mockDueTasks = [
-            { id: 104, title: "Review contract for BigCorp", dueDate: "2025-11-04", relatedTo: "BigCorp (Deal)" },
-            { id: 105, title: "Send follow-up email", dueDate: "2025-11-01", relatedTo: "Tim Brown (Contact)" },
-        ];
-
-        // Data for My Stats (Line Chart)
-        const myChartData = {
-            tasks: [
-                { date: "2025-11-01", count: 2 }, { date: "2025-11-02", count: 1 }, { date: "2025-11-03", count: 3 },
-                { date: "2025-11-04", count: 2 }, { date: "2025-11-05", count: 4 }, { date: "2025-11-06", count: 1 },
-            ],
-            emails: [
-                { date: "2025-11-01", count: 5 }, { date: "2025-11-02", count: 8 }, { date: "2025-11-03", count: 4 },
-                { date: "2025-11-04", count: 7 }, { date: "2025-11-05", count: 6 }, { date: "2025-11-06", count: 9 },
-            ],
-            calls: [
-                { date: "2025-11-01", count: 3 }, { date: "2025-11-02", count: 2 }, { date: "2025-11-03", count: 5 },
-                { date: "2025-11-04", count: 1 }, { date: "2025-11-05", count: 4 }, { date: "2025-11-06", count: 2 },
-            ]
-        };
-
-        // Data for Admin Stats (Bar Chart)
-        const adminChartData = {
-            tasks: [
-                { user: "You", count: 13 }, { user: "Sarah", count: 10 }, { user: "Mark", count: 8 }, { user: "Admin", count: 5 },
-            ],
-            emails: [
-                { user: "You", count: 39 }, { user: "Sarah", count: 45 }, { user: "Mark", count: 30 }, { user: "Admin", count: 12 },
-            ],
-            calls: [
-                { user: "You", count: 17 }, { user: "Sarah", count: 12 }, { user: "Mark", count: 22 }, { user: "Admin", count: 8 },
-            ]
-        };
+        const myChartData = @Html.Raw(Json.Serialize(Model.MyActivityData));
+        const isAdmin = @Html.Raw(Json.Serialize(Model.IsAdmin));
+        const adminChartData = @Html.Raw(Json.Serialize(Model.TeamActivityData));
 
         // Chart.js instances
         let myStatsChartInstance = null;
@@ -257,55 +182,74 @@ It includes:
 
         // --- 2. TASK RENDERING ---
 
+        // *** UPDATED: renderTasks() ***
         function renderTasks() {
             const pendingList = document.getElementById('task-list-pending');
             const dueList = document.getElementById('task-list-due');
+            const completedList = document.getElementById('task-list-completed'); // New
 
             pendingList.innerHTML = '';
             dueList.innerHTML = '';
+            completedList.innerHTML = ''; // New
 
-            if (mockPendingTasks.length === 0) {
+            if (!pendingTasks || pendingTasks.length === 0) {
                 pendingList.innerHTML = '<p class="text-gray-500">No pending tasks. Great job!</p>';
             } else {
-                mockPendingTasks.forEach(task => {
+                pendingTasks.forEach(task => {
                     pendingList.innerHTML += createTaskElement(task, 'pending');
                 });
             }
 
-            if (mockDueTasks.length === 0) {
+            if (!dueTasks || dueTasks.length === 0) {
                 dueList.innerHTML = '<p class="text-gray-500">No overdue tasks!</p>';
             } else {
-                mockDueTasks.forEach(task => {
+                dueTasks.forEach(task => {
                     dueList.innerHTML += createTaskElement(task, 'due');
+                });
+            }
+
+            // *** NEW: Render Completed Tasks ***
+            if (!completedTasks || completedTasks.length === 0) {
+                completedList.innerHTML = '<p class="text-gray-500">No completed tasks found.</p>';
+            } else {
+                completedTasks.forEach(task => {
+                    completedList.innerHTML += createTaskElement(task, 'completed');
                 });
             }
 
             // Update due count badge
             const badge = document.getElementById('due-count-badge');
-            if (mockDueTasks.length > 0) {
-                badge.textContent = mockDueTasks.length;
+            if (dueTasks && dueTasks.length > 0) {
+                badge.textContent = dueTasks.length;
                 badge.style.display = 'inline-block';
             } else {
                 badge.style.display = 'none';
             }
         }
 
+        // *** UPDATED: createTaskElement() ***
         function createTaskElement(task, type) {
-            const isDue = type === 'due';
-            const dateColor = isDue ? 'text-red-600' : 'text-gray-600';
-            const icon = isDue ? 'fa-exclamation-circle' : 'fa-clock';
+            let dateColor = 'text-gray-600';
+            let icon = 'fa-clock';
 
-            // Format date as "Nov 6"
+            if (type === 'due') {
+                dateColor = 'text-red-600';
+                icon = 'fa-exclamation-circle';
+            } else if (type === 'completed') {
+                dateColor = 'text-green-600';
+                icon = 'fa-check-circle';
+            }
+
             const date = new Date(task.dueDate);
             const formattedDate = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', timeZone: 'UTC' });
 
             return `
                 <div class="task-list-item flex items-center justify-between p-3 rounded-lg cursor-pointer border border-transparent hover:border-yellow-300 hover:bg-yellow-50"
-                     onclick="openUpdateTaskModal(${task.id}, '${task.title}', '${task.relatedTo}')">
+                     onclick="openUpdateTaskModal(${task.id})">
                     <div class="flex items-center space-x-3">
-                        <i class="fas fa-task text-blue-500 fa-lg"></i>
+                        <i class="fas ${type === 'completed' ? 'fa-check' : 'fa-task'} text-pink-500 fa-lg"></i>
                         <div>
-                            <p class="font-semibold text-gray-800">${task.title}</p>
+                            <p class="font-semibold text-gray-800 ${type === 'completed' ? 'line-through' : ''}">${task.title}</p>
                             <p class="text-sm text-gray-500">${task.relatedTo}</p>
                         </div>
                     </div>
@@ -319,18 +263,27 @@ It includes:
             `;
         }
 
+        // *** UPDATED: switchTaskTab() ***
         function switchTaskTab(tab) {
-            document.getElementById('task-list-pending').classList.toggle('hidden', tab !== 'pending');
-            document.getElementById('tab-btn-pending').classList.toggle('active', tab === 'pending');
+            // Hide all lists
+            document.getElementById('task-list-pending').classList.add('hidden');
+            document.getElementById('task-list-due').classList.add('hidden');
+            document.getElementById('task-list-completed').classList.add('hidden');
 
-            document.getElementById('task-list-due').classList.toggle('hidden', tab !== 'due');
-            document.getElementById('tab-btn-due').classList.toggle('active', tab === 'due');
+            // Deactivate all buttons
+            document.getElementById('tab-btn-pending').classList.remove('active');
+            document.getElementById('tab-btn-due').classList.remove('active');
+            document.getElementById('tab-btn-completed').classList.remove('active');
+
+            // Show the selected list and activate the selected button
+            document.getElementById(`task-list-${tab}`).classList.remove('hidden');
+            document.getElementById(`tab-btn-${tab}`).classList.add('active');
         }
 
-        // --- 3. CHART RENDERING ---
+        // --- 3. CHART RENDERING (No changes here) ---
 
         function renderMyStatsChart(type) {
-            const data = myChartData[type];
+            const data = myChartData[type] || [];
             const labels = data.map(d => new Date(d.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', timeZone: 'UTC' }));
             const counts = data.map(d => d.count);
 
@@ -367,7 +320,7 @@ It includes:
         }
 
         function renderAdminStatsChart(type) {
-            const data = adminChartData[type];
+            const data = adminChartData[type] || [];
             const labels = data.map(d => d.user);
             const counts = data.map(d => d.count);
 
@@ -400,7 +353,7 @@ It includes:
                     }]
                 },
                 options: {
-                    indexAxis: 'y', // <-- This makes it horizontal
+                    indexAxis: 'y',
                     responsive: true,
                     maintainAspectRatio: false,
                     scales: {
@@ -412,19 +365,57 @@ It includes:
             });
         }
 
-        // --- 4. MODAL FUNCTIONS ---
+        // --- 4. REAL MODAL FUNCTIONS (No changes here) ---
 
-        function openUpdateTaskModal(taskId, title, relatedTo) {
-            // Pre-fill the mock modal
-            document.getElementById('mock-task-title').value = title;
-            document.getElementById('mock-related-label').textContent = relatedTo;
+        // Delegated submit handler
+        $('#taskUpdateModalContainer').on('submit', '#updateTaskForm', function (event) {
+            event.preventDefault();
+            var form = $(this);
+            if ($.validator && $.validator.unobtrusive && !form.valid()) {
+                return false;
+            }
+            $.ajax({
+                url: form.attr('action'),
+                type: form.attr('method'),
+                data: form.serialize(),
+                success: function (response) {
+                    closeUpdateTaskModal();
+                    alert(response.message || "Task updated successfully!");
+                    location.reload();
+                },
+                error: function (xhr) {
+                    var response = xhr.responseJSON;
+                    if (response && response.errors) {
+                        var errorMsg = "Update failed:\n" + response.errors.join("\n");
+                        alert(errorMsg);
+                    } else {
+                        alert("An error occurred: " + (xhr.responseJSON?.message || xhr.responseText));
+                    }
+                }
+            });
+        });
 
-            // Show the modal
-            document.getElementById('updateTaskModal').style.display = 'flex';
+        // Open modal
+        function openUpdateTaskModal(taskId) {
+            var url = '@Url.Action("Update", "Task")' + '?taskId=' + taskId;
+
+            $.get(url, function (data) {
+                $('#taskUpdateModalContainer').html(data);
+                $('#updateTaskModal').css('display', 'flex');
+
+                var form = $("#updateTaskForm");
+                if ($.validator && $.validator.unobtrusive) {
+                    $.validator.unobtrusive.parse(form);
+                }
+            })
+            .fail(function(xhr) {
+                 alert("Error loading task for update: " + (xhr.responseJSON?.message || "Server error."));
+            });
         }
 
+        // Close modal
         function closeUpdateTaskModal() {
-            document.getElementById('updateTaskModal').style.display = 'none';
+            $('#taskUpdateModalContainer').html('');
         }
 
         // --- 5. INITIALIZATION ---
@@ -437,7 +428,8 @@ It includes:
             renderMyStatsChart('tasks');
 
             // Init "Admin Stats" chart
-            if (mockIsAdmin) {
+            if (isAdmin) {
+                // *** UPDATED: Show admin section based on Model.IsAdmin ***
                 document.getElementById('admin-stats-section').style.display = 'block';
                 renderAdminStatsChart('tasks');
             }
@@ -451,13 +443,17 @@ It includes:
                 }
             });
 
-            document.getElementById('admin-stats-tabs').addEventListener('click', (e) => {
-                if (e.target.classList.contains('tab-btn')) {
-                    document.querySelectorAll('#admin-stats-tabs .tab-btn').forEach(btn => btn.classList.remove('active'));
-                    e.target.classList.add('active');
-                    renderAdminStatsChart(e.target.dataset.type);
-                }
-            });
+            // *** UPDATED: Check if admin section exists before adding listener ***
+            const adminTabs = document.getElementById('admin-stats-tabs');
+            if (adminTabs) {
+                adminTabs.addEventListener('click', (e) => {
+                    if (e.target.classList.contains('tab-btn')) {
+                        document.querySelectorAll('#admin-stats-tabs .tab-btn').forEach(btn => btn.classList.remove('active'));
+                        e.target.classList.add('active');
+                        renderAdminStatsChart(e.target.dataset.type);
+                    }
+                });
+            }
         });
 
     </script>

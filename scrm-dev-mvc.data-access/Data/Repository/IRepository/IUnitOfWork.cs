@@ -38,6 +38,8 @@ namespace scrm_dev_mvc.Data.Repository.IRepository
         ITaskStatusRepository TaskStatuses { get; }
 
         IPriorityRepository Priorities { get; }
+
+        IAuditRepository Audits { get; }
         Task SaveChangesAsync();
     }
 }

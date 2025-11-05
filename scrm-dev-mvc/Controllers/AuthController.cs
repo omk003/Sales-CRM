@@ -104,7 +104,7 @@ namespace scrm_dev_mvc.Controllers
                         ExpiresUtc = DateTimeOffset.UtcNow.AddDays(7)
                     });
 
-            return RedirectToAction("Index", "Home");
+            return RedirectToAction("Index", "Workspace");
             
         }
 

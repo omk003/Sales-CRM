@@ -33,13 +33,18 @@ builder.Services.AddScoped<IInvitationService, InvitationService>();
 builder.Services.AddScoped<ICallService, CallService>();
 
 builder.Services.AddScoped<IActivityService, ActivityService>();
-builder.Services.AddScoped<IGmailService, GmailService>(); // Assuming this exists
+builder.Services.AddScoped<IGmailService, GmailService>(); 
 builder.Services.AddScoped<IEmailService, EmailService>();
-
+// In Program.cs
+builder.Services.AddScoped<IAuditService, AuditService>(); 
 // In Program.cs, with your other services:
 
 builder.Services.AddScoped<IDealService, DealService>();
 builder.Services.AddScoped<ITaskService, TaskService>();
+
+builder.Services.AddScoped<IWorkspaceService, WorkspaceService>(); 
+
+
 builder.Services.AddHostedService<GmailPollingHostedService>();
 
 builder.Services.Configure<ForwardedHeadersOptions>(options =>

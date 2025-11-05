@@ -81,7 +81,13 @@ namespace scrm_dev_mvc.Controllers
                 return BadRequest(new { message = "Validation failed.", errors = errors });
             }
 
-            var result = await _taskService.UpdateTaskAndEntitiesAsync(viewModel);
+            var ownerIdString = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (!Guid.TryParse(ownerIdString, out Guid ownerId))
+            {
+                return Unauthorized(new { message = "User ID claim is invalid." });
+            }
+
+            var result = await _taskService.UpdateTaskAndEntitiesAsync(viewModel, ownerId);
 
             if (result.Success)
             {

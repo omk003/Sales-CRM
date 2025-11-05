@@ -8,6 +8,6 @@ namespace scrm_dev_mvc.services
         Task<(bool Success, string Message)> CreateTaskAsync(TaskCreateViewModel viewModel, Guid ownerId);
 
         Task<TaskUpdateViewModel> GetTaskUpdateViewModelAsync(int taskId);
-        Task<(bool Success, string Message)> UpdateTaskAndEntitiesAsync(TaskUpdateViewModel viewModel);
+        Task<(bool Success, string Message)> UpdateTaskAndEntitiesAsync(TaskUpdateViewModel viewModel, Guid ownerId);
     }
 }
