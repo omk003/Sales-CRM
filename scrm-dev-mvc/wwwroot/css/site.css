@@ -521,7 +521,9 @@ table.table thead th {
 .kanban-container {
     max-width: 100vw;
     margin: 0 auto;
-    padding: 1rem;
+    margin-top:1.5rem;
+    padding: 24px;
+    
    background: #ffffff; /*var(--bg-secondary);*/
     border-radius: var(--border-radius-lg);
     box-shadow: var(--shadow-sm);

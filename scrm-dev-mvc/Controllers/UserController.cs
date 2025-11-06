@@ -95,8 +95,8 @@ namespace scrm_dev_mvc.Controllers
             // Update only editable fields
             existingUser.FirstName = user.FirstName;
             existingUser.LastName = user.LastName;
-
-            await _userService.UpdateUserAsync(existingUser);
+            var ownerId = User.GetUserId();
+            await _userService.UpdateUserProfileAsync(user.Id, user.FirstName, user.LastName, ownerId);
 
             TempData["Message"] = "Profile updated successfully!";
             return RedirectToAction("Index"); // Redirect to refresh the data
@@ -108,8 +108,8 @@ namespace scrm_dev_mvc.Controllers
         public async Task<IActionResult> ChangeUserRole(int organizationId, Guid userId, string newRole)
         {
             // You may want to check if the current user has permission to change roles here.
-
-            var success = await _userService.ChangeUserRoleAsync(userId, organizationId, newRole);
+            var adminId = User.GetUserId();
+            var success = await _userService.ChangeUserRoleAsync(userId, organizationId, newRole, adminId);
             if (!success)
             {
                 TempData["Message"] = "Failed to update user role.";

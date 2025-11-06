@@ -36,9 +36,9 @@ public class InvitationService(ApplicationDbContext context, IUserService userSe
         {
             return false; // Invalid, used, or expired code
         }
-
+        var ownerId = userId;  // User accepting the invitation is the owner
         // Use a user service to update the user's organization
-        var success = await userService.AssignUserToOrganizationAsync(userId, invitation.OrganizationId, invitation.RoleId);
+        var success = await userService.AssignUserToOrganizationAsync(userId, invitation.OrganizationId, invitation.RoleId, ownerId);
 
         if (success)
         {

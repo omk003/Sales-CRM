@@ -113,7 +113,12 @@ namespace scrm_dev_mvc.Controllers
         [HttpPost]
         public async Task<IActionResult> DeleteBulk([FromBody] List<int> ids)
         {
-            await contactService.DeleteContactsByIdsAsync(ids);
+            var userId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrEmpty(userId))
+            {
+                return Unauthorized();
+            }
+            await contactService.DeleteContactsByIdsAsync(ids, Guid.Parse(userId));
             return Json(new { success = true, message = "Delete Successful" });
         }
 
@@ -168,37 +173,21 @@ namespace scrm_dev_mvc.Controllers
                 };
                 return View(vm);
             }
-
+            var userId = Guid.Parse(User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value);
             if (contact.OwnerId == null)
             {
-                contact.OwnerId = Guid.Parse(User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value);
+                contact.OwnerId = userId;
             }
 
-            var result = await contactService.UpdateContact(contact); 
+            var result = await contactService.UpdateContact(contact, userId); 
 
             // You can either:
             // 1. Redirect to Index with TempData message
-            TempData["SuccessMessage"] = result;
+            TempData["Message"] = result;
             return RedirectToAction("Index");
         }
 
-        [HttpPost]
-        [ValidateAntiForgeryToken] 
-        public async Task<IActionResult> AssociateContactToCompany(int contactId, int companyId)
-        {
-            var result = await contactService.AssociateContactToCompany(contactId, companyId);
-
-            if (result.Success)
-            {
-                // Send a success response
-                return Ok(new { message = result.Message });
-            }
-            else
-            {
-                // Send a 400 Bad Request response with the error message
-                return BadRequest(new { message = result.Message });
-            }
-        }
+        
 
       
 
@@ -284,7 +273,27 @@ namespace scrm_dev_mvc.Controllers
         }
 
 
-   
+        #region Association Methods
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> AssociateContactToCompany(int contactId, int companyId)
+        {
+            var userId = Guid.Parse(User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value);
+
+            var result = await contactService.AssociateContactToCompany(contactId, companyId, userId);
+
+            if (result.Success)
+            {
+                // Send a success response
+                return Ok(new { message = result.Message });
+            }
+            else
+            {
+                // Send a 400 Bad Request response with the error message
+                return BadRequest(new { message = result.Message });
+            }
+        }
 
         [HttpPost]
         public async Task<IActionResult> AssociateContactToDeal(int contactId, int dealId)
@@ -293,10 +302,11 @@ namespace scrm_dev_mvc.Controllers
             {
                 return BadRequest(new { success = false, message = "Invalid IDs provided." });
             }
+            var userId = Guid.Parse(User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value);
 
-            var success = await contactService.AssociateContactToDealAsync(contactId, dealId);
+            var result = await contactService.AssociateContactToDealAsync(contactId, dealId, userId);
 
-            if (success)
+            if (result.Success)
             {
                 return Ok(new { success = true, message = "Contact associated with deal successfully." });
             }
@@ -310,7 +320,9 @@ namespace scrm_dev_mvc.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DisassociateCompany(int contactId)
         {
-            var result = await contactService.DisassociateCompany(contactId);
+            var userId = Guid.Parse(User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value);
+
+            var result = await contactService.DisassociateCompany(contactId, userId);
 
             if (result.Success)
             {
@@ -321,5 +333,7 @@ namespace scrm_dev_mvc.Controllers
                 return BadRequest(new { message = result.Message });
             }
         }
+
+        #endregion
     }
 }

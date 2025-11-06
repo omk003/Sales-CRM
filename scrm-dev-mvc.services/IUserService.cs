@@ -19,9 +19,11 @@ namespace scrm_dev_mvc.services
         Task<User> GetUserByIdAsync(Guid id);
         System.Threading.Tasks.Task UpdateUserAsync(User user);
 
-        Task<bool> AssignUserToOrganizationAsync(Guid userId, int organizationId, int roleId);
+        Task<bool> UpdateUserProfileAsync(Guid userId, string newFirstName, string newLastName, Guid ownerId);
+
+        Task<bool> AssignUserToOrganizationAsync(Guid userId, int organizationId, int roleId, Guid adminId);
 
         Task<User> GetFirstOrDefault(System.Linq.Expressions.Expression<Func<User, bool>> predicate, string? Include);
-        Task<bool> ChangeUserRoleAsync(Guid userId, int organizationId, string newRole);
+        Task<bool> ChangeUserRoleAsync(Guid userId, int organizationId, string newRole, Guid adminId);
     }
 }

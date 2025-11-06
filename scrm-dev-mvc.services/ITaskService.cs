@@ -9,5 +9,6 @@ namespace scrm_dev_mvc.services
 
         Task<TaskUpdateViewModel> GetTaskUpdateViewModelAsync(int taskId);
         Task<(bool Success, string Message)> UpdateTaskAndEntitiesAsync(TaskUpdateViewModel viewModel, Guid ownerId);
+
     }
 }

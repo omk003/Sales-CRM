@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using scrm_dev_mvc.Models;
+using scrm_dev_mvc.Models.DTO;
 using scrm_dev_mvc.Models.ViewModels;
 using scrm_dev_mvc.services;
 using scrm_dev_mvc.Services;
@@ -26,7 +27,7 @@ namespace scrm_dev_mvc.Controllers
             // check if he is in organization
             if (!string.IsNullOrEmpty(organizationService.IsInOrganizationById(Guid.Parse(userId)).Result?.Name))
             {
-                TempData["Error"] = "You are already in an organization.";
+                //TempData["Error"] = "You are already in an organization.";
                 return RedirectToAction("Index", "Organization");
             }
             return View();
@@ -143,32 +144,50 @@ namespace scrm_dev_mvc.Controllers
         {
             if (!ModelState.IsValid)
             {
+                // You should reload the view model with any necessary data if you return here
                 return View(model);
             }
 
-            var organization = await organizationService.GetByIdAsync(model.OrganizationId);
-            if (organization == null)
+            // 1. Get the ID of the user performing the action
+            var ownerIdString = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (!Guid.TryParse(ownerIdString, out Guid ownerId))
             {
-                return NotFound();
+                return Unauthorized();
             }
 
-            organization.Name = model.Name;
-            organization.Address = model.Address;
-            organization.PhoneNumber = model.PhoneNumber;
+            // 2. Map ViewModel to DTO
+            var dto = new OrganizationUpdateDto
+            {
+                OrganizationId = model.OrganizationId,
+                Name = model.Name,
+                Address = model.Address,
+                PhoneNumber = model.PhoneNumber
+            };
 
-            await organizationService.UpdateAsync(organization);
+            // 3. Call the new auditable service method
+            var success = await organizationService.UpdateOrganizationAsync(dto, ownerId);
+
+            if (!success)
+            {
+                TempData["Message"] = "Error: Could not update organization.";
+                return View(model);
+            }
 
             TempData["Message"] = "Organization details updated successfully!";
-            return RedirectToAction("OrganizationView", "Organization");
+
+            // Redirect to the OrganizationView, but you need its ID.
+            // Assuming your OrganizationView action takes an 'id' parameter.
+            return RedirectToAction("OrganizationView", "Organization", new { id = model.OrganizationId });
         }
 
 
         [HttpPost]
         [ValidateAntiForgeryToken]
         [Authorize(Roles = "SalesAdminSuper")]
-        public async Task<IActionResult> DeleteUser(int organizationId, Guid userId)
+        public async Task<IActionResult> DeleteUser(int organizationId, Guid userId, Guid newUserId)
         {
-            var result = await organizationService.DeleteUserFromOrganizationAsync(userId, organizationId);
+            var adminId = User.GetUserId();
+            var result = await organizationService.ReassignAndRemoveUserAsync(userId, organizationId, newUserId, adminId);
             if (result)
                 TempData["Message"] = "User deleted successfully.";
             else

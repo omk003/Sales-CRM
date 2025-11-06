@@ -66,19 +66,26 @@ This page is now updated with the "Completed" tasks tab.
         .task-list-item:hover {
             background-color: #fefcbf; /* A light yellow highlight */
         }
+
+
+        h3 {
+            font-size: var(--fs-h3);
+            color: var(--color-accent1);
+            padding-top:12px;
+        }
     </style>
 </head>
-<body class="p-4 md:p-8">
+<body class="pt-4">
 
     <div class="max-w-7xl mx-auto space-y-8">
 
-        <h1 class="text-3xl font-bold text-gray-900">My Workspace</h1>
+        @* <h1 class="text-3xl font-bold text-gray-900">My Workspace</h1> *@
 
         <!-- ================================== -->
         <!-- Section 1: Tasks -->
         <!-- ================================== -->
-        <div class="bg-white p-4 sm:p-6 rounded-lg shadow-sm border border-gray-200">
-            <h2 class="text-xl font-semibold mb-4">My Tasks</h2>
+        <div class="bg-white p-4 sm:p-6 rounded-lg shadow-sm ">
+            <h3 class="text-2xl font-bold mb-4">My Tasks</h3>
 
             <!-- *** UPDATED: Task Tabs: Pending / Due / Completed *** -->
             <div class="border-b border-gray-200 mb-4">
@@ -119,7 +126,7 @@ This page is now updated with the "Completed" tasks tab.
         <!-- ================================== -->
         <!-- Section 2: My Stats (Line Chart) -->
         <!-- ================================== -->
-        <div class="bg-white p-4 sm:p-6 rounded-lg shadow-sm border border-gray-200">
+        <div class="bg-white p-4 sm:p-6 rounded-lg shadow-sm ">
             <div class="flex flex-col sm:flex-row justify-between sm:items-center mb-4">
                 <h2 class="text-xl font-semibold">My Activity</h2>
                 <div class="flex space-x-2 mt-3 sm:mt-0" id="my-stats-tabs">
@@ -138,7 +145,7 @@ This page is now updated with the "Completed" tasks tab.
         <!-- ================================== -->
         @if (Model.IsAdmin)
         {
-            <div id="admin-stats-section" class="bg-white p-4 sm:p-6 rounded-lg shadow-sm border border-gray-200">
+            <div id="admin-stats-section" class="bg-white p-4 sm:p-6 rounded-lg shadow-sm ">
                 <div class="flex flex-col sm:flex-row justify-between sm:items-center mb-4">
                     <h2 class="text-xl font-semibold">Team Performance</h2>
                     <div class="flex space-x-2 mt-3 sm:mt-0" id="admin-stats-tabs">

@@ -2,8 +2,10 @@
 @Html.AntiForgeryToken() 
 
 <div class="kanban-container">
+
     <div class="kanban-header">
-        <h2 style="font-size:1.2rem; margin:0;">Deals Board</h2>
+        @* <h2 style="font-size:1.2rem; margin:0;">Deals Board</h2> *@
+        <h3 class="py-2">Deals Board</h3>
         <a class="btn btn-primary btn-custom" style="padding:0.3rem 1rem;" asp-action="Create" asp-controller="Deal">
             + Create Deal
         </a>

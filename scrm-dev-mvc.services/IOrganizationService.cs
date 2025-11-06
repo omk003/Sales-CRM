@@ -1,4 +1,5 @@
 ﻿using scrm_dev_mvc.Models;
+using scrm_dev_mvc.Models.DTO;
 using scrm_dev_mvc.Models.ViewModels;
 using System;
 using System.Collections.Generic;
@@ -18,6 +19,10 @@ namespace scrm_dev_mvc.services
 
         System.Threading.Tasks.Task UpdateAsync(Organization organization);
 
-        Task<bool> DeleteUserFromOrganizationAsync(Guid userId, int organizationId);
+        Task<bool> UpdateOrganizationAsync(OrganizationUpdateDto dto, Guid ownerId);
+
+        Task<bool> DeleteUserFromOrganizationAsync(Guid userId, int organizationId, Guid adminId);
+
+        Task<bool> ReassignAndRemoveUserAsync(Guid userIdToRemove, int organizationId, Guid newOwnerId, Guid adminId);
     }
 }

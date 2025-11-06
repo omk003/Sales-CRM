@@ -1,11 +1,11 @@
-﻿@if (TempData["Message"] != null)
+﻿@* @if (TempData["Message"] != null)
 {
     <div id="tempDataMessage" class="alert alert-info alert-dismissible fade show" role="alert">
         @TempData["Message"]
         <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
     </div>
 }
-    <div class="card p-4 mt-3 shadow-sm">
+    <div class="card p-4 mt-3 m-5 shadow-sm">
         <h5>Invite Your Team</h5>
         <form asp-action="SendInvitation" method="post">
             <div class="mb-3">
@@ -23,4 +23,330 @@
         </form>
     </div>
 
+ *@
+@{
+    ViewData["Title"] = "Invite Team Member";
+}
 
+@* Display feedback messages (styled as a "toast") *@
+@if (TempData["Message"] != null)
+{
+    <div id="tempDataMessage" class="alert alert-info alert-dismissible fade show" role="alert" style="position: absolute; top: 80px; right: 20px; z-index: 1050;">
+        @TempData["Message"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
+
+<div class="profile-container">
+    <header class="profile-header">
+        <h1 class="page-title">Invite Your Team</h1>
+    </header>
+
+    <main class="profile-content">
+        <div id="inviteFormSection">
+            @* We use "profile-edit-card" since it's a form *@
+            <div class="profile-edit-card">
+                <form asp-action="SendInvitation" method="post">
+
+                    <div class="form-group">
+                        <label for="email">Email</label>
+                        <input type="email" class="form-input" id="email" name="Email" placeholder="Enter team member's email" required />
+                    </div>
+
+                    <div class="form-group">
+                        <label for="role">Permission</label>
+                        <select class="form-input" id="role" name="RoleId" required>
+                            <option value="3">Sales Admin</option>
+                            <option value="4">Sales User</option>
+                        </select>
+                    </div>
+
+                    <div class="btn-container">
+                        @* Using "sync-btn" to make it blue, like a primary action *@
+                        <button type="submit" class="btn-common sync-btn">Send Invitation</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </main>
+</div>
+
+@* This is the complete, shared CSS block.
+   You can (and should) move this into your main _Layout.cshtml or a shared .css file
+   so you don't have to repeat it on every page.
+*@
+<style>
+    /* Main container and layout */
+    .profile-container {
+        max-width: 900px;
+        margin: 0 auto;
+        display: flex;
+        flex-direction: column;
+        height: calc(100vh - 5rem);
+        /* Adjust calc(100vh - 5rem) if your main layout padding is different */
+    }
+
+    .profile-header {
+        border-bottom: 1px solid #e5e5e5;
+        padding-bottom: 20px;
+        margin-bottom: 30px;
+        flex-shrink: 0; /* Prevents the header from shrinking */
+        /* Added for the action button */
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .page-title {
+        font-size: 2rem;
+        font-weight: 700;
+        color: #333;
+    }
+
+    .profile-content {
+        /* This makes the main content area scrollable if it overflows */
+        overflow-y: auto;
+    }
+
+    /* Tab Navigation / Header Actions */
+    .profile-nav {
+        margin-top: 0; /* Aligned with title */
+        display: flex;
+        gap: 10px;
+    }
+
+    .nav-tab {
+        padding: 10px 20px;
+        font-size: 1rem;
+        font-weight: 600;
+        border: 2px solid transparent;
+        border-bottom: 2px solid #e5e5e5;
+        background: none;
+        cursor: pointer;
+        color: #666;
+        transition: all 0.2s ease;
+        border-radius: 6px 6px 0 0;
+    }
+
+        .nav-tab:hover {
+            background-color: #f8f8f8;
+            color: #333;
+        }
+
+        .nav-tab.active {
+            color: var(--color-secondary, #0078ff); /* Uses your variable with a fallback */
+            border-color: var(--color-secondary, #0078ff);
+        }
+
+    /* Shared Card styles */
+    .profile-info-card, .profile-edit-card {
+        background: #ffffff;
+        padding: 30px;
+        border-radius: 12px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+        border: 1px solid #e5e5e5;
+    }
+
+    /* View Profile Styles */
+    .info-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 25px;
+    }
+
+    .info-item {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .info-label {
+        font-size: 0.9rem;
+        color: #777;
+        margin-bottom: 4px;
+    }
+
+    .info-value {
+        font-size: 1.1rem;
+        color: #333;
+        font-weight: 500;
+    }
+
+    .sync-action {
+        border-top: 1px solid #eee;
+        margin-top: 25px;
+        padding-top: 25px;
+    }
+
+    /* Edit Form Styles */
+    .form-group {
+        margin-bottom: 20px;
+    }
+
+    label {
+        display: block;
+        font-size: 0.9rem;
+        font-weight: 600;
+        color: #555;
+        margin-bottom: 6px;
+    }
+
+    .form-input {
+        width: 100%;
+        padding: 12px;
+        border: 1px solid #ccc;
+        border-radius: 8px;
+        font-size: 1rem;
+        transition: border-color 0.2s;
+        /* Ensures <select> elements look right */
+        background-color: white;
+        -webkit-appearance: none;
+        -moz-appearance: none;
+        appearance: none;
+    }
+
+    /* Add a dropdown arrow to select elements styled as form-input */
+    select.form-input {
+        background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23333333' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='m2 5 6 6 6-6'/%3e%3c/svg%3e");
+        background-repeat: no-repeat;
+        background-position: right 12px center;
+        background-size: 1em;
+    }
+
+    .form-input:focus {
+        border-color: var(--color-secondary, #0078ff); /* Uses your variable */
+        outline: none;
+    }
+
+    .form-input.readonly {
+        background: #f5f5f5;
+        cursor: not-allowed;
+    }
+
+    /* Button Styles */
+    .btn-container {
+        margin-top: 30px;
+        display: flex;
+    }
+
+    .btn-common {
+        padding: 12px 20px;
+        border: none;
+        border-radius: 8px;
+        font-size: 1rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s;
+        text-decoration: none;
+        text-align: center;
+    }
+
+    .submit-btn {
+        background-color: #333;
+        color: white;
+    }
+
+        .submit-btn:hover {
+            background-color: #000;
+        }
+
+    .sync-btn {
+        background-color: var(--color-secondary, #0078ff); /* Uses your variable */
+        color: white;
+        display: inline-block;
+    }
+
+        .sync-btn:hover {
+            filter: brightness(90%); /* Adds a hover effect */
+        }
+
+    /* --- Styles for Organization Table (Not used here, but safe to keep) --- */
+    .data-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+        .data-table th, .data-table td {
+            padding: 12px 15px;
+            border-bottom: 1px solid #e5e5e5;
+            text-align: left;
+            vertical-align: middle;
+        }
+
+        .data-table th {
+            font-weight: 600;
+            color: #555;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+        }
+
+        .data-table td {
+            color: #333;
+        }
+
+        .data-table tr:last-child td {
+            border-bottom: none;
+        }
+
+    .role-form {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+        flex-wrap: nowrap;
+    }
+
+    .form-select-inline {
+        padding: 8px 12px;
+        border: 1px solid #ccc;
+        border-radius: 8px;
+        font-size: 0.9rem;
+        background-color: white;
+        min-width: 120px;
+    }
+
+        .form-select-inline:focus {
+            border-color: var(--color-secondary, #0078ff);
+            outline: none;
+        }
+
+    .btn-sm {
+        padding: 8px 12px;
+        font-size: 0.9rem;
+    }
+
+    .btn-custom-delete {
+        background-color: #dc3545; /* Bootstrap's danger color */
+        color: white;
+    }
+
+        .btn-custom-delete:hover {
+            background-color: #c82333;
+            color: white;
+        }
+
+    .data-table td:last-child {
+        white-space: nowrap;
+        display: flex;
+        gap: 8px;
+    }
+</style>
+
+@* This script will auto-dismiss the TempData alert *@
+@section Scripts {
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // --- START: Auto-dismiss TempData alerts ---
+            try {
+                var tempDataAlert = document.getElementById('tempDataMessage');
+                if (tempDataAlert && (typeof bootstrap !== 'undefined') && bootstrap.Alert) {
+                    var bsAlert = new bootstrap.Alert(tempDataAlert);
+                    setTimeout(function() {
+                        bsAlert.close();
+                    }, 5000); // Close after 5 seconds
+                }
+            } catch (e) {
+                console.error("Error auto-dismissing alerts: ", e);
+            }
+            // --- END: Auto-dismiss TempData alerts ---
+        });
+    </script>
+}
