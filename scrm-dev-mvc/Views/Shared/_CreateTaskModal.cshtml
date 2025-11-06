@@ -24,6 +24,15 @@
                     </div>
 
                     <div style="margin-bottom:var(--space-md);">
+                        <label asp-for="TaskType" style="font-weight:var(--fw-bold);">Task Type</label>
+                        <select asp-for="TaskType" style="width:100%;padding:var(--space-sm);border-radius:var(--border-radius-sm);border:1px solid var(--border-color);">
+                            <option value="">-- Select Type --</option>
+                            <option value="Email">Email</option>
+                            <option value="Call">Call</option>
+                        </select>
+                        <span asp-validation-for="TaskType" style="color:var(--color-accent);font-size:var(--fs-sm);"></span>
+                    </div>
+                    <div style="margin-bottom:var(--space-md);">
                         <label asp-for="Description" style="font-weight:var(--fw-bold);">Description</label>
                         <textarea asp-for="Description" rows="4" style="width:100%;padding:var(--space-sm);border-radius:var(--border-radius-sm);border:1px solid var(--border-color);"></textarea>
                     </div>

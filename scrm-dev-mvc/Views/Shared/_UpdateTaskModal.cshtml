@@ -15,6 +15,10 @@
                     <input type="hidden" asp-for="ContactId" />
                     <input type="hidden" asp-for="DealId" />
 
+                    <input type="hidden" asp-for="TaskType" />
+                    <input type="hidden" asp-for="ContactEmail" />
+                    <input type="hidden" asp-for="ContactPhoneNumber" />
+
                     <div style="margin-bottom:var(--space-md);">
                         <label asp-for="Title" style="font-weight:var(--fw-bold);">Title</label>
                         <input type="text" asp-for="Title" style="width:100%;padding:var(--space-sm);border-radius:var(--border-radius-sm);border:1px solid var(--border-color);" />
@@ -27,7 +31,7 @@
                         </div>
                         <div style="flex:1;">
                             <label asp-for="StatusId" style="font-weight:var(--fw-bold);">Task Status</label>
-                            <select asp-for="StatusId" asp-items="@Model.TaskStatuses" style="width:100%;padding:var(--space-sm);border-radius:var(--border-radius-sm);border:1px solid var(--border-color);"></select>
+                            <select id="taskStatusDropdown" asp-for="StatusId" asp-items="@Model.TaskStatuses" style="width:100%;padding:var(--space-sm);border-radius:var(--border-radius-sm);border:1px solid var(--border-color);"></select>
                         </div>
                     </div>
 
@@ -38,6 +42,23 @@
                             <select asp-for="CurrentContactLeadStatusId" asp-items="@Model.LeadStatuses" style="width:100%;padding:var(--space-sm);border-radius:var(--border-radius-sm);border:1px solid var(--border-color);">
                                 <option value="">-- Change Lead Status --</option>
                             </select>
+
+                            <div style="margin-top: var(--space-md); display: flex; gap: var(--space-md);">
+                                @if (Model.TaskType == "Email")
+                                {
+                                    <button type="button" class="btn btn-action-email" style="flex:1;"
+                                            onclick="openEmailModal('@Model.ContactEmail')">
+                                        <i class="bi bi-envelope"></i> Send Email
+                                    </button>
+                                }
+                                @if (Model.TaskType == "Call")
+                                {
+                                    <button type="button" class="btn btn-action-call" style="flex:1;"
+                                            onclick="openCallModal('@Model.ContactPhoneNumber', @Model.ContactId.Value)">
+                                        <i class="bi bi-phone"></i> Make Call
+                                    </button>
+                                }
+                            </div>
                         </div>
                     }
 

@@ -46,6 +46,7 @@ namespace scrm_dev_mvc.Services
                     Id = t.Id,
                     Title = t.Title ?? "N/A",
                     DueDate = t.DueDate ?? today.AddYears(1),
+                    TaskType = t.TaskType,
                     RelatedTo = t.ContactId.HasValue ? $"{t.Contact?.FirstName} {t.Contact?.LastName} (Contact)" :
                                 t.DealId.HasValue ? $"{t.Deal?.Name} (Deal)" : "No Association"
                 });
@@ -75,6 +76,7 @@ namespace scrm_dev_mvc.Services
                     {
                         Id = t.Id,
                         Title = t.Title ?? "N/A",
+                        TaskType = t.TaskType,
                         DueDate = t.DueDate ?? today, // Use 'today' as a fallback
                         RelatedTo = t.ContactId.HasValue ? $"{t.Contact?.FirstName} {t.Contact?.LastName} (Contact)" :
                                     t.DealId.HasValue ? $"{t.Deal?.Name} (Deal)" : "No Association"
@@ -171,31 +173,7 @@ namespace scrm_dev_mvc.Services
                     viewModel.TeamActivityData["tasks"] = groupedTeamActivities.GetValueOrDefault("task", new List<UserActivityStats>());
                     viewModel.TeamActivityData["emails"] = groupedTeamActivities.GetValueOrDefault("email", new List<UserActivityStats>());
                     viewModel.TeamActivityData["calls"] = groupedTeamActivities.GetValueOrDefault("call", new List<UserActivityStats>());
-                    //var teamActivities = await _unitOfWork.Activities.GetAllAsync(
-                    //    a => a.ActivityDate >= today.AddDays(-30),
-                    //    false,
-                    //    a => a.ActivityType,
-                    //    a => a.Owner
-                    //);
-
-                    //var groupedTeamActivities = teamActivities
-                    //    .Where(a => a.Owner != null)
-                    //    .GroupBy(a => a.ActivityType.Name.ToLower())
-                    //    .ToDictionary(
-                    //        g => g.Key,
-                    //        g => g.GroupBy(a => a.Owner.FirstName) // Group by user
-                    //              .Select(userGroup => new UserActivityStats
-                    //              {
-                    //                  User = userGroup.Key,
-                    //                  Count = userGroup.Count()
-                    //              })
-                    //              .OrderByDescending(us => us.Count)
-                    //              .ToList()
-                    //    );
-
-                    //viewModel.TeamActivityData["tasks"] = groupedTeamActivities.GetValueOrDefault("task", new List<UserActivityStats>());
-                    //viewModel.TeamActivityData["emails"] = groupedTeamActivities.GetValueOrDefault("email", new List<UserActivityStats>());
-                    //viewModel.TeamActivityData["calls"] = groupedTeamActivities.GetValueOrDefault("call", new List<UserActivityStats>());
+                    
                 }
                 catch (Exception ex)
                 {

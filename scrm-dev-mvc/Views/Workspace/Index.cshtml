@@ -73,6 +73,41 @@ This page is now updated with the "Completed" tasks tab.
             color: var(--color-accent1);
             padding-top:12px;
         }
+
+        /* ... add this to your existing <style> tag ... */
+
+        .btn-action-email, .btn-action-call {
+            padding: 8px 12px;
+            border: none;
+            border-radius: 6px; /* Match your other styles */
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            text-align: center;
+            font-size: 0.9rem;
+            display: flex; /* Added for icon */
+            align-items: center; /* Added for icon */
+            justify-content: center; /* Added for icon */
+            gap: 8px; /* Added for icon */
+        }
+
+        .btn-action-email {
+            background-color: #0d6efd; /* Blue */
+            color: white;
+        }
+
+            .btn-action-email:hover {
+                background-color: #0b5ed7;
+            }
+
+        .btn-action-call {
+            background-color: #198754; /* Green */
+            color: white;
+        }
+
+            .btn-action-call:hover {
+                background-color: #157347;
+            }
     </style>
 </head>
 <body class="pt-4">
@@ -168,10 +203,201 @@ This page is now updated with the "Completed" tasks tab.
         <!-- The _UpdateTaskModal partial view will be loaded here -->
     </div>
 
+
+
+
+    <div id="emailModal" class="modal" tabindex="-1" style="display:none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.3); z-index: 9999; align-items: center; justify-content: center;">
+        <div class="modal-dialog" style="max-width: 450px; margin: 4rem auto;">
+            <div class="modal-content" style="background:var(--bg-primary);border-radius:var(--border-radius-lg);padding:var(--space-lg);">
+                <div class="modal-header" style="display: flex; justify-content: space-between; align-items: center;">
+                    <h5 class="modal-title">Send Email</h5>
+                    <button type="button" class="btn-close" onclick="closeEmailModal()"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="emailForm" autocomplete="off">
+                        <input type="hidden" id="emailModalContactEmail" />
+                        <div style="margin-bottom:var(--space-md);">
+                            <label for="emailSubject" style="font-weight:var(--fw-bold);">Subject</label>
+                            <input type="text" id="emailSubject" name="subject" style="width:100%;padding:var(--space-sm);border-radius:var(--border-radius-sm);border:1px solid var(--border-color);" required />
+                        </div>
+                        <div style="margin-bottom:var(--space-md);">
+                            <label for="emailBody" style="font-weight:var(--fw-bold);">Body</label>
+                            <textarea id="emailBody" name="body" rows="6" style="width:100%;padding:var(--space-sm);border-radius:var(--border-radius-sm);border:1px solid var(--border-color);" required></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-custom" style="width:100%;">Send</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="callModal" class="modal" tabindex="-1" style="display:none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.3); z-index: 9999; align-items: center; justify-content: center;">
+        <div class="modal-dialog" style="max-width: 350px; margin: 4rem auto;">
+            <div class="modal-content" style="background:var(--bg-primary);border-radius:var(--border-radius-lg);padding:var(--space-lg);">
+                <div class="modal-header" style="display: flex; justify-content: space-between; align-items: center;">
+                    <h5 class="modal-title">Call Contact</h5>
+                    <button type="button" class="btn-close" onclick="closeCallModal()"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" id="callModalPhoneNumber" />
+                    <input type="hidden" id="callModalContactId" />
+                    <div style="margin-bottom:var(--space-md);">
+                        <label style="font-weight:var(--fw-bold);">Contact Number</label>
+                        <div id="callModalPhoneNumberDisplay" style="padding:var(--space-sm);font-size:var(--fs-base);background:var(--bg-secondary);border-radius:var(--border-radius-sm);border:1px solid var(--border-color);">
+                        </div>
+                    </div>
+                    <button type="button" class="btn btn-custom" style="width:100%;" onclick="makeCall()">
+                        Call
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- ================================== -->
     <!-- SCRIPT BLOCK -->
     <!-- ================================== -->
     <script>
+                function submitTaskUpdateForm(formElement) {
+            var form = $(formElement);
+
+            // Optional: Re-run validation
+            if ($.validator && $.validator.unobtrusive && !form.valid()) {
+                return false;
+            }
+
+            $.ajax({
+                url: form.attr('action'),
+                type: form.attr('method'),
+                data: form.serialize(),
+                success: function (response) {
+                    closeUpdateTaskModal();
+                    alert(response.message || "Task updated successfully!");
+                    location.reload(); // This is the original, correct success handler
+                },
+                error: function (xhr) {
+                    var response = xhr.responseJSON;
+                    if (response && response.errors) {
+                        var errorMsg = "Update failed:\n" + response.errors.join("\n");
+                        alert(errorMsg);
+                    } else {
+                        alert("An error occurred: " + (xhr.responseJSON?.message || xhr.responseText));
+                    }
+                }
+            });
+        }
+
+
+                    // UPDATE THIS FUNCTION
+        function completeTaskAndSubmit() {
+            try {
+                const statusDropdown = $('#taskStatusDropdown');
+                if (statusDropdown.length === 0) {
+                    console.error('Could not find task status dropdown. Reloading.');
+                    location.reload();
+                    return;
+                }
+
+                let completedOptionValue = null;
+                statusDropdown.find('option').each(function() {
+                    if ($(this).text().trim() === 'Completed') {
+                        completedOptionValue = $(this).val();
+                    }
+                });
+
+                if (completedOptionValue) {
+                    // Set the dropdown value
+                    statusDropdown.val(completedOptionValue);
+
+                    // --- THIS IS THE FIX ---
+                    // Call the reusable function directly instead of using .trigger()
+                    submitTaskUpdateForm($('#updateTaskForm'));
+
+                } else {
+                    console.error("Could not find a 'Completed' status in the dropdown.");
+                    location.reload();
+                }
+
+            } catch (e) {
+                console.error('Error in completeTaskAndSubmit:', e);
+                location.reload();
+            }
+        }
+
+        // --- Email Modal ---
+        function openEmailModal(contactEmail) {
+            // Set the hidden field with the email
+            $('#emailModalContactEmail').val(contactEmail);
+
+            // Reset form fields
+            $('#emailSubject').val('');
+            $('#emailBody').val('');
+            $('#emailModal').css('display', 'flex');
+        }
+
+        function closeEmailModal() {
+            $('#emailModal').hide();
+        }
+
+        $('#emailForm').on('submit', function(event){
+            event.preventDefault();
+
+            // Get data from the form and the hidden input
+            var subject = $('#emailSubject').val();
+            var body = $('#emailBody').val();
+            var contactEmail = $('#emailModalContactEmail').val(); // Get email from hidden input
+
+            $.ajax({
+                url: '/Contact/SendEmail', // Make sure this URL is correct
+                type: 'POST',
+                data: { contactEmail: contactEmail, subject: subject, body: body },
+                success: function(response) {
+                    closeEmailModal();
+                    alert("Email sent successfully!");
+                    completeTaskAndSubmit();
+                },
+                error: function() {
+                    alert("Failed to send email.");
+                }
+            });
+        });
+
+        
+           // --- Call Modal ---
+        function openCallModal(phoneNumber, contactId) {
+            // Set hidden fields and display field
+            $('#callModalPhoneNumber').val(phoneNumber);
+            $('#callModalContactId').val(contactId);
+            $('#callModalPhoneNumberDisplay').text(phoneNumber);
+
+            // --- THIS IS THE FIX ---
+            // Was: $('#emailModal').css('display', 'flex');
+            $('#callModal').css('display', 'flex'); // Corrected to target #callModal
+        }
+
+        function closeCallModal() {
+            $('#callModal').hide();
+        }
+
+        function makeCall() {
+            // Get data from hidden inputs
+            var phoneNumber = $('#callModalPhoneNumber').val();
+            var contactId = $('#callModalContactId').val();
+
+            $.ajax({
+                url: '/Contact/CallContact', // Make sure this URL is correct
+                type: 'POST',
+                data: { phoneNumber: phoneNumber, contactId: contactId },
+                success: function(response) {
+                    closeCallModal();
+                    alert("Call initiated!");
+                    completeTaskAndSubmit();
+                },
+                error: function() {
+                    alert("Failed to initiate call.");
+                }
+            });
+        }
         // --- 1. REAL DATA (from @Model) ---
 
         const pendingTasks = @Html.Raw(Json.Serialize(Model.PendingTasks));
@@ -250,16 +476,43 @@ This page is now updated with the "Completed" tasks tab.
             const date = new Date(task.dueDate);
             const formattedDate = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', timeZone: 'UTC' });
 
+            // --- NEW: Task Type Label Logic ---
+            // We build the HTML for the label based on task.taskType
+            let taskTypeLabel = '';
+            if (task.taskType === 'Email') {
+                taskTypeLabel = `
+                    <span class="text-xs font-semibold px-2 py-0.5 rounded-full bg-blue-100 text-blue-800 mb-1">
+                        <i class="fas fa-envelope mr-1"></i> Email
+                    </span>
+                `;
+            } else if (task.taskType === 'Call') {
+                taskTypeLabel = `
+                    <span class="text-xs font-semibold px-2 py-0.5 rounded-full bg-green-100 text-green-800 mb-1">
+                        <i class="fas fa-phone mr-1"></i> Call
+                    </span>
+                `;
+            }
+            // --- END: New Logic ---
+
+            // *** UPDATED: HTML return block ***
+            // Added ${taskTypeLabel} and classes to align it
             return `
                 <div class="task-list-item flex items-center justify-between p-3 rounded-lg cursor-pointer border border-transparent hover:border-yellow-300 hover:bg-yellow-50"
                      onclick="openUpdateTaskModal(${task.id})">
+
                     <div class="flex items-center space-x-3">
                         <i class="fas ${type === 'completed' ? 'fa-check' : 'fa-task'} text-pink-500 fa-lg"></i>
                         <div>
                             <p class="font-semibold text-gray-800 ${type === 'completed' ? 'line-through' : ''}">${task.title}</p>
-                            <p class="text-sm text-gray-500">${task.relatedTo}</p>
+
+                            <div class="flex items-center space-x-2 mt-1">
+                                <p class="text-sm text-gray-500">${task.relatedTo}</p>
+                                ${taskTypeLabel}
+                            </div>
+
                         </div>
                     </div>
+
                     <div class="text-right">
                         <p class="text-sm font-semibold ${dateColor} flex items-center">
                             <i class="far ${icon} mr-1.5"></i>
@@ -267,7 +520,7 @@ This page is now updated with the "Completed" tasks tab.
                         </p>
                     </div>
                 </div>
-            `;
+            `;;
         }
 
         // *** UPDATED: switchTaskTab() ***
@@ -377,29 +630,8 @@ This page is now updated with the "Completed" tasks tab.
         // Delegated submit handler
         $('#taskUpdateModalContainer').on('submit', '#updateTaskForm', function (event) {
             event.preventDefault();
-            var form = $(this);
-            if ($.validator && $.validator.unobtrusive && !form.valid()) {
-                return false;
-            }
-            $.ajax({
-                url: form.attr('action'),
-                type: form.attr('method'),
-                data: form.serialize(),
-                success: function (response) {
-                    closeUpdateTaskModal();
-                    alert(response.message || "Task updated successfully!");
-                    location.reload();
-                },
-                error: function (xhr) {
-                    var response = xhr.responseJSON;
-                    if (response && response.errors) {
-                        var errorMsg = "Update failed:\n" + response.errors.join("\n");
-                        alert(errorMsg);
-                    } else {
-                        alert("An error occurred: " + (xhr.responseJSON?.message || xhr.responseText));
-                    }
-                }
-            });
+            submitTaskUpdateForm(this);
+            
         });
 
         // Open modal

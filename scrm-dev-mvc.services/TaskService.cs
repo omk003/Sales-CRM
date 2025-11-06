@@ -61,12 +61,14 @@ namespace scrm_dev_mvc.services
                 {
                     Title = viewModel.Title,
                     Description = viewModel.Description,
+                    TaskType = viewModel.TaskType,
                     PriorityId = viewModel.PriorityId,
                     StatusId = viewModel.StatusId,
                     DueDate = viewModel.DueDate,
                     ContactId = viewModel.ContactId,
                     CompanyId = viewModel.CompanyId,
-                    DealId = viewModel.DealId
+                    DealId = viewModel.DealId,
+                    OwnerId = ownerId
                 };
 
                 await _unitOfWork.Tasks.AddAsync(task);
@@ -131,7 +133,7 @@ namespace scrm_dev_mvc.services
                 DueDate = task.DueDate,
                 ContactId = task.ContactId,
                 DealId = task.DealId,
-
+                TaskType = task.TaskType,
                 // Populate all dropdowns
                 TaskStatuses = (await _unitOfWork.TaskStatuses.GetAllAsync())
                                 .Select(s => new SelectListItem { Value = s.Id.ToString(), Text = s.StatusName }),
@@ -146,6 +148,8 @@ namespace scrm_dev_mvc.services
             {
                 viewModel.ContactName = task.Contact.FirstName ?? task.Contact.Email; // Assuming Contact has a Name property
                 viewModel.CurrentContactLeadStatusId = task.Contact.LeadStatusId; // Assuming this property exists
+                viewModel.ContactEmail = task.Contact.Email;
+                viewModel.ContactPhoneNumber = task.Contact.Number;
             }
 
             // If linked to a Deal, pre-fill its current stage
@@ -158,68 +162,7 @@ namespace scrm_dev_mvc.services
             return viewModel;
         }
 
-        // --- NEW METHOD: POST ---
-        //public async Task<(bool Success, string Message)> UpdateTaskAndEntitiesAsync(TaskUpdateViewModel viewModel)
-        //{
-        //    try
-        //    {
-        //        var task = await _unitOfWork.Tasks.FirstOrDefaultAsync(u => u.Id == viewModel.TaskId, include:"Status");
-        //        if (task == null) return (false, "Task not found.");
-
-        //        // 1. Update the Task itself
-        //        task.Title = viewModel.Title;
-        //        task.Description = viewModel.Description;
-        //        task.DueDate = viewModel.DueDate;
-
-        //        // Check if status changed
-        //        if (task.StatusId != viewModel.StatusId)
-        //        {
-        //            task.StatusId = viewModel.StatusId;
-        //            // If new status is "Completed", mark it
-        //            var completedStatus = await _unitOfWork.TaskStatuses.FirstOrDefaultAsync(s => s.StatusName == "Completed");
-        //            if (completedStatus != null && task.StatusId == completedStatus.Id)
-        //            {
-        //                task.CompletedAt = DateTime.UtcNow;
-        //            }
-        //        }
-        //        _unitOfWork.Tasks.Update(task);
-
-        //        // 2. Update the related Contact, if any
-        //        if (viewModel.ContactId.HasValue && viewModel.CurrentContactLeadStatusId.HasValue)
-        //        {
-        //            var contact = await _unitOfWork.Contacts.FirstOrDefaultAsync(u=>u.Id == viewModel.ContactId.Value);
-        //            if (contact != null)
-        //            {
-        //                contact.LeadStatusId = viewModel.CurrentContactLeadStatusId.Value;
-        //                _unitOfWork.Contacts.Update(contact);
-        //            }
-        //        }
-
-        //        // 3. Update the related Deal, if any
-        //        if (viewModel.DealId.HasValue && viewModel.CurrentDealStageId.HasValue)
-        //        {
-        //            var deal = await _unitOfWork.Deals.FirstOrDefaultAsync(u => u.Id == viewModel.DealId.Value);
-        //            if (deal != null)
-        //            {
-        //                deal.StageId = viewModel.CurrentDealStageId.Value;
-        //                _unitOfWork.Deals.Update(deal);
-        //            }
-        //        }
-        //        var activity = await _unitOfWork.Activities.FirstOrDefaultAsync(u => u.SubjectId == task.Id);
-
-        //        activity.Status = task.Status.StatusName;
-
-        //        // 4. Save all changes in one transaction
-        //        await _unitOfWork.SaveChangesAsync();
-        //        return (true, "Task updated successfully!");
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        _logger.LogError(ex, "Error updating task and entities.");
-        //        return (false, "A database error occurred.");
-        //    }
-        //}
-
+        
         public async Task<(bool Success, string Message)> UpdateTaskAndEntitiesAsync(
         TaskUpdateViewModel viewModel, Guid ownerId) 
         {

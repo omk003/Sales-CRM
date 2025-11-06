@@ -7,6 +7,8 @@ namespace scrm_dev_mvc.Models.ViewModels
 {
     public class TaskCreateViewModel
     {
+        [Required(ErrorMessage = "Please select a task type.")]
+        public string TaskType { get; set; }
         [Required]
         [StringLength(200)]
         public string Title { get; set; }

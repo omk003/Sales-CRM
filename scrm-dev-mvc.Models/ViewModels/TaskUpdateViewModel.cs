@@ -31,6 +31,10 @@ namespace scrm_dev_mvc.Models.ViewModels
         public int? DealId { get; set; }
         public string? DealName { get; set; }
         public int? CurrentDealStageId { get; set; } // Deal's Stage
+
+        public string? TaskType { get; set; } // "Email" or "Call"
+        public string ContactEmail { get; set; }
+        public string? ContactPhoneNumber { get; set; }
         public IEnumerable<SelectListItem> DealStages { get; set; } = new List<SelectListItem>();
     }
 }

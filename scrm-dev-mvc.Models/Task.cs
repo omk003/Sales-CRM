@@ -19,6 +19,8 @@ public partial class Task
     public int? CompanyId { get; set; }
     public int? DealId { get; set; }
 
+
+    public string? TaskType { get; set; }
     // --- Navigation Properties ---
     public virtual Priority Priority { get; set; } = null!;
     public virtual scrm_dev_mvc.Models.TaskStatus Status { get; set; } = null!;
