@@ -16,7 +16,8 @@ namespace scrm_dev_mvc.Controllers
     public class WorkflowController : Controller
     {
         private readonly ApplicationDbContext _context;
-        private readonly IOrganizationService _organizationService; // For getting current org
+        private readonly IOrganizationService _organizationService; 
+
 
         public WorkflowController(ApplicationDbContext context, IOrganizationService organizationService)
         {
@@ -68,81 +69,11 @@ namespace scrm_dev_mvc.Controllers
                 AvailableLifeCycleStages = (await _context.Lifecycles.ToListAsync())
                     .Select(s => new SelectListItem { Text = s.LifeCycleStageName, Value = s.Id.ToString() })
             };
-            //viewModel.Task_PriorityId = viewModel.AvailablePriorities.FirstOrDefault(p => p.Text == "Normal")?.Value ?? viewModel.AvailablePriorities.First().Value;
-            //viewModel.Task_StatusId = viewModel.AvailableTaskStatuses.FirstOrDefault(s => s.Text == "Pending")?.Value ?? viewModel.AvailableTaskStatuses.First().Value;
+
             return View(viewModel);
         }
 
-        // 3. CREATE (POST): Saves the new workflow
-        //[HttpPost]
-        //[ValidateAntiForgeryToken]
-        //public async Task<IActionResult> Create(WorkflowCreateViewModel viewModel)
-        //{
-        //    if (!ModelState.IsValid)
-        //    {
-        //        // Repopulate dropdowns if model state is invalid
-        //        // (Omitted for brevity, but you'd copy the GET method's logic)
-        //        return View(viewModel);
-        //    }
-
-        //    var organization = await _organizationService.GetOrganizationViewModelByUserId(User.GetUserId());
-        //    if (organization == null) return Unauthorized();
-
-        //    // 1. Create the parent Workflow
-        //    var workflow = new Workflow
-        //    {
-        //        Name = viewModel.Name,
-        //        Event = viewModel.Trigger,
-        //        IsActive = true,
-        //        OrganizationId = organization.OrganizationId
-        //    };
-
-        //    // 2. Build the Action and its ParametersJson
-        //    string parametersJson;
-        //    if (viewModel.ActionType == WorkflowActionType.CreateTask)
-        //    {
-        //        var parameters = new
-        //        {
-        //            Title = viewModel.Task_Title,
-        //            DaysDue = viewModel.Task_DaysDue,
-        //            TaskType = viewModel.Task_TaskType,
-        //            AssignedTo = "ContactOwner",
-        //            PriorityId = viewModel.Task_PriorityId,
-        //            StatusId = viewModel.Task_StatusId
-        //        };
-        //        parametersJson = JsonSerializer.Serialize(parameters);
-        //    }
-        //    else if (viewModel.ActionType == WorkflowActionType.ChangeLeadStatus)
-        //    {
-        //        var parameters = new { NewStatus = viewModel.ChangeLeadStatus_NewStatusId };
-        //        parametersJson = JsonSerializer.Serialize(parameters);
-        //    }
-        //    else if (viewModel.ActionType == WorkflowActionType.ChangeLifeCycleStage)
-        //    {
-        //        var parameters = new { NewStageId = viewModel.ChangeLifeCycleStage_NewStageId };
-        //        parametersJson = JsonSerializer.Serialize(parameters);
-        //    }
-        //    else
-        //    {
-        //        // Action type has no parameters
-        //        parametersJson = "{}";
-        //    }
-
-        //    var action = new WorkflowAction
-        //    {
-        //        ActionType = viewModel.ActionType,
-        //        ParametersJson = parametersJson
-        //    };
-
-        //    workflow.Actions.Add(action);
-
-        //    // 3. Save to database
-        //    _context.Workflows.Add(workflow);
-        //    await _context.SaveChangesAsync();
-
-        //    TempData["Message"] = "Workflow created successfully!";
-        //    return RedirectToAction(nameof(Index));
-        //}
+        
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(WorkflowCreateViewModel viewModel)

@@ -15,11 +15,12 @@ namespace scrm_dev_mvc.Controllers
     {
         private readonly IDealService _dealService;
         private readonly ILogger<DealController> _logger;
-
-        public DealController(IDealService dealService, ILogger<DealController> logger)
+        private readonly ICurrentUserService _currentUserService;
+        public DealController(IDealService dealService, ILogger<DealController> logger, ICurrentUserService currentUserService)
         {
             _dealService = dealService;
             _logger = logger;
+            _currentUserService = currentUserService;
         }
 
         // ----------------------- KANBAN BOARD -----------------------
@@ -59,8 +60,8 @@ namespace scrm_dev_mvc.Controllers
 
             try
             {
-                var userIdString = User.FindFirstValue(ClaimTypes.NameIdentifier);
-                if (string.IsNullOrEmpty(userIdString) || !Guid.TryParse(userIdString, out var userId))
+                var userId = _currentUserService.GetUserId();
+                if (userId == Guid.Empty)
                 {
                     _logger.LogWarning("Invalid or missing user ID in Insert Deal");
                     return Unauthorized();

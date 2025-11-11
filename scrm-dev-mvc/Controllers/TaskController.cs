@@ -9,10 +9,12 @@ namespace scrm_dev_mvc.Controllers
     {
         private readonly ITaskService _taskService;
         private readonly ILogger<TaskController> _logger;
-        public TaskController(ITaskService taskService, ILogger<TaskController> logger)
+        private readonly ICurrentUserService _currentUserService;
+        public TaskController(ITaskService taskService, ILogger<TaskController> logger, ICurrentUserService currentUserService)
         {
             _taskService = taskService;
             _logger = logger;
+            _currentUserService = currentUserService;
         }
 
         // [HttpGet] - No change
@@ -35,14 +37,14 @@ namespace scrm_dev_mvc.Controllers
             }
 
             // --- NEW: Get the Owner's ID from the authenticated user ---
-            var ownerId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            if (string.IsNullOrEmpty(ownerId))
+            var ownerId = _currentUserService.GetUserId();
+            if (ownerId == Guid.Empty)
             {
                 return Unauthorized(new { message = "You must be logged in to create a task." });
             }
 
             // --- Pass the ownerId to the service ---
-            var result = await _taskService.CreateTaskAsync(viewModel, Guid.Parse(ownerId));
+            var result = await _taskService.CreateTaskAsync(viewModel, ownerId);
 
             if (result.Success)
             {
@@ -81,8 +83,8 @@ namespace scrm_dev_mvc.Controllers
                 return BadRequest(new { message = "Validation failed.", errors = errors });
             }
 
-            var ownerIdString = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            if (!Guid.TryParse(ownerIdString, out Guid ownerId))
+            var ownerId = _currentUserService.GetUserId();
+            if (ownerId == Guid.Empty)
             {
                 return Unauthorized(new { message = "User ID claim is invalid." });
             }

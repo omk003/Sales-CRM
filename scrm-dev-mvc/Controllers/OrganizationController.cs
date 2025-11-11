@@ -12,7 +12,7 @@ using System.Security.Claims;
 namespace scrm_dev_mvc.Controllers
 {
     [Authorize]
-    public class OrganizationController(IOrganizationService organizationService,IConfiguration configuration, IInvitationService invitationService, IGmailService gmailService) : Controller
+    public class OrganizationController(IOrganizationService organizationService,IConfiguration configuration, IInvitationService invitationService, IGmailService gmailService, ICurrentUserService currentUserService) : Controller
     {
         public IActionResult Index()
         {
@@ -22,10 +22,10 @@ namespace scrm_dev_mvc.Controllers
 
         public IActionResult Register()
         {
-            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var userId = currentUserService.GetUserId();
 
             // check if he is in organization
-            if (!string.IsNullOrEmpty(organizationService.IsInOrganizationById(Guid.Parse(userId)).Result?.Name))
+            if (!string.IsNullOrEmpty(organizationService.IsInOrganizationById(userId).Result?.Name))
             {
                 //TempData["Error"] = "You are already in an organization.";
                 return RedirectToAction("Index", "Organization");
@@ -36,16 +36,16 @@ namespace scrm_dev_mvc.Controllers
         [HttpPost]
         public async Task<IActionResult> Register(Organization organization)
         {
-            // Get the user who is currently logged in
-            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-
             
-            // Pass User in Service layer of organization
-            await organizationService.CreateOrganizationAsync(organization, Guid.Parse(userId));
+            var userId = currentUserService.GetUserId();
 
-            if (string.IsNullOrEmpty(organizationService.IsInOrganizationById(Guid.Parse(userId)).Result?.Name))
+            // Pass User in Service layer of organization
+            await organizationService.CreateOrganizationAsync(organization, userId));
+
+            // TODO: FIX
+            if (string.IsNullOrEmpty(organizationService.IsInOrganizationById(userId).Result?.Name))
             {
-                var org = organizationService.IsInOrganizationById(Guid.Parse(userId)).Result;
+                var org = organizationService.IsInOrganizationById(userId).Result;
                 var identity = (ClaimsIdentity)User.Identity;
 
                 // Check if the claim already exists
@@ -104,11 +104,11 @@ namespace scrm_dev_mvc.Controllers
         
         public async Task<IActionResult> OrganizationView()
         {
-            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            if (string.IsNullOrEmpty(userId)) {
+            var userId = currentUserService.GetUserId();
+            if (userId == Guid.Empty) {
                 return Unauthorized();
             }
-            var organizationViewModel = await organizationService.GetOrganizationViewModelByUserId(Guid.Parse(userId));
+            var organizationViewModel = await organizationService.GetOrganizationViewModelByUserId(userId);
             return View(organizationViewModel);
         }
 
@@ -155,8 +155,8 @@ namespace scrm_dev_mvc.Controllers
             }
 
             // 1. Get the ID of the user performing the action
-            var ownerIdString = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            if (!Guid.TryParse(ownerIdString, out Guid ownerId))
+            var ownerId = currentUserService.GetUserId();
+            if (ownerId == Guid.Empty)
             {
                 return Unauthorized();
             }
@@ -192,7 +192,7 @@ namespace scrm_dev_mvc.Controllers
         [Authorize(Roles = "SalesAdminSuper")]
         public async Task<IActionResult> DeleteUser(int organizationId, Guid userId, Guid newUserId)
         {
-            var adminId = User.GetUserId();
+            var adminId = currentUserService.GetUserId();
             var result = await organizationService.ReassignAndRemoveUserAsync(userId, organizationId, newUserId, adminId);
             if (result)
                 TempData["Message"] = "User deleted successfully.";

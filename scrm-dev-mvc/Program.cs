@@ -23,6 +23,13 @@ builder.Services.AddControllersWithViews();
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlServer(connectionString));
+
+// This makes IHttpContextAccessor available via DI
+builder.Services.AddHttpContextAccessor();
+
+// Register your service
+builder.Services.AddScoped<ICurrentUserService, CurrentUserService>();
+
 builder.Services.AddScoped<IPasswordHasher, PasswordHasher>();
 builder.Services.AddScoped<IGmailService, GmailService>();
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();

@@ -14,25 +14,23 @@ namespace scrm_dev_mvc.Controllers
     {
         private readonly IUserService _userService;
         private readonly IOrganizationService _organizationService;
+        private readonly ICurrentUserService _currentUserService;
 
-        public UserController(IUserService userService, IOrganizationService organizationService)
+        public UserController(IUserService userService, IOrganizationService organizationService, ICurrentUserService currentUserService)
         {
             _userService = userService;
             _organizationService = organizationService;
+            _currentUserService = currentUserService;
         }
 
         public async Task<IActionResult> Index()
         {
-            //Get the current logged-in user's ID from claims
-            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
-            if (userIdClaim == null)
+            var userId = _currentUserService.GetUserId();
+            if (userId == Guid.Empty)
             {
                 // User not logged in, redirect to login
                 return RedirectToAction("Login", "Auth");
             }
-
-            var userId = Guid.Parse(userIdClaim.Value);
-
             // 2️⃣ Get user from the database
             var user = await _userService.GetFirstOrDefault(u => u.Id == userId , "Role");
             var organization = await _organizationService.IsInOrganizationById(userId);
@@ -60,7 +58,7 @@ namespace scrm_dev_mvc.Controllers
 
         public async Task<IActionResult> ProfileUpdate()
         {
-            var userId = User.GetUserId();
+            var userId = _currentUserService.GetUserId();
             var user = await _userService.GetFirstOrDefault(u => u.Id == userId, "Role,Organization");
             //var organization = await _organizationService.IsInOrganizationById(userId);
             var model = new UserViewModel
@@ -96,7 +94,7 @@ namespace scrm_dev_mvc.Controllers
             // Update only editable fields
             existingUser.FirstName = user.FirstName;
             existingUser.LastName = user.LastName;
-            var ownerId = User.GetUserId();
+            var ownerId = _currentUserService.GetUserId();
             await _userService.UpdateUserProfileAsync(user.Id, user.FirstName, user.LastName, ownerId);
 
             TempData["Message"] = "Profile updated successfully!";
@@ -109,7 +107,7 @@ namespace scrm_dev_mvc.Controllers
         public async Task<IActionResult> ChangeUserRole(int organizationId, Guid userId, string newRole)
         {
             // You may want to check if the current user has permission to change roles here.
-            var adminId = User.GetUserId();
+            var adminId = _currentUserService.GetUserId();
             var success = await _userService.ChangeUserRoleAsync(userId, organizationId, newRole, adminId);
             if (!success)
             {

@@ -6,30 +6,31 @@ using System.Threading.Tasks;
 
 namespace scrm_dev_mvc.Controllers
 {
-    [Authorize] // Make sure the user is logged in
+    [Authorize] 
     public class WorkspaceController : Controller
     {
         private readonly IWorkspaceService _workspaceService;
         private readonly ILogger<WorkspaceController> _logger;
+        private readonly ICurrentUserService _currentUserService;
 
-        public WorkspaceController(IWorkspaceService workspaceService, ILogger<WorkspaceController> logger)
+        public WorkspaceController(IWorkspaceService workspaceService, ILogger<WorkspaceController> logger, ICurrentUserService currentUserService)
         {
             _workspaceService = workspaceService;
             _logger = logger;
+            _currentUserService = currentUserService;
         }
 
         public async Task<IActionResult> Index()
         {
-            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            if (string.IsNullOrEmpty(userId))
+            var userId = _currentUserService.GetUserId();
+            if (userId == Guid.Empty)
             {
                 return Challenge();
             }
 
-            // Check if the user is an Admin
-            bool isAdmin = User.IsInRole("SalesAdminSuper") || User.IsInRole("SalesAdmin");
+            bool isAdmin = _currentUserService.IsInRole("SalesAdminSuper") || _currentUserService.IsInRole("SalesAdmin");
 
-            var viewModel = await _workspaceService.GetWorkspaceDataAsync(Guid.Parse(userId), isAdmin);
+            var viewModel = await _workspaceService.GetWorkspaceDataAsync(userId, isAdmin);
 
             return View(viewModel);
         }

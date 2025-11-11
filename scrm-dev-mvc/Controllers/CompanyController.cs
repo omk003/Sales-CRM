@@ -6,7 +6,7 @@ using scrm_dev_mvc.services.Interfaces;
 
 namespace scrm_dev_mvc.Controllers
 {
-    public class CompanyController(IOrganizationService organizationService, IUserService userService, ICompanyService companyService, ILogger<CompanyController> _logger) : Controller
+    public class CompanyController(IOrganizationService organizationService, IUserService userService, ICompanyService companyService, ILogger<CompanyController> _logger, ICurrentUserService currentUserService) : Controller
     {
         public IActionResult Index()
         {
@@ -16,8 +16,8 @@ namespace scrm_dev_mvc.Controllers
 
         public async Task<IActionResult> Insert()
         {
-            var userId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
-            var organization = await organizationService.IsInOrganizationById(Guid.Parse(userId));
+            var userId = currentUserService.GetUserId();
+            var organization = await organizationService.IsInOrganizationById(userId);
             var userIds = await userService.GetAllUsersByOrganizationIdAsync(organization.Id);
 
             var viewModel = new CompanyFormViewModel
@@ -53,13 +53,12 @@ namespace scrm_dev_mvc.Controllers
         [HttpGet]
         public async Task<IActionResult> GetAll()
         {
-            var userId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
-
-            if (string.IsNullOrEmpty(userId))
+            var userId = currentUserService.GetUserId();
+            if (userId == Guid.Empty)
                 return Unauthorized();
 
-            Guid id = Guid.Parse(userId);
-            List<CompanyViewModel> CompanyList = await companyService.GetAllCompany(id);
+            //Guid id = Guid.Parse(userId);
+            List<CompanyViewModel> CompanyList = await companyService.GetAllCompany(userId);
             return Json(new { data = CompanyList });
         }
 
@@ -73,8 +72,8 @@ namespace scrm_dev_mvc.Controllers
 
         public async Task<IActionResult> Update(int id)
         {
-            var userId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
-            var organization = await organizationService.IsInOrganizationById(Guid.Parse(userId));
+            var userId = currentUserService.GetUserId();
+            var organization = await organizationService.IsInOrganizationById(userId);
 
             var companyEntity = companyService.GetCompanyById(id);
             if (companyEntity == null) return NotFound();
@@ -117,7 +116,7 @@ namespace scrm_dev_mvc.Controllers
 
             if (company.userId == null)
             {
-                company.userId = Guid.Parse(User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value);
+                company.userId = currentUserService.GetUserId();
             }
 
             var result = await companyService.UpdateCompany(company);

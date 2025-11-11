@@ -13,7 +13,7 @@ using System.Web;
 namespace scrm_dev_mvc.Controllers
 {
     [Authorize]
-    public class ContactController(ICallService callService,IContactService contactService, IUserService userService,IEmailService emailService, IOrganizationService organizationService, IGmailService gmailService, IConfiguration configuration, ILogger<ContactController> _logger) : Controller
+    public class ContactController(ICallService callService,IContactService contactService, IUserService userService,IEmailService emailService, IOrganizationService organizationService, IGmailService gmailService, IConfiguration configuration, ILogger<ContactController> _logger, ICurrentUserService currentUserService) : Controller
     {
         public IActionResult Index()
         {
@@ -51,8 +51,8 @@ namespace scrm_dev_mvc.Controllers
         }
         public async Task<IActionResult> Insert()
         {
-            var userId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
-            var organization = await organizationService.IsInOrganizationById(Guid.Parse(userId));
+            var userId = currentUserService.GetUserId();
+            var organization = await organizationService.IsInOrganizationById(userId);
             var leadStatuses = await contactService.GetLeadStatusesAsync();
             var lifeCycleStages = await contactService.GetLifeCycleStagesAsync();
             var userIds = await userService.GetAllUsersByOrganizationIdAsync(organization.Id);
@@ -85,7 +85,7 @@ namespace scrm_dev_mvc.Controllers
             }
             if(contact.OwnerId == null)
             {
-                contact.OwnerId = Guid.Parse(User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value);
+                contact.OwnerId = currentUserService.GetUserId();
             }
             var result = await contactService.CreateContactAsync(contact);
 
@@ -98,30 +98,24 @@ namespace scrm_dev_mvc.Controllers
         [HttpGet]
         public async Task<IActionResult> GetAll()
         {
-            var userId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+            var userId = currentUserService.GetUserId();
 
-            if (string.IsNullOrEmpty(userId))
+            if (userId == Guid.Empty)
                 return Unauthorized();
-
-            Guid id = Guid.Parse(userId);
-
             
-            List<ContactResponseViewModel> ContactList = await contactService.GetAllContacts(id);
+            List<ContactResponseViewModel> ContactList = await contactService.GetAllContacts(userId);
             return Json(new { data = ContactList });
         }
 
         [HttpGet]
         public async Task<IActionResult> GetAllContactsForCompany(int? companyId)
         {
-            var userId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+            var userId = currentUserService.GetUserId();
 
-            if (string.IsNullOrEmpty(userId))
+            if (userId == Guid.Empty)
                 return Unauthorized();
 
-            Guid id = Guid.Parse(userId);
-
-
-            List<ContactResponseViewModel> ContactList = await contactService.GetAllContactsForCompany(id, companyId);
+            List<ContactResponseViewModel> ContactList = await contactService.GetAllContactsForCompany(userId, companyId);
             return Json(new { data = ContactList });
         }
 
@@ -129,20 +123,20 @@ namespace scrm_dev_mvc.Controllers
         [HttpPost]
         public async Task<IActionResult> DeleteBulk([FromBody] List<int> ids)
         {
-            var userId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
-            if (string.IsNullOrEmpty(userId))
+            var userId = currentUserService.GetUserId();
+            if (userId == Guid.Empty)
             {
                 return Unauthorized();
             }
-            await contactService.DeleteContactsByIdsAsync(ids, Guid.Parse(userId));
+            await contactService.DeleteContactsByIdsAsync(ids, userId);
             return Json(new { success = true, message = "Delete Successful" });
         }
 
         
         public async Task<IActionResult> Update(int id)
         {
-            var userId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
-            var organization = await organizationService.IsInOrganizationById(Guid.Parse(userId));
+            var userId = currentUserService.GetUserId();
+            var organization = await organizationService.IsInOrganizationById(userId);
 
             var contactEntity = contactService.GetContactById(id);
             if (contactEntity == null) return NotFound();
@@ -189,7 +183,7 @@ namespace scrm_dev_mvc.Controllers
                 };
                 return View(vm);
             }
-            var userId = Guid.Parse(User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value);
+            var userId = currentUserService.GetUserId();
             if (contact.OwnerId == null)
             {
                 contact.OwnerId = userId;
@@ -208,8 +202,8 @@ namespace scrm_dev_mvc.Controllers
         public async Task<IActionResult> SendEmail(string contactEmail, string subject, string body)
         {
             // 1. Get User ID
-            var userIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            if (!Guid.TryParse(userIdStr, out Guid currentUserId))
+            var userId = currentUserService.GetUserId();
+            if (userId == Guid.Empty)
             {
                 return StatusCode(401, new { message = "User is not authenticated." });
             }
@@ -220,7 +214,7 @@ namespace scrm_dev_mvc.Controllers
 
             // 3. Call the service (passing contactEmail, not contact.Id)
             var result = await emailService.SendEmailAsync(
-                currentUserId,
+                userId,
                 contactEmail, // <-- Pass the email string directly
                 subject,
                 body,
@@ -256,8 +250,8 @@ namespace scrm_dev_mvc.Controllers
         public async Task<IActionResult> CallContact(string phoneNumber, int contactId)
         {
             // 2. Get the current user's ID
-            var userIdString = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            if (string.IsNullOrEmpty(userIdString) || !Guid.TryParse(userIdString, out Guid userId))
+            var userId = currentUserService.GetUserId();
+            if (userId == Guid.Empty)
             {
                 _logger.LogWarning("CallContact: Could not find valid User ID in claims.");
                 return Unauthorized("User is not authenticated.");
@@ -292,7 +286,7 @@ namespace scrm_dev_mvc.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> AssociateContactToCompany(int contactId, int companyId)
         {
-            var userId = Guid.Parse(User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value);
+            var userId = currentUserService.GetUserId();
 
             var result = await contactService.AssociateContactToCompany(contactId, companyId, userId);
 
@@ -315,7 +309,7 @@ namespace scrm_dev_mvc.Controllers
             {
                 return BadRequest(new { success = false, message = "Invalid IDs provided." });
             }
-            var userId = Guid.Parse(User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value);
+            var userId = currentUserService.GetUserId();
 
             var result = await contactService.AssociateContactToDealAsync(contactId, dealId, userId);
 
@@ -333,7 +327,7 @@ namespace scrm_dev_mvc.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DisassociateCompany(int contactId)
         {
-            var userId = Guid.Parse(User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value);
+            var userId = currentUserService.GetUserId();
 
             var result = await contactService.DisassociateCompany(contactId, userId);
 
@@ -351,7 +345,7 @@ namespace scrm_dev_mvc.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DisassociateContactFromDeal(int contactId, int dealId)
         {
-            var userId = Guid.Parse(User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value);
+            var userId = currentUserService.GetUserId();
 
             var result = await contactService.DisassociateContactFromDealAsync(contactId, dealId, userId);
 
