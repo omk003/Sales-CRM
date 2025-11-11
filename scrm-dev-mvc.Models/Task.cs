@@ -21,11 +21,13 @@ public partial class Task
 
 
     public string? TaskType { get; set; }
+
+    public int OrganizationId { get; set; }
     // --- Navigation Properties ---
     public virtual Priority Priority { get; set; } = null!;
     public virtual scrm_dev_mvc.Models.TaskStatus Status { get; set; } = null!;
 
-    // --- ADD THESE NEW NAVIGATION PROPERTIES ---
+    // --- NAVIGATION PROPERTIES ---
     public virtual Contact? Contact { get; set; }
     public virtual Company? Company { get; set; }
     public virtual Deal? Deal { get; set; }

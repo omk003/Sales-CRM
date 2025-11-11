@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using scrm_dev_mvc.DataAccess.Data;
 
@@ -11,9 +12,11 @@ using scrm_dev_mvc.DataAccess.Data;
 namespace scrm_dev_mvc.data_access.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251107051636_addedSenderDetailsInInvitation")]
+    partial class addedSenderDetailsInInvitation
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -884,9 +887,6 @@ namespace scrm_dev_mvc.data_access.Migrations
                         .HasColumnType("datetime")
                         .HasColumnName("due_date");
 
-                    b.Property<int>("OrganizationId")
-                        .HasColumnType("int");
-
                     b.Property<Guid>("OwnerId")
                         .HasColumnType("uniqueidentifier");
 
@@ -1060,60 +1060,6 @@ namespace scrm_dev_mvc.data_access.Migrations
                         .IsUnique();
 
                     b.ToTable("user", (string)null);
-                });
-
-            modelBuilder.Entity("scrm_dev_mvc.Models.Workflow", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<int>("Event")
-                        .HasColumnType("int");
-
-                    b.Property<bool>("IsActive")
-                        .HasColumnType("bit");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
-
-                    b.Property<int>("OrganizationId")
-                        .HasColumnType("int");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("OrganizationId");
-
-                    b.ToTable("Workflows");
-                });
-
-            modelBuilder.Entity("scrm_dev_mvc.Models.WorkflowAction", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<int>("ActionType")
-                        .HasColumnType("int");
-
-                    b.Property<string>("ParametersJson")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<int>("WorkflowId")
-                        .HasColumnType("int");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("WorkflowId");
-
-                    b.ToTable("WorkflowActions");
                 });
 
             modelBuilder.Entity("scrm_dev_mvc.Models.WorkflowTemplate", b =>
@@ -1466,28 +1412,6 @@ namespace scrm_dev_mvc.data_access.Migrations
                     b.Navigation("Role");
                 });
 
-            modelBuilder.Entity("scrm_dev_mvc.Models.Workflow", b =>
-                {
-                    b.HasOne("scrm_dev_mvc.Models.Organization", "Organization")
-                        .WithMany()
-                        .HasForeignKey("OrganizationId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Organization");
-                });
-
-            modelBuilder.Entity("scrm_dev_mvc.Models.WorkflowAction", b =>
-                {
-                    b.HasOne("scrm_dev_mvc.Models.Workflow", "Workflow")
-                        .WithMany("Actions")
-                        .HasForeignKey("WorkflowId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Workflow");
-                });
-
             modelBuilder.Entity("scrm_dev_mvc.Models.WorkflowTemplate", b =>
                 {
                     b.HasOne("scrm_dev_mvc.Models.User", "User")
@@ -1595,11 +1519,6 @@ namespace scrm_dev_mvc.data_access.Migrations
                     b.Navigation("Products");
 
                     b.Navigation("WorkflowTemplates");
-                });
-
-            modelBuilder.Entity("scrm_dev_mvc.Models.Workflow", b =>
-                {
-                    b.Navigation("Actions");
                 });
 
             modelBuilder.Entity("scrm_dev_mvc.Models.WorkflowTemplate", b =>

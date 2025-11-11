@@ -1,6 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using scrm_dev_mvc.Models.ViewModels;
-using scrm_dev_mvc.services;
+using scrm_dev_mvc.services.Interfaces;
 using System.Security.Claims;
 
 namespace scrm_dev_mvc.Controllers

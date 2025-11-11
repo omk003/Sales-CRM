@@ -1,4 +1,4 @@
-﻿namespace scrm_dev_mvc.Services
+﻿namespace scrm_dev_mvc.services.Interfaces
 {
     public interface ICallService
     {

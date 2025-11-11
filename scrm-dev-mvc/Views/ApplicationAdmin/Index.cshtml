@@ -1,0 +1,92 @@
+﻿@model IEnumerable<scrm_dev_mvc.Models.ViewModels.OrganizationViewModel>
+@{
+    Layout = null;
+}
+@{
+    ViewData["Title"] = "Super Admin Dashboard";
+}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - YourCRM</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous">
+
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+</head>
+<body>
+
+    <nav class="navbar navbar-light bg-light border-bottom mb-3 px-5 py-2">
+        <div class="container-fluid">
+            @* <span class="navbar-brand mb-0 h1">Super Admin Panel</span> *@
+
+            <form class="d-flex ms-auto" asp-area="" asp-controller="Auth" asp-action="Logout" method="post" id="logoutForm">
+                <button type="submit" class="btn btn-outline-danger">
+                    Logout <i class="fas fa-sign-out-alt"></i>
+                </button>
+            </form>
+        </div>
+    </nav>
+    <div class="container mt-4">
+        <main role="main" class="pb-3">
+
+            <h1 class="display-4">@ViewData["Title"]</h1>
+            <p>Manage all organizations and their users.</p>
+            <br />
+
+            @if (TempData["Message"] != null)
+            {
+                <div class="alert alert-info alert-dismissible fade show" role="alert">
+                    @TempData["Message"]
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            }
+            @if (TempData["Error"] != null)
+            {
+                <div class="alert alert-danger" role="alert">
+                    @TempData["Error"]
+                </div>
+            }
+
+            <table class="table table-striped table-hover">
+                <thead class="thead-dark">
+                <thead class="table-dark">
+                    <tr>
+                        <th>
+                            Organization Name
+                        </th>
+                        <th>
+                            User Count
+                        </th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var org in Model)
+                    {
+                        <tr>
+                            <td>
+                                @Html.DisplayFor(modelItem => org.OrganizationName)
+                            </td>
+                            <td>
+                                @org.Users.Count
+                            </td>
+                            <td>
+                                <a asp-action="Manage" asp-route-id="@org.OrganizationId" class="btn btn-primary btn-sm">
+                                    Manage
+                                </a>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+
+        </main>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL" crossorigin="anonymous"></script>
+</body>
+</html>

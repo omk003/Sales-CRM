@@ -1,7 +1,7 @@
 ﻿using scrm_dev_mvc.Models.ViewModels;
 using System.Threading.Tasks;
 
-namespace scrm_dev_mvc.services
+namespace scrm_dev_mvc.services.Interfaces
 {
     public interface IWorkspaceService
     {

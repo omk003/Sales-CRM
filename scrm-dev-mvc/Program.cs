@@ -6,6 +6,7 @@ using scrm_dev_mvc.Data.Repository;
 using scrm_dev_mvc.Data.Repository.IRepository;
 using scrm_dev_mvc.DataAccess.Data;
 using scrm_dev_mvc.services;
+using scrm_dev_mvc.services.Interfaces;
 using scrm_dev_mvc.Services;
 
 using Serilog;
@@ -42,6 +43,7 @@ builder.Services.AddScoped<IAuditService, AuditService>();
 builder.Services.AddScoped<IDealService, DealService>();
 builder.Services.AddScoped<ITaskService, TaskService>();
 
+builder.Services.AddScoped<IWorkflowService, WorkflowService>();
 builder.Services.AddScoped<IWorkspaceService, WorkspaceService>(); 
 
 

@@ -1,52 +1,110 @@
-﻿@if (TempData["Message"] != null)
+﻿
+<style>
+    /* Your brand color */
+    :root {
+        --brand-primary: hsl(347.78, 100%, 57.65%);
+        --brand-primary-dark: hsl(347.78, 100%, 50%);
+        --brand-primary-light: hsl(347.78, 100%, 95%);
+        --brand-primary-selected: hsl(347.78, 100%, 90%);
+    }
+
+    /* 1. Style the "Create Contact" button with your brand color */
+    .btn-brand {
+        background-color: var(--brand-primary);
+        color: white;
+    }
+
+        .btn-brand:hover {
+            background-color: var(--brand-primary-dark);
+        }
+
+    /* 2. Fix "plain white" table with zebra striping */
+    #tblData tbody tr:nth-child(even) {
+        background-color: #f9fafb; /* Tailwind's bg-gray-50 */
+    }
+
+    /* 3. Add a brand-colored hover effect */
+    #tblData tbody tr:hover {
+        background-color: var(--brand-primary-light);
+        cursor: pointer;
+    }
+
+    /* 4. Style the selected row (when checkbox is clicked) */
+    #tblData tbody tr.selected {
+        background-color: var(--brand-primary-selected) !important; /* !important to override DataTables */
+    }
+
+    /* 5. Style the checkboxes to use your brand color */
+    #tblData tbody tr td input[type="checkbox"]:checked {
+        accent-color: var(--brand-primary);
+        transform: scale(1.1);
+    }
+</style>
+
+
+
+ @if (TempData["Message"] != null)
 {
     <div id="tempDataMessage" class="alert alert-info alert-dismissible fade show" role="alert">
         @TempData["Message"]
         <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
     </div>
 }
+<div class="max-w-7xl mx-auto py-2 space-y-4">
+        <div class="max-w-7xl mx-auto py-4 space-y-4">
 
+            @* (Keep your TempData blocks here if you didn't move them) *@
 
-<div class="card border-0 my-4" style="background: #ffffff; border-radius: var(--border-radius-lg); box-shadow: var(--shadow-sm);">
-    <div class=" ml-0 px-4">
-        <div class="row">
-            <div class="col-12">
-                <h3 class="py-4">Contacts</h3>
-            </div>
-            <div class="d-flex justify-content-between align-items-center mb-2">
-                <!-- Left: Edit/Delete buttons -->
-                <div id="actionBar" style="width: 150px; visibility: hidden;">
-                    <button id="btnEdit" class="btn btn-custom btn-sm me-2">Edit</button>
-                    <button id="btnDelete" class="btn btn-custom-delete btn-sm">Delete</button>
+            <div class="bg-white p-4 sm:p-6 rounded-lg shadow-sm">
+
+                <div class="flex flex-col sm:flex-row justify-between sm:items-center mb-4">
+
+                    <h3 class="text-2xl font-bold text-gray-900">Contacts</h3>
+
+                    <div class="flex items-center space-x-2 mt-3 sm:mt-0">
+
+                        <div id="actionBar" class="flex space-x-2" style="visibility: hidden;">
+                            <button id="btnEdit" class="flex items-center bg-white-600 hover:bg-white-700 text-black font-semibold py-2 px-4 rounded-lg shadow-sm text-sm transition duration-150 border">
+                                <i class="fas fa-edit mr-2"></i> Edit
+                            </button>
+                            <button id="btnDelete" class="flex items-center bg-white-600 hover:bg-grey-700 text-black font-semibold py-2 px-4 rounded-lg shadow-sm text-sm transition duration-150 border">
+                                <i class="fas fa-trash mr-2"></i> Delete
+                            </button>
+                        </div>
+
+                        <a href="@Url.Action("Insert", "Contact")"
+                           class="btn-brand flex items-center font-bold py-2 px-4 rounded-lg shadow-sm text-sm transition duration-150">
+                            <i class="fas fa-plus mr-2"></i> Create Contact
+                        </a>
+
+                    </div>
                 </div>
 
-                <!-- Right: Create Contact button -->
-                <a href="@Url.Action("Insert", "Contact")" class="btn btn-custom btn-sm">
-                    Create Contact
-                </a>
+                <div class="overflow-x-auto overflow-y-auto max-h-[600px]">
+                    <div class="min-w-full inline-block align-middle">
+
+                        <table id="tblData" class="min-w-full divide-y divide-gray-200">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"></th>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Phone Number</th>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Lead Status</th>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Owner Name</th>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Create Date</th>
+                                </tr>
+                            </thead>
+
+                            <tbody class="bg-white"></tbody>
+
+                        </table>
+                    </div>
+                </div>
+
             </div>
         </div>
-    </div>
-    <div class="card-body p-4">
-     
-
-        <table id="tblData" class="table" style="width:100%">
-            <thead>
-                <tr>
-                    <th></th>
-                    <th>NAME</th>
-                    <th>EMAIL</th>
-                    <th>PHONE NUMBER</th>
-                    <th>LEAD STATUS</th>
-                    <th>CREATE DATE</th>
-                </tr>
-            </thead>
-            <tbody></tbody>
-        </table>
-
-    </div>
 </div>
-
 @section Scripts {
-    <script src="~/js/contact.js"></script>
+            <script src="~/js/contact.js"></script>
 }

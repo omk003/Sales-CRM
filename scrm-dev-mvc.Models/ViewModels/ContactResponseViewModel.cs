@@ -15,6 +15,8 @@ namespace scrm_dev_mvc.Models.ViewModels
 
         public string? LeadStatus { get; set; }
 
+        public string? OwnerName { get; set; }
+
         public DateTime? CreatedAt { get; set; }
     }
 }

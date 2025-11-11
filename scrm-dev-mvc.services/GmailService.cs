@@ -19,6 +19,7 @@ namespace scrm_dev_mvc.Services
     using scrm_dev_mvc.Data.Repository.IRepository;
     using scrm_dev_mvc.Models;
     using scrm_dev_mvc.Models.ViewModels;
+    using scrm_dev_mvc.services.Interfaces;
     using System.Threading.Tasks;
     public class GmailService : IGmailService
     {

@@ -5,7 +5,7 @@ using scrm_dev_mvc.Data.Repository;
 using scrm_dev_mvc.Data.Repository.IRepository;
 using scrm_dev_mvc.Models;
 using scrm_dev_mvc.Models.ViewModels;
-using scrm_dev_mvc.services;
+using scrm_dev_mvc.services.Interfaces;
 using System;
 using System.Linq;
 using System.Security.Claims;

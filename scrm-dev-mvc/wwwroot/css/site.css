@@ -316,7 +316,7 @@ table.table thead th {
 
 /* Scrollable table body */
 .table-scroll-wrapper {
-    max-height: 350px;
+    max-height: 550px;
     overflow-y: auto;
     overflow-x: hidden;
     width: 100%;
@@ -454,6 +454,7 @@ table.table thead th {
     padding: var(--space-md) var(--space-sm);
     border-bottom: 1px solid var(--border-color);
     font-size: var(--fs-lg);
+    height:60px;
     color: var(--color-accent1);
     font-weight: var(--fw-bold);
     display: flex;
@@ -523,6 +524,7 @@ table.table thead th {
     margin: 0 auto;
     margin-top:1.5rem;
     padding: 24px;
+    
     
    background: #ffffff; /*var(--bg-secondary);*/
     border-radius: var(--border-radius-lg);

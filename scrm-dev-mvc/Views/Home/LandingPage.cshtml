@@ -10,7 +10,7 @@
 
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
-
+    <link rel="icon" type="image/png" href="~/favicon.png">
     <!-- Google Fonts: Poppins -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -40,7 +40,10 @@
     <!-- Header / Navigation -->
     <header class="bg-white/80 backdrop-blur-md sticky top-0 z-50">
         <nav class="container mx-auto px-6 py-4 flex justify-between items-center">
-            <h1 class="text-2xl font-bold text-gray-900">SCRM</h1>
+            <div class="flex items-center space-x-2">
+                <img src="~/favicon.png" class="w-8 h-8" alt="SCRM Logo">
+                <h1 class="text-2xl font-bold text-gray-900">SCRM</h1>
+            </div>            
             <div>
                 <a asp-action="Login" asp-controller="Auth" class="text-gray-600 hover:text-gray-900 mx-3">Login</a>
                 <a asp-action="Register" asp-controller="Auth" class="brand-red text-white font-semibold px-5 py-2 rounded-lg hover:opacity-90 transition-opacity">

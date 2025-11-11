@@ -4,8 +4,9 @@ using scrm_dev_mvc.Data.Repository;
 using scrm_dev_mvc.Data.Repository.IRepository;
 using scrm_dev_mvc.Models;
 using scrm_dev_mvc.Models.DTO;
+using scrm_dev_mvc.Models.Enums;
 using scrm_dev_mvc.Models.ViewModels;
-using scrm_dev_mvc.services;
+using scrm_dev_mvc.services.Interfaces;
 using scrm_dev_mvc.Services;
 using System.Diagnostics;
 using System.Linq;
@@ -14,7 +15,7 @@ using System.Linq.Expressions;
 
 namespace SCRM_dev.Services
 {
-    public class ContactService(IUnitOfWork unitOfWork, IAuditService _auditService, ILogger<ContactService> _logger) : IContactService
+    public class ContactService(IUnitOfWork unitOfWork, IAuditService _auditService, ILogger<ContactService> _logger, IWorkflowService _workflowService) : IContactService
     {
         
         public async Task<string> CreateContactAsync(ContactDto contactDto)
@@ -132,7 +133,24 @@ namespace SCRM_dev.Services
 
                     // Saves the Contact update AND all the Audit logs in one transaction
                     await unitOfWork.SaveChangesAsync();
+
+                    try
+                    {
+                        await _workflowService.RunTriggersAsync(
+                            WorkflowTrigger.ContactCreated,
+                            existingContact // Pass the new contact object
+                        );
+                    }
+                    catch (Exception ex)
+                    {
+                        // Log the error, but don't stop the user's action
+                        _logger.LogError(ex, "Workflow failed for ContactCreated: {ContactId}", existingContact.Id);
+                    }
+
+
                     return "Contact created successfully";
+
+
                 }
                 else
                 {
@@ -140,6 +158,7 @@ namespace SCRM_dev.Services
                 }
 
             }
+
             // Map ContactDto to Contact entity
             var contact = new Contact
             {
@@ -148,7 +167,7 @@ namespace SCRM_dev.Services
                 Email = contactDto.Email,
                 Number = contactDto.Number,
                 JobTitle = contactDto.JobTitle,
-                LeadStatusId = contactDto.LeadStatusId,
+                LeadStatusId = contactDto.LeadStatusId ?? 1,
                 LifeCycleStageId = contactDto.LifeCycleStageId,
                 OrganizationId = user?.OrganizationId ?? 0,
                 OwnerId = contactDto.OwnerId,
@@ -226,6 +245,18 @@ namespace SCRM_dev.Services
 
                 // Save the audit logs
                 await unitOfWork.SaveChangesAsync();
+                try
+                {
+                    await _workflowService.RunTriggersAsync(
+                        WorkflowTrigger.ContactCreated,
+                        contact // Pass the new contact object
+                    );
+                }
+                catch (Exception ex)
+                {
+                    // Log the error, but don't stop the user's action
+                    _logger.LogError(ex, "Workflow failed for ContactCreated: {ContactId}", contact.Id);
+                }
             }
             catch (Exception ex)
             {
@@ -254,7 +285,7 @@ namespace SCRM_dev.Services
             }
 
             // Eager load LeadStatus to avoid N+1 queries
-            var contacts = await unitOfWork.Contacts.GetAllAsync(predicate, asNoTracking: true, c => c.LeadStatus);
+            var contacts = await unitOfWork.Contacts.GetAllAsync(predicate, asNoTracking: true, c => c.LeadStatus, c => c.Owner);
 
             var contactResponseViewModels = contacts.Select(contact => new ContactResponseViewModel
             {
@@ -263,6 +294,7 @@ namespace SCRM_dev.Services
                 Email = contact.Email,
                 PhoneNumber = contact.Number,
                 LeadStatus = contact.LeadStatus?.LeadStatusName ?? "N/A",
+                OwnerName = contact?.Owner?.Email ?? "N/A",
                 CreatedAt = contact.CreatedAt,
             }).ToList();
 

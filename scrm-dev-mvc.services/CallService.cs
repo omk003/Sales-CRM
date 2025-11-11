@@ -3,6 +3,7 @@ using Microsoft.Extensions.Logging; // Add Logger
 using scrm_dev_mvc.Data.Repository.IRepository; // Add your UoW namespace
 using scrm_dev_mvc.Models; // Add your Models namespace
 using scrm_dev_mvc.Models.DTO;
+using scrm_dev_mvc.services.Interfaces;
 using System;
 using System.Threading.Tasks;
 using Twilio;

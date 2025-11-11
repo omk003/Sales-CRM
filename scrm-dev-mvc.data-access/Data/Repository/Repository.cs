@@ -1,6 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using scrm_dev_mvc.Data.Repository.IRepository;
 using scrm_dev_mvc.DataAccess.Data;
+using scrm_dev_mvc.Models;
 using System.Linq.Expressions;
 
 namespace scrm_dev_mvc.Data.Repository
@@ -15,7 +16,7 @@ namespace scrm_dev_mvc.Data.Repository
             _context = context;
             _dbSet = _context.Set<T>();
         }
-        public async Task AddAsync(T entity)
+        public async System.Threading.Tasks.Task AddAsync(T entity)
         {
             await _dbSet.AddAsync(entity);
             
@@ -96,7 +97,7 @@ namespace scrm_dev_mvc.Data.Repository
         {
             return await _dbSet.FindAsync(id);
         }
-        public async Task SaveChangesAsync()
+        public async System.Threading.Tasks.Task SaveChangesAsync()
         {
             await _context.SaveChangesAsync();
 
@@ -105,6 +106,9 @@ namespace scrm_dev_mvc.Data.Repository
         {
             return _dbSet.AnyAsync(predicate);
         }
-
+        public void DeleteRange(List<T> entity)
+        {
+            _dbSet.RemoveRange(entity);
+        }
     }
 }

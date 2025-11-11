@@ -4,16 +4,33 @@ using Microsoft.EntityFrameworkCore.Metadata;
 using scrm_dev_mvc.Data.Repository.IRepository;
 using scrm_dev_mvc.DataAccess.Data;
 using scrm_dev_mvc.Models;
-using scrm_dev_mvc.services;
+using scrm_dev_mvc.services.Interfaces;
 
 public class InvitationService(ApplicationDbContext context, IUserService userService,IUnitOfWork unitOfWork) : IInvitationService
 {
-    public async Task<Invitation> CreateInvitationAsync(string email, int organizationId, int roleId)
+    public async Task<Invitation> CreateInvitationAsync(string email, int organizationId, int roleId, Guid senderId)
     {
+        var existingInvitation = await unitOfWork.Invitations.FirstOrDefaultAsync(inv =>
+        inv.Email == email &&
+        inv.OrganizationId == organizationId &&
+        inv.IsAccepted == false &&
+        inv.ExpiryDate > DateTime.UtcNow);
+
+        // 2. IF VALID INVITATION EXISTS, RETURN NULL
+        // This signals to the calling code (e.g., your Controller) that the 
+        // invitation failed to create because one already exists.
+        if (existingInvitation != null)
+        {
+            // "Notify user" happens in the code that *calls* this method,
+            // by checking for a null return.
+            return null;
+        }
+
         var invitation = new Invitation
         {
             Id = Guid.NewGuid(),
             Email = email,
+            SenderId = senderId,
             OrganizationId = organizationId,
             RoleId = roleId,
             InvitationCode = GenerateUniqueCode(), 

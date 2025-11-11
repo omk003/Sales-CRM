@@ -8,7 +8,7 @@ using scrm_dev_mvc.DataAccess.Data;
 using scrm_dev_mvc.Models;
 using scrm_dev_mvc.Models.ViewModels;
 using scrm_dev_mvc.services;
-using scrm_dev_mvc.Services;
+using scrm_dev_mvc.services.Interfaces;
 using System.Security.Claims;
 
 namespace scrm_dev_mvc.Controllers
@@ -104,6 +104,10 @@ namespace scrm_dev_mvc.Controllers
                         ExpiresUtc = DateTimeOffset.UtcNow.AddDays(7)
                     });
 
+            if(user.RoleId == 1)
+            {
+                return RedirectToAction("Index", "ApplicationAdmin");
+            }
             return RedirectToAction("Index", "Workspace");
             
         }
@@ -393,7 +397,10 @@ namespace scrm_dev_mvc.Controllers
                     CookieAuthenticationDefaults.AuthenticationScheme,
                     new ClaimsPrincipal(claimsIdentity),
                     authProperties);
-
+                if (user.RoleId == 1)
+                {
+                    return RedirectToAction("Index", "ApplicationAdmin");
+                }
                 return RedirectToAction("Index", "Home");
             }
             catch (Exception ex)

@@ -10,7 +10,8 @@ namespace scrm_dev_mvc.data_access.Data.Repository.IRepository
     public interface ICompanyRepository: IRepository<Company>
     {
         void Update(Company company);
+        
     }
-
+    
 
 }

@@ -8,6 +8,8 @@ namespace scrm_dev_mvc.Models
         [Key]
         public Guid Id { get; set; }
 
+        public Guid SenderId { get; set; }
+
         [Required]
         public string InvitationCode { get; set; } 
 

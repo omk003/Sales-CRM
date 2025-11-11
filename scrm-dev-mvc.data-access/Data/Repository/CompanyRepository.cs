@@ -23,5 +23,7 @@ namespace scrm_dev_mvc.data_access.Data.Repository
         {
             _context.Companies.Update(company);
         }
+
+        
     }
 }

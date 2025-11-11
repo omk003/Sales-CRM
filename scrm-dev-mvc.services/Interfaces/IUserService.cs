@@ -6,11 +6,11 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace scrm_dev_mvc.services
+namespace scrm_dev_mvc.services.Interfaces
 {
     public interface IUserService
     {
-        Task<IEnumerable<Models.User>> GetAllUsersAsync();
+        Task<IEnumerable<User>> GetAllUsersAsync();
 
         Task<List<User>> GetAllUsersByOrganizationIdAsync(int id);
         Task<User> IsEmailExistsAsync(string email);
@@ -25,5 +25,6 @@ namespace scrm_dev_mvc.services
 
         Task<User> GetFirstOrDefault(System.Linq.Expressions.Expression<Func<User, bool>> predicate, string? Include);
         Task<bool> ChangeUserRoleAsync(Guid userId, int organizationId, string newRole, Guid adminId);
+        Task<bool> DeleteAsync(User user);
     }
 }

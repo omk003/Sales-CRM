@@ -1,6 +1,6 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using scrm_dev_mvc.services;
+using scrm_dev_mvc.services.Interfaces;
 using System.Security.Claims;
 using System.Threading.Tasks;
 

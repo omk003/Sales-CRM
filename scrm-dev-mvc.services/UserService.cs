@@ -4,6 +4,7 @@ using scrm_dev_mvc.Data.Repository;
 using scrm_dev_mvc.Data.Repository.IRepository;
 using scrm_dev_mvc.Models;
 using scrm_dev_mvc.Models.DTO;
+using scrm_dev_mvc.services.Interfaces;
 using scrm_dev_mvc.Services;
 using System;
 using System.Collections.Generic;
@@ -21,10 +22,12 @@ namespace scrm_dev_mvc.services
         {
             return unitOfWork.Users.GetAllAsync();
         }
+
         Task<List<User>> IUserService.GetAllUsersByOrganizationIdAsync(int id)
         {
             return unitOfWork.Users.GetAllAsync(u => u.OrganizationId == id);
         }
+
         Task<User> IUserService.IsEmailExistsAsync(string email)
         {
             var user = unitOfWork.Users.FirstOrDefaultAsync(u => u.Email == email,"Role");
@@ -79,10 +82,17 @@ namespace scrm_dev_mvc.services
         public async Task<bool> UpdateUserProfileAsync(Guid userId, string newFirstName, string newLastName,Guid ownerId)
         {
             var user = await unitOfWork.Users.GetByIdAsync(userId);
-            if (user == null || !user.OrganizationId.HasValue) return false;
-
-            int orgId = user.OrganizationId.Value; // Get the OrgId to log against
-
+            if (user == null) return false;
+            int orgId;
+            if(user.OrganizationId == null)
+            {
+                orgId = 0;
+            }
+            else
+            {
+                orgId = user.OrganizationId.Value;
+            }
+               
             try
             {
                 if (user.FirstName != newFirstName)
@@ -183,5 +193,86 @@ namespace scrm_dev_mvc.services
                 NewValue = newVal
             });
         }
+
+        public async Task<bool> DeleteAsync(User user)
+        {
+            try
+            {
+                // --- PRE-DELETE CHECKS ---
+                if (!user.OrganizationId.HasValue)
+                {
+                    _logger.LogError("Cannot delete user {UserId}: User has no OrganizationId.", user.Id);
+                    return false;
+                }
+
+                // --- 1. Find the Super Admin of the SAME organization to transfer ownership to ---
+                var superAdmin = await unitOfWork.Users.FirstOrDefaultAsync(
+                    u => u.OrganizationId == user.OrganizationId &&
+                         u.RoleId == 2 // Assuming Role.Name property
+                );
+
+                if (superAdmin == null)
+                {
+                    _logger.LogError("Cannot delete user {UserId}: No 'SalesAdminSuper' found in organization {OrgId} to transfer ownership to.", user.Id, user.OrganizationId);
+                    return false;
+                }
+
+                if (superAdmin.Id == user.Id)
+                {
+                    _logger.LogWarning("Delete attempt failed: User {UserId} is the last/only Super Admin in organization {OrgId}. Cannot delete.", user.Id, user.OrganizationId);
+                    return false;
+                }
+
+                // --- 2. Delete related Gmail credentials (as before) ---
+                var gmailCred = await unitOfWork.GmailCred.FirstOrDefaultAsync(gc => gc.Email == user.Email);
+
+                if (gmailCred != null) // Check for null before deleting
+                {
+                    unitOfWork.GmailCred.Delete(gmailCred);
+                }
+
+                // --- 3. REASSIGN related Companies ---
+                var companies = await unitOfWork.Company.GetAllAsync(
+                     c => c.UserId == user.Id
+                );
+
+                if (companies.Any())
+                {
+                    foreach (var company in companies)
+                    {
+                        company.UserId = superAdmin.Id; // Reassign
+                        unitOfWork.Company.Update(company); // Mark as updated
+                    }
+                }
+
+                // --- 4. REASSIGN related Contacts ---
+                var contacts = await unitOfWork.Contacts.GetAllAsync(
+                    c => c.OwnerId == user.Id
+                );
+
+                if (contacts.Any())
+                {
+                    foreach (var contact in contacts)
+                    {
+                        contact.OwnerId = superAdmin.Id; // Reassign
+                        unitOfWork.Contacts.Update(contact); // Mark as updated
+                    }
+                }
+
+                // 5. Now, delete the original user
+                unitOfWork.Users.Delete(user);
+
+                // 6. Save all changes (Deletions AND Updates) in one transaction
+                await unitOfWork.SaveChangesAsync();
+                return true;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error reassigning data and deleting user {UserId}", user.Id);
+                return false;
+            }
+        }
     }
+
+    
 }

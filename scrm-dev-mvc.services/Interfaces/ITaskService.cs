@@ -1,6 +1,6 @@
 ﻿using scrm_dev_mvc.Models.ViewModels;
 
-namespace scrm_dev_mvc.services
+namespace scrm_dev_mvc.services.Interfaces
 {
     public interface ITaskService
     {

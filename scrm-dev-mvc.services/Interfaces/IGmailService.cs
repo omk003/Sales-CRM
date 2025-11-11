@@ -1,7 +1,7 @@
 ﻿using scrm_dev_mvc.Models;
 using scrm_dev_mvc.Models.ViewModels;
 
-namespace scrm_dev_mvc.Services
+namespace scrm_dev_mvc.services.Interfaces
 {
     /// <summary>
     /// Defines the contract for a service that interacts with the Gmail API

@@ -2,7 +2,7 @@
 using scrm_dev_mvc.Models;
 using System.Threading.Tasks;
 
-namespace scrm_dev_mvc.Services
+namespace scrm_dev_mvc.services.Interfaces
 {
     public interface IActivityService
     {

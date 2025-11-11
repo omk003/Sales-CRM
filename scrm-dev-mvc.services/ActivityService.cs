@@ -1,7 +1,7 @@
 ﻿using Microsoft.Extensions.Logging;
 using scrm_dev_mvc.Data.Repository.IRepository;
 using scrm_dev_mvc.Models.DTO;
-using scrm_dev_mvc.Services;
+using scrm_dev_mvc.services.Interfaces;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;

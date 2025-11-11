@@ -3,7 +3,7 @@ using Microsoft.Extensions.Logging;
 using scrm_dev_mvc.Data.Repository.IRepository;
 using scrm_dev_mvc.Models;
 using scrm_dev_mvc.Models.ViewModels;
-using scrm_dev_mvc.services; // Assuming this is where IWorkspaceService is
+using scrm_dev_mvc.services.Interfaces;
 using System;
 using System.Collections.Generic;
 using System.Linq;

@@ -6,7 +6,7 @@ using scrm_dev_mvc.Models;
 using scrm_dev_mvc.Models.DTO;
 using scrm_dev_mvc.Models.ViewModels;
 using scrm_dev_mvc.services;
-using scrm_dev_mvc.Services;
+using scrm_dev_mvc.services.Interfaces;
 using System.Security.Claims;
 
 namespace scrm_dev_mvc.Controllers
@@ -71,14 +71,10 @@ namespace scrm_dev_mvc.Controllers
         [Authorize(Roles ="SalesAdminSuper,SalesAdmin")]
         public async Task<IActionResult> SendInvitation(string email, int roleId)
         {
-            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            if (string.IsNullOrEmpty(userId))
-            {
-                return Unauthorized();
-            }
-
+            var userId = User.GetUserId();
+            
             // Get the organization of the user sending the invitation
-            var organization = await organizationService.IsInOrganizationById(Guid.Parse(userId));
+            var organization = await organizationService.IsInOrganizationById(userId);
             if (organization == null)
             {
                 TempData["Error"] = "You must be in an organization to send invitations.";
@@ -86,7 +82,17 @@ namespace scrm_dev_mvc.Controllers
             }
 
             // 1. Create the invitation in the database
-            var invitation = await invitationService.CreateInvitationAsync(email, organization.Id, roleId);
+            var invitation = await invitationService.CreateInvitationAsync(email, organization.Id, roleId, userId);
+
+            if (invitation == null)
+            {
+                // --- THIS BLOCK IS FIXED ---
+                // An active invitation already exists.
+                // Use TempData to send the error message back to the Index view.
+                TempData["Message"] = "An active invitation has already been sent to this email address.";
+                return RedirectToAction("Index"); // Redirect back to the page with the form
+            }
+
             string? adminId = configuration["Gmail:AdminEmailId"];
             // 2. Send the invitation via email
             await gmailService.SendEmailAsync(Guid.Parse(adminId ?? ""),email,"Invitation from SCRM",$"Hey, you just got invited to SCRM in {organization.Name}, log in to the SCRM using this link - {"https://maudlinly-nonreactive-arturo.ngrok-free.dev/auth/login?invitationcode=" + invitation.InvitationCode}   ,            if new user use this link {"https://maudlinly-nonreactive-arturo.ngrok-free.dev/auth/register?invitationcode=" + invitation.InvitationCode}","");

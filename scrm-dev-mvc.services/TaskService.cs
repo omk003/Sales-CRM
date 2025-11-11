@@ -3,11 +3,11 @@ using Microsoft.Extensions.Logging;
 using scrm_dev_mvc.Data.Repository.IRepository;
 using scrm_dev_mvc.Models;
 using scrm_dev_mvc.Models.DTO; // <-- Import your DTO namespace
+using scrm_dev_mvc.Models.Enums;
 using scrm_dev_mvc.Models.ViewModels;
-using scrm_dev_mvc.services;
-using scrm_dev_mvc.Services;
+using scrm_dev_mvc.services.Interfaces;
 using System.Diagnostics;
-
+using LeadStatusEnum = scrm_dev_mvc.Models.Enums.LeadStatusEnum;
 namespace scrm_dev_mvc.services
 {
     public class TaskService : ITaskService
@@ -15,16 +15,19 @@ namespace scrm_dev_mvc.services
         private readonly IUnitOfWork _unitOfWork;
         private readonly IActivityService _activityService; 
         private readonly ILogger<TaskService> _logger;
-        private readonly IAuditService _auditService; // <-- Audit service
+        private readonly IAuditService _auditService; 
+        private readonly IWorkflowService _workflowService;
 
         public TaskService(IUnitOfWork unitOfWork,
                            IActivityService activityService, 
-                           ILogger<TaskService> logger, IAuditService auditService)
+                           ILogger<TaskService> logger, IAuditService auditService, IWorkflowService workflowService)
         {
             _unitOfWork = unitOfWork;
             _activityService = activityService; 
             _logger = logger;
             _auditService = auditService; 
+            _workflowService = workflowService;
+
         }
 
        
@@ -53,7 +56,8 @@ namespace scrm_dev_mvc.services
         public async Task<(bool Success, string Message)> CreateTaskAsync(TaskCreateViewModel viewModel, Guid ownerId)
         {
             Models.Task task; // Use full namespace
-
+            var user = await _unitOfWork.Users.FirstOrDefaultAsync(u => u.Id == ownerId);
+            var organizationId = user?.OrganizationId ?? 0;
             // --- Step 1: Create and Save the Task ---
             try
             {
@@ -68,7 +72,8 @@ namespace scrm_dev_mvc.services
                     ContactId = viewModel.ContactId,
                     CompanyId = viewModel.CompanyId,
                     DealId = viewModel.DealId,
-                    OwnerId = ownerId
+                    OwnerId = ownerId,
+                    OrganizationId = organizationId
                 };
 
                 await _unitOfWork.Tasks.AddAsync(task);
@@ -162,16 +167,157 @@ namespace scrm_dev_mvc.services
             return viewModel;
         }
 
-        
+
+        //public async Task<(bool Success, string Message)> UpdateTaskAndEntitiesAsync(
+        //TaskUpdateViewModel viewModel, Guid ownerId) 
+        //{
+        //    try
+        //    {
+        //        var task = await _unitOfWork.Tasks.FirstOrDefaultAsync(u=>u.Id == viewModel.TaskId);
+        //        if (task == null) return (false, "Task not found.");
+
+        //        // --- 1. AUDIT LOGIC: Compare Task fields ---
+        //        if (task.StatusId != viewModel.StatusId)
+        //        {
+        //            await _auditService.LogChangeAsync(new AuditLogDto
+        //            {
+        //                OwnerId = ownerId,
+        //                RecordId = task.Id,
+        //                TableName = "Task",
+        //                FieldName = "StatusId",
+        //                OldValue = task.StatusId.ToString(),
+        //                NewValue = viewModel.StatusId.ToString()
+        //            });
+        //            task.StatusId = viewModel.StatusId; // Apply change
+
+        //            // Check if new status is "Completed"
+        //            var completedStatus = await _unitOfWork.TaskStatuses.FirstOrDefaultAsync(s => s.StatusName == "Completed");
+        //            if (completedStatus != null && task.StatusId == completedStatus.Id)
+        //            {
+        //                task.CompletedAt = DateTime.UtcNow;
+
+        //                // --- FIRE THE TRIGGER ---
+        //                await _workflowService.RunTriggersAsync(
+        //                    WorkflowTrigger.TaskCompleted,
+        //                    task // Pass the completed task object
+        //                );
+        //                // ------------------------
+        //            }
+        //        }
+        //        _unitOfWork.Tasks.Update(task);
+
+        //        // --- 2. AUDIT LOGIC: Compare Contact fields ---
+        //        if (viewModel.ContactId.HasValue && viewModel.CurrentContactLeadStatusId.HasValue)
+        //        {
+        //            var contact = await _unitOfWork.Contacts.FirstOrDefaultAsync(u => u.Id == viewModel.ContactId.Value);
+        //            int newStatusId = viewModel.CurrentContactLeadStatusId.Value;
+
+        //            if (contact != null && contact.LeadStatusId != viewModel.CurrentContactLeadStatusId.Value)
+        //            {
+        //                await _auditService.LogChangeAsync(new AuditLogDto
+        //                {
+        //                    OwnerId = ownerId,
+        //                    RecordId = contact.Id,
+        //                    TableName = "Contact",
+        //                    FieldName = "LeadStatusId",
+        //                    OldValue = contact.LeadStatusId.ToString(),
+        //                    NewValue = viewModel.CurrentContactLeadStatusId.Value.ToString()
+        //                });
+        //                contact.LeadStatusId = newStatusId;//changed
+        //                // --- FIRE THE TRIGGER ---
+        //                // Convert the int ID to the correct trigger
+        //                if (TryGetTriggerForStatus(newStatusId, out WorkflowTrigger trigger))
+        //                {
+        //                    await _workflowService.RunTriggersAsync(trigger, contact);
+        //                }
+        //                // ------------------------
+
+        //                _unitOfWork.Contacts.Update(contact);
+        //            }
+        //        }
+
+        //        // --- 3. AUDIT LOGIC: Compare Deal fields ---
+        //        if (viewModel.DealId.HasValue && viewModel.CurrentDealStageId.HasValue)
+        //        {
+        //            var deal = await _unitOfWork.Deals.FirstOrDefaultAsync(u => u.Id == viewModel.DealId.Value);
+        //            if (deal != null && deal.StageId != viewModel.CurrentDealStageId.Value)
+        //            {
+        //                await _auditService.LogChangeAsync(new AuditLogDto
+        //                {
+        //                    OwnerId = ownerId,
+        //                    RecordId = deal.Id,
+        //                    TableName = "Deal",
+        //                    FieldName = "StageId",
+        //                    OldValue = deal.StageId.ToString(),
+        //                    NewValue = viewModel.CurrentDealStageId.Value.ToString()
+        //                });
+        //                deal.StageId = viewModel.CurrentDealStageId.Value; // Apply change
+        //                _unitOfWork.Deals.Update(deal);
+        //            }
+        //        }
+
+        //        // 4. Save all changes (Task, Contact, Deal, AND Audit logs) in one transaction
+        //        await _unitOfWork.SaveChangesAsync();
+        //        return (true, "Task updated successfully!");
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        _logger.LogError(ex, "Error updating task and entities.");
+        //        return (false, "A database error occurred.");
+        //    }
+        //}
+
+
         public async Task<(bool Success, string Message)> UpdateTaskAndEntitiesAsync(
-        TaskUpdateViewModel viewModel, Guid ownerId) 
+    TaskUpdateViewModel viewModel, Guid ownerId)
         {
             try
             {
-                var task = await _unitOfWork.Tasks.FirstOrDefaultAsync(u=>u.Id == viewModel.TaskId);
+                // 1. Get the task AND its related contact
+                // We include "Contact" so we use the same object for all operations
+                var task = await _unitOfWork.Tasks.FirstOrDefaultAsync(u => u.Id == viewModel.TaskId, include: "Contact");
                 if (task == null) return (false, "Task not found.");
 
-                // --- 1. AUDIT LOGIC: Compare Task fields ---
+                bool taskWasCompleted = false;
+                bool leadStatusWasManuallyChanged = false;
+
+                // --- 1. Handle MANUAL Lead Status change FIRST ---
+                // This block runs if the user *manually* changed the Lead Status dropdown in the modal.
+                if (viewModel.ContactId.HasValue && viewModel.CurrentContactLeadStatusId.HasValue)
+                {
+                    var contact = task.Contact; // Use the already-loaded contact
+                    if (contact == null)
+                    {
+                        contact = await _unitOfWork.Contacts.FirstOrDefaultAsync(u => u.Id == viewModel.ContactId.Value);
+                    }
+
+                    int newManualStatusId = viewModel.CurrentContactLeadStatusId.Value;
+
+                    if (contact != null && contact.LeadStatusId != newManualStatusId)
+                    {
+                        await _auditService.LogChangeAsync(new AuditLogDto
+                        {
+                            OwnerId = ownerId,
+                            RecordId = contact.Id,
+                            TableName = "Contact",
+                            FieldName = "LeadStatusId",
+                            OldValue = contact.LeadStatusId.ToString(),
+                            NewValue = newManualStatusId.ToString()
+                        });
+
+                        contact.LeadStatusId = newManualStatusId;
+                        leadStatusWasManuallyChanged = true; // Flag that this happened
+
+                        // Fire the trigger for the *manual* change
+                        if (TryGetTriggerForStatus(newManualStatusId, out WorkflowTrigger trigger))
+                        {
+                            await _workflowService.RunTriggersAsync(trigger, contact);
+                        }
+                        _unitOfWork.Contacts.Update(contact);
+                    }
+                }
+
+                // --- 2. Handle Task Status change ---
                 if (task.StatusId != viewModel.StatusId)
                 {
                     await _auditService.LogChangeAsync(new AuditLogDto
@@ -183,65 +329,84 @@ namespace scrm_dev_mvc.services
                         OldValue = task.StatusId.ToString(),
                         NewValue = viewModel.StatusId.ToString()
                     });
+
                     task.StatusId = viewModel.StatusId; // Apply change
 
-                    // Check if new status is "Completed"
                     var completedStatus = await _unitOfWork.TaskStatuses.FirstOrDefaultAsync(s => s.StatusName == "Completed");
                     if (completedStatus != null && task.StatusId == completedStatus.Id)
                     {
                         task.CompletedAt = DateTime.UtcNow;
+                        taskWasCompleted = true; // Flag that this happened
                     }
-                }
-                _unitOfWork.Tasks.Update(task);
-
-                // --- 2. AUDIT LOGIC: Compare Contact fields ---
-                if (viewModel.ContactId.HasValue && viewModel.CurrentContactLeadStatusId.HasValue)
-                {
-                    var contact = await _unitOfWork.Contacts.FirstOrDefaultAsync(u => u.Id == viewModel.ContactId.Value);
-                    if (contact != null && contact.LeadStatusId != viewModel.CurrentContactLeadStatusId.Value)
-                    {
-                        await _auditService.LogChangeAsync(new AuditLogDto
-                        {
-                            OwnerId = ownerId,
-                            RecordId = contact.Id,
-                            TableName = "Contact",
-                            FieldName = "LeadStatusId",
-                            OldValue = contact.LeadStatusId.ToString(),
-                            NewValue = viewModel.CurrentContactLeadStatusId.Value.ToString()
-                        });
-                        contact.LeadStatusId = viewModel.CurrentContactLeadStatusId.Value; // Apply change
-                        _unitOfWork.Contacts.Update(contact);
-                    }
+                    _unitOfWork.Tasks.Update(task);
                 }
 
-                // --- 3. AUDIT LOGIC: Compare Deal fields ---
+                // --- 3. Handle Deal change ---
                 if (viewModel.DealId.HasValue && viewModel.CurrentDealStageId.HasValue)
                 {
-                    var deal = await _unitOfWork.Deals.FirstOrDefaultAsync(u => u.Id == viewModel.DealId.Value);
-                    if (deal != null && deal.StageId != viewModel.CurrentDealStageId.Value)
-                    {
-                        await _auditService.LogChangeAsync(new AuditLogDto
-                        {
-                            OwnerId = ownerId,
-                            RecordId = deal.Id,
-                            TableName = "Deal",
-                            FieldName = "StageId",
-                            OldValue = deal.StageId.ToString(),
-                            NewValue = viewModel.CurrentDealStageId.Value.ToString()
-                        });
-                        deal.StageId = viewModel.CurrentDealStageId.Value; // Apply change
-                        _unitOfWork.Deals.Update(deal);
-                    }
+                    // ... (Your existing deal logic here) ...
+                    // var deal = ...
+                    // _unitOfWork.Deals.Update(deal);
                 }
 
-                // 4. Save all changes (Task, Contact, Deal, AND Audit logs) in one transaction
+                // --- 4. Save ALL manual changes in one transaction ---
                 await _unitOfWork.SaveChangesAsync();
+
+                // --- 5. Fire the AUTOMATIC TaskCompleted trigger ---
+                // ONLY run this workflow if the task was completed AND
+                // the user did NOT *also* manually change the lead status.
+                // This gives manual changes priority and prevents the fight.
+                if (taskWasCompleted && !leadStatusWasManuallyChanged)
+                {
+                    // This runs in its own transaction (Context_B) *after*
+                    // Context_A is finished, so it cannot be overwritten.
+                    await _workflowService.RunTriggersAsync(
+                        WorkflowTrigger.TaskCompleted,
+                        task // Pass the completed task object
+                    );
+                }
+
                 return (true, "Task updated successfully!");
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error updating task and entities.");
+                if (ex.Source == "WorkflowService")
+                {
+                    return (false, "Task updated, but a workflow failed. Check logs.");
+                }
                 return (false, "A database error occurred.");
+            }
+        }
+
+        private bool TryGetTriggerForStatus(int statusId, out WorkflowTrigger trigger)
+        {
+            // Cast the int ID to your LeadStatus enum
+            LeadStatusEnum status = (LeadStatusEnum)statusId;
+
+            switch (status)
+            {
+                case LeadStatusEnum.Open:
+                    trigger = WorkflowTrigger.ContactLeadStatusChangesToOpen;
+                    return true;
+                case LeadStatusEnum.Connected:
+                    trigger = WorkflowTrigger.ContactLeadStatusChangesToConnected;
+                    return true;
+                case LeadStatusEnum.Qualified:
+                    trigger = WorkflowTrigger.ContactLeadStatusChangesToQualified;
+                    return true;
+                case LeadStatusEnum.Disqualified:
+                    trigger = WorkflowTrigger.ContactLeadStatusChangesToDisqualified;
+                    return true;
+                case LeadStatusEnum.BadTiming:
+                    trigger = WorkflowTrigger.ContactLeadStatusChangesToBadTiming;
+                    return true;
+                case LeadStatusEnum.HighPrice:
+                    trigger = WorkflowTrigger.ContactLeadStatusChangesToHighPrice;
+                    return true;
+                default:
+                    trigger = default;
+                    return false;
             }
         }
     }

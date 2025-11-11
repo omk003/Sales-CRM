@@ -32,6 +32,7 @@ function loadDataTable() {
             { data: 'email', "width": "15%" },
             { data: 'phoneNumber', "width": "15%" },
             { data: 'leadStatus', "width": "15%" },
+            {data:'ownerName',"width":"15%"},
             { data: 'createdAt', "width": "10%" }
         ],
         // Highlight: Use createdRow to assign data-id

@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using scrm_dev_mvc.Models;
 using System;
+using scrm_dev_mvc.services.Interfaces;
 
 namespace scrm_dev_mvc.services
 {
