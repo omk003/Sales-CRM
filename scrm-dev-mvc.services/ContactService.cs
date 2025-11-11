@@ -302,6 +302,40 @@ namespace SCRM_dev.Services
         }
 
 
+        public async Task<List<ContactResponseViewModel>> GetAllContactsForCompany(Guid userId, int? companyId)
+        {
+            var user = await unitOfWork.Users.GetByIdAsync(userId);
+            if (user == null)
+                return new List<ContactResponseViewModel>();
+
+            Expression<Func<Contact, bool>> predicate;
+            if (user.RoleId == 2 || user.RoleId == 3)
+            {
+                predicate = c => c.OrganizationId == user.OrganizationId && (!c.IsDeleted ?? false) && c.CompanyId == companyId;
+            }
+            else
+            {
+                predicate = c => c.OwnerId == userId && c.OrganizationId == user.OrganizationId && (!c.IsDeleted ?? false) && c.CompanyId == companyId;
+            }
+
+            // Eager load LeadStatus to avoid N+1 queries
+            var contacts = await unitOfWork.Contacts.GetAllAsync(predicate, asNoTracking: true, c => c.LeadStatus, c => c.Owner);
+
+            var contactResponseViewModels = contacts.Select(contact => new ContactResponseViewModel
+            {
+                Id = contact.Id,
+                Name = $"{contact.FirstName} {contact.LastName}",
+                Email = contact.Email,
+                PhoneNumber = contact.Number,
+                LeadStatus = contact.LeadStatus?.LeadStatusName ?? "N/A",
+                OwnerName = contact?.Owner?.Email ?? "N/A",
+                CreatedAt = contact.CreatedAt,
+            }).ToList();
+
+            return contactResponseViewModels;
+        }
+
+
 
         public async Task<IEnumerable<LeadStatus>> GetLeadStatusesAsync()
         {
@@ -343,8 +377,6 @@ namespace SCRM_dev.Services
             await unitOfWork.SaveChangesAsync();
             return true;
         }
-
-
 
 
         public async Task<string> UpdateContact(ContactDto contact, Guid ownerId) // <-- ADDED ownerId
@@ -619,6 +651,67 @@ namespace SCRM_dev.Services
             catch (Exception ex)
             {
                 Debug.WriteLine($"Error associating contact to deal: {ex.Message}");
+                return (false, "A database error occurred.");
+            }
+        }
+
+        /// <summary>
+        /// Disassociates a Contact from a Deal.
+        /// </summary>
+        /// <param name="contactId">The ID of the contact.</param>
+        /// <param name="dealId">The ID of the deal to remove.</param>
+        /// <param name="ownerId">The ID of the user performing the action (for auditing).</param>
+        /// <returns>A tuple indicating success and a message.</returns>
+        public async Task<(bool Success, string Message)> DisassociateContactFromDealAsync(int contactId, int dealId, Guid ownerId)
+        {
+            // 1. Fetch the contact and include its existing deals
+            var contact = await unitOfWork.Contacts.FirstOrDefaultAsync(
+                c => c.Id == contactId,
+                "Deals" // Eager load the Deals collection
+            );
+
+            if (contact == null)
+            {
+                Debug.WriteLine($"DisassociateContactFromDeal: Contact with ID {contactId} not found.");
+                return (false, "Contact not found.");
+            }
+
+            // 2. Find the deal to remove *from the contact's loaded collection*
+            var dealToRemove = contact.Deals.FirstOrDefault(d => d.Id == dealId);
+
+            // 3. Check if the association even exists.
+            if (dealToRemove == null)
+            {
+                Debug.WriteLine($"DisassociateContactFromDeal: Contact {contactId} is not associated with Deal {dealId}.");
+                // Not an error, the desired state (disassociated) is already met.
+                return (true, "Contact was not associated with this deal.");
+            }
+
+            // --- AUDIT LOGIC ---
+            await _auditService.LogChangeAsync(new AuditLogDto
+            {
+                OwnerId = ownerId,
+                RecordId = contact.Id,
+                TableName = "Contact",
+                FieldName = "DealAssociation",
+                OldValue = $"Associated with Deal ID: {dealToRemove.Id} ({dealToRemove.Name})",
+                NewValue = "[Disassociated]"
+            });
+            // --- END AUDIT LOGIC ---
+
+            // 4. Remove the association
+            contact.Deals.Remove(dealToRemove);
+            unitOfWork.Contacts.Update(contact);
+
+            // 5. Save
+            try
+            {
+                await unitOfWork.SaveChangesAsync(); // Saves contact change AND audit log
+                return (true, "Contact disassociated successfully.");
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"Error disassociating contact from deal: {ex.Message}");
                 return (false, "A database error occurred.");
             }
         }

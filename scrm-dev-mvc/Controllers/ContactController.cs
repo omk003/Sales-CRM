@@ -110,6 +110,22 @@ namespace scrm_dev_mvc.Controllers
             return Json(new { data = ContactList });
         }
 
+        [HttpGet]
+        public async Task<IActionResult> GetAllContactsForCompany(int? companyId)
+        {
+            var userId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+
+            if (string.IsNullOrEmpty(userId))
+                return Unauthorized();
+
+            Guid id = Guid.Parse(userId);
+
+
+            List<ContactResponseViewModel> ContactList = await contactService.GetAllContactsForCompany(id, companyId);
+            return Json(new { data = ContactList });
+        }
+
+
         [HttpPost]
         public async Task<IActionResult> DeleteBulk([FromBody] List<int> ids)
         {
@@ -187,9 +203,6 @@ namespace scrm_dev_mvc.Controllers
             return RedirectToAction("Index");
         }
 
-        
-
-      
 
         [HttpPost]
         public async Task<IActionResult> SendEmail(string contactEmail, string subject, string body)
@@ -333,6 +346,25 @@ namespace scrm_dev_mvc.Controllers
                 return BadRequest(new { message = result.Message });
             }
         }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> DisassociateContactFromDeal(int contactId, int dealId)
+        {
+            var userId = Guid.Parse(User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value);
+
+            var result = await contactService.DisassociateContactFromDealAsync(contactId, dealId, userId);
+
+            if (result.Success)
+            {
+                return Ok(new { message = result.Message });
+            }
+            else
+            {
+                return BadRequest(new { message = result.Message });
+            }
+        }
+
 
         #endregion
     }

@@ -198,8 +198,47 @@
                     <p style="color:var(--text-tertiary);">No company associated.</p>
                 }
             </section>
-
             <section style="background:var(--bg-secondary);border-radius:var(--border-radius-lg);box-shadow:var(--shadow-sm);padding:var(--space-lg);">
+                <div style="display:flex;justify-content:space-between;align-items:center;">
+                    <h3 style="font-size:var(--fs-lg);color:var(--color-accent1);margin-bottom:var(--space-md);">Contacts</h3>
+                    <div style="display:flex; gap: 5px;">
+                        <button class="btn btn-custom" type="button"
+                                style="font-size:var(--fs-sm);padding:var(--space-xs) var(--space-sm);"
+                                onclick="openContactModal()">
+                            + Add
+                        </button>
+                    </div>
+                </div>
+
+                @if (Model.Contacts != null && Model.Contacts.Any())
+                {
+                    foreach (var contact in Model.Contacts)
+                    {
+                        <div style="background:var(--bg-primary);border-radius:var(--border-radius-sm);padding:var(--space-md);box-shadow:var(--shadow-sm);margin-bottom:var(--space-sm); display:flex; justify-content:space-between; align-items:center;">
+                            <div>
+                                <a href="@Url.Action("Preview", "Contact", new { id = contact.Id })"
+                                   style="font-weight:var(--fw-bold);margin-bottom:var(--space-xs); text-decoration:none;">
+                                    @contact.FirstName @contact.LastName
+                                </a>
+                                <div style="color:var(--text-secondary);font-size:var(--fs-sm);">@contact.Email</div>
+                            </div>
+
+                            <button class="btn btn-danger btn-sm"
+                                    title="Remove Contact"
+                                    style="font-size:var(--fs-sm);padding:var(--space-xs) var(--space-sm); background-color: var(--color-danger); color: white; border: none; border-radius: var(--border-radius-sm); cursor:pointer;"
+                                    onclick="removeContactFromDeal(@contact.Id, @Model.Deal.Id)">
+                                <i class="fas fa-trash-alt"></i>
+                            </button>
+                        </div>
+                    }
+                }
+                else
+                {
+                    <p style="color:var(--text-tertiary);">No contacts associated with this deal.</p>
+                }
+            </section>
+
+            @* <section style="background:var(--bg-secondary);border-radius:var(--border-radius-lg);box-shadow:var(--shadow-sm);padding:var(--space-lg);">
                 <div style="display:flex;justify-content:space-between;align-items:center;">
                     <h3 style="font-size:var(--fs-lg);color:var(--color-accent1);margin-bottom:var(--space-md);">Contacts</h3>
                     <div style="display:flex; gap: 5px;">
@@ -226,7 +265,7 @@
                 {
                     <p style="color:var(--text-tertiary);">No contacts associated with this deal.</p>
                 }
-            </section>
+            </section> *@
         </aside>
     </div>
 </div>
@@ -248,7 +287,22 @@
 
     // --- Contact Modal Functions ---
     function openContactModal() {
-        $.get('@Url.Action("GetAll", "Contact")', function (response) {
+        // Get the Company ID from the model.
+        // Razor will render this as 'var companyId = 123;' or 'var companyId = null;'
+        var companyId = @(Model.Deal.Company?.Id.ToString() ?? "null");
+        var url = '@Url.Action("GetAllContactsForCompany", "Contact")';
+
+        // Prepare the data for the AJAX request
+        var requestData = {};
+
+        // IMPORTANT: Only add the companyId to the request if it exists
+        if (companyId) {
+            requestData.companyId = companyId;
+        }
+
+        // Pass the requestData object to $.get.
+        // jQuery will automatically append it as a query string (e.g., ?companyId=123)
+        $.get(url, requestData, function (response) {
             var list = $('#contactList');
             list.empty();
             if (response.data && response.data.length > 0) {
@@ -261,11 +315,40 @@
                     );
                 });
             } else {
-                list.append('<li>No contacts found.</li>');
+                list.append('<li>No contacts found for this company.</li>');
             }
             $('#contactModal').css('display', 'flex');
         });
     }
+
+        function removeContactFromDeal(contactId, dealId) {
+        if (!confirm("Are you sure you want to remove this contact from the deal?")) {
+            return;
+        }
+
+        var token = $('input[name="__RequestVerificationToken"]').val();
+
+        $.ajax({
+            url: '@Url.Action("DisassociateContactFromDeal", "Contact")',
+            type: 'POST',
+            data: {
+                contactId: contactId,
+                dealId: dealId
+            },
+            headers: {
+                "RequestVerificationToken": token
+            },
+            success: function (response) {
+                alert(response.message || "Contact removed successfully!");
+                location.reload();
+            },
+            error: function (xhr) {
+                var msg = xhr.responseJSON?.message || xhr.responseText || "Failed to remove contact.";
+                alert("Error: " + msg);
+            }
+        });
+    }
+
 
     function closeContactModal() {
         $('#contactModal').hide();

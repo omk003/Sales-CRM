@@ -24,6 +24,9 @@ namespace scrm_dev_mvc.services.Interfaces
 
         Task<List<Contact>> GetAllContactsByOwnerIdAsync(Guid ownerId);
 
+        Task<List<ContactResponseViewModel>> GetAllContactsForCompany(Guid userId, int? companyId);
+        Task<(bool Success, string Message)> DisassociateContactFromDealAsync(int contactId, int dealId, Guid ownerId);
+
         //Task<(List<ContactResponseViewModel> Result, long WithTrackingMs, long WithoutTrackingMs)> GetAllContactsPerformanceTest(Guid userId);
     }
 }
