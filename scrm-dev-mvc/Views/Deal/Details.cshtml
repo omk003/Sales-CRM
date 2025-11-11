@@ -3,6 +3,23 @@
 @{
     ViewData["Title"] = $"Deal: {Model.Deal.Name}";
 }
+<style>
+    .btn-hover-shadow {
+        font-size: var(--fs-sm);
+        padding: var(--space-xs) var(--space-sm);
+        background-color: white;
+        color: black;
+        /* border: thin solid #ccc; */
+        border-radius: var(--border-radius-sm);
+        cursor: pointer;
+        transition: box-shadow 0.3s ease;
+    }
+
+        .btn-hover-shadow:hover {
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+        }
+</style>
+
 
 <div style="padding: 0 0 0 var(--space-md);">
     <a href="@Url.Action("KanbanBoard", "Deal")" style="display: inline-block; color: var(--color-primary); font-size: var(--fs-sm); font-family: var(--font-primary); font-weight: var(--fw-bold); text-decoration: none; letter-spacing: 0.03em; transition: var(--transition-base); border-radius: var(--border-radius-sm);"
@@ -223,9 +240,8 @@
                                 <div style="color:var(--text-secondary);font-size:var(--fs-sm);">@contact.Email</div>
                             </div>
 
-                            <button class="btn btn-danger btn-sm"
+                            <button class="btn-hover-shadow"
                                     title="Remove Contact"
-                                    style="font-size:var(--fs-sm);padding:var(--space-xs) var(--space-sm); background-color: var(--color-danger); color: white; border: none; border-radius: var(--border-radius-sm); cursor:pointer;"
                                     onclick="removeContactFromDeal(@contact.Id, @Model.Deal.Id)">
                                 <i class="fas fa-trash-alt"></i>
                             </button>

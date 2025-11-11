@@ -1,5 +1,9 @@
 ﻿@model scrm_dev_mvc.Models.ViewModels.ContactPreviewViewModel
-
+<style>
+    .btn-hover-shadow:hover {
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+    }
+</style>
     <div style="padding: 0 0 0 var(--space-md);">
         <a href="@Url.Action("Index", "Contact")" style="
         display: inline-block;
@@ -257,23 +261,41 @@
 
                 @if (Model.Company != null && Model.Company.Id > 0)
                 {
-                    <div style="background:var(--bg-primary);border-radius:var(--border-radius-sm);padding:var(--space-md);box-shadow:var(--shadow-sm);margin-bottom:var(--space-sm);">
+                    <div style="background:var(--bg-primary);
+                                padding:var(--space-md);
+                                box-shadow:var(--shadow-sm);
+                                margin-bottom:var(--space-sm);">
 
                         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:var(--space-xs);">
-                            <div style="font-weight:var(--fw-bold);">
-                                @Model.Company.Name
+                            <!-- Left section: Name + Domain in same line -->
+                            <div style="display:flex; align-items:center; gap:var(--space-sm);">
+                                <div style="font-weight:var(--fw-bold);">
+                                    @Model.Company.Name
+                                </div>
+                                <span style="color:var(--text-secondary); font-size:var(--fs-sm); padding-left:5px;">
+                                    Domain: @Model.Company.Domain
+                                </span>
                             </div>
 
-                            <button type="button"
-                                    onclick="disassociateCompany()"
+                            <!-- Right section: Delete button -->
+                            <button class="btn-hover-shadow"
+                                    type="button"
                                     title="Disassociate Company"
-                                    style="background:none; border:none; color: var(--color-accent); cursor:pointer; font-size: 0.8rem; padding: 2px 5px;">
-                                <i class="fas fa-times"></i> Remove
+                                    onclick="disassociateCompany()"
+                                    style="font-size:var(--fs-sm);
+                           padding:var(--space-xs) var(--space-sm);
+                           background:white;
+                           color:black;
+                           border-radius:var(--border-radius-sm);
+                           cursor:pointer;
+                           transition:box-shadow 0.3s ease;">
+                                <i class="fas fa-trash-alt"></i>
                             </button>
                         </div>
-
-                        <span style="color:var(--text-secondary);font-size:var(--fs-sm);">Domain: @Model.Company.Domain</span>
                     </div>
+
+                    
+
                 }
                 else
                 {
