@@ -413,7 +413,7 @@ namespace scrm_dev_mvc.Controllers
             }
         }
 
-        [Authorize] // Only logged-in users
+        [Authorize]
         [HttpGet]
         public async Task<IActionResult> GmailSync()
         {
@@ -432,9 +432,9 @@ namespace scrm_dev_mvc.Controllers
             return Redirect(authUrl);
         }
 
-        //[Authorize]
+        
         [HttpGet]
-        [AllowAnonymous] // Google callback can be called by Google
+        [AllowAnonymous] 
         public async Task<IActionResult> GmailSyncCallback([FromQuery] string code, [FromQuery] string state)
         {
             if (string.IsNullOrEmpty(code))

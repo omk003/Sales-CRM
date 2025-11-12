@@ -48,7 +48,7 @@ namespace scrm_dev_mvc.Services
 
         private class ChangeLeadStatusParams
         {
-            public LeadStatusEnum NewStatus { get; set; }
+            public LeadStatusEnum NewLeadStatus { get; set; }
         }
 
         private class ChangeLifeCycleStageParams
@@ -165,12 +165,12 @@ namespace scrm_dev_mvc.Services
                     return;
                 }
 
-                targetContact.LeadStatusId = (int)parameters.NewStatus;
+                targetContact.LeadStatusId = (int)parameters.NewLeadStatus;
                 dbContext.Contacts.Update(targetContact);
                 await dbContext.SaveChangesAsync();
 
                 _logger.LogInformation("Successfully updated Contact {ContactId} LeadStatus to {NewStatus} via Workflow {ActionId}.",
-                    targetContact.Id, parameters.NewStatus, action.Id);
+                    targetContact.Id, parameters.NewLeadStatus, action.Id);
             }
         }
 

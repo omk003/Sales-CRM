@@ -28,7 +28,8 @@ namespace scrm_dev_mvc.Controllers
         {
             try
             {
-                var viewModel = await _dealService.GetKanbanBoardAsync();
+                var userd = _currentUserService.GetUserId();
+                var viewModel = await _dealService.GetKanbanBoardAsync(userd);
                 return View(viewModel);
             }
             catch (Exception ex)

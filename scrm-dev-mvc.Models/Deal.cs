@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace scrm_dev_mvc.Models;
 
@@ -34,6 +35,12 @@ public partial class Deal
     public virtual User? Owner { get; set; }
 
     public virtual Stage? Stage { get; set; }
+
+    
+    public int? OrganizationId { get; set; }
+
+    [ForeignKey("OrganizationId")]
+    public virtual Organization? Organization { get; set; }
 
     public virtual ICollection<Contact> Contacts { get; set; } = new List<Contact>();
 }

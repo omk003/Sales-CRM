@@ -8,6 +8,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using scrm_dev_mvc.Models.Enums;
 
 namespace scrm_dev_mvc.services
 {
@@ -15,26 +16,55 @@ namespace scrm_dev_mvc.services
     {
         private readonly IUnitOfWork _unitOfWork;
         private readonly ILogger<DealService> _logger;
+        private readonly IUserService _userService;
 
-        public DealService(IUnitOfWork unitOfWork, ILogger<DealService> logger)
+        public DealService(IUnitOfWork unitOfWork, ILogger<DealService> logger, IUserService userService)
         {
             _unitOfWork = unitOfWork;
             _logger = logger;
+            _userService = userService;
         }
 
         // =======================
         // 1️⃣ KANBAN BOARD
         // =======================
-        public async Task<KanbanBoardViewModel> GetKanbanBoardAsync()
+        public async Task<KanbanBoardViewModel> GetKanbanBoardAsync(Guid ownerId)
         {
             try
             {
+                var user = await _userService.GetUserByIdAsync(ownerId);
+                if (user == null)
+                {
+                    _logger.LogWarning("GetKanbanBoardAsync: User with ID {UserId} not found.", ownerId);
+                    return new KanbanBoardViewModel
+                    {
+                        DealStages = new List<string>(),
+                        DealsByStage = new Dictionary<string, List<Deal>>(),
+                        StageTotals = new Dictionary<string, decimal>()
+                    };
+                }
+
                 var stages = await _unitOfWork.Stages.GetAllAsync(s => true, asNoTracking: true);
-                var deals = await _unitOfWork.Deals.GetAllAsync(
-                    d => d.IsDeleted != true,
+                var deals = new List<Deal>();
+
+                if (user.RoleId == (int)UserRoleEnum.SalesAdminSuper || user.RoleId == (int)UserRoleEnum.SalesAdmin)
+                {
+                    deals = await _unitOfWork.Deals.GetAllAsync(
+                       d => d.IsDeleted != true && d.OrganizationId == user.OrganizationId,
+                       asNoTracking: true,
+                        d => d.Stage, d => d.Owner, d => d.Company
+                   );
+                }
+                else
+                {
+                    deals = await _unitOfWork.Deals.GetAllAsync(
+                    d => d.IsDeleted != true && d.OwnerId == ownerId,
                     asNoTracking: true,
                      d => d.Stage, d => d.Owner, d => d.Company
-                );
+                    );
+                }
+                
+                   
 
                 var dealsByStage = stages.ToDictionary(
                     stage => stage.Name,

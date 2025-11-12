@@ -5,7 +5,7 @@ namespace scrm_dev_mvc.services.Interfaces
 {
     public interface IDealService
     {
-        Task<KanbanBoardViewModel> GetKanbanBoardAsync();
+        Task<KanbanBoardViewModel> GetKanbanBoardAsync(Guid ownerId);
         Task<DealFormViewModel> GetCreateFormAsync(int? companyId);
         Task<bool> InsertDealAsync(DealFormViewModel vm, Guid userId);
         Task<DealFormViewModel?> GetUpdateFormAsync(int id);

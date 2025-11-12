@@ -24,7 +24,7 @@ namespace scrm_dev_mvc.services
             var httpContext = _httpContextAccessor.HttpContext;
             if (httpContext == null)
             {
-                // This can happen in background services, return empty or throw
+                
                 return Guid.Empty;
             }
 

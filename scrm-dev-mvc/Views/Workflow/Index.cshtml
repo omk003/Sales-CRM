@@ -64,6 +64,25 @@
             background-color: #FEE2E2; /* red-100 */
             border-color: #FECACA; /* red-200 */
         }
+
+    .btn-edit {
+        padding: 4px 10px;
+        border-radius: 6px;
+        font-weight: 600;
+        font-size: 0.75rem; /* text-xs */
+        line-height: 1rem;
+        transition: background-color 0.2s;
+        border: none;
+        cursor: pointer;
+        background-color: #F8F8F8; /* A light gray */
+        color: #4B5563; /* gray-600 */
+        border: 1px solid #E5E7EB; /* gray-200 */
+    }
+
+        .btn-edit:hover {
+            background-color: #F3F4F6; /* gray-100 */
+            border-color: #D1D5DB; /* gray-300 */
+        }
     /* ------------------------------------- */
 </style>
 
@@ -120,7 +139,9 @@
                                     </button>
                                 }
                             </form>
-
+                            <a asp-action="Edit" asp-route-id="@workflow.Id" class="btn-edit">
+                                <i class="fas fa-pencil-alt"></i>
+                            </a>
                             <form asp-action="Delete" asp-route-id="@workflow.Id" method="post" class="mb-0">
                                 @Html.AntiForgeryToken()
                                 <button type="submit" class="btn-delete"

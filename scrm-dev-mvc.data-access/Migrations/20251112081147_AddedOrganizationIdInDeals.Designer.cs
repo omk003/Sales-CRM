@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using scrm_dev_mvc.DataAccess.Data;
 
@@ -11,9 +12,11 @@ using scrm_dev_mvc.DataAccess.Data;
 namespace scrm_dev_mvc.data_access.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251112081147_AddedOrganizationIdInDeals")]
+    partial class AddedOrganizationIdInDeals
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -435,8 +438,6 @@ namespace scrm_dev_mvc.data_access.Migrations
                         .HasName("PK__deal__3213E83F2D70B86A");
 
                     b.HasIndex("CompanyId");
-
-                    b.HasIndex("OrganizationId");
 
                     b.HasIndex("OwnerId");
 
@@ -1292,10 +1293,6 @@ namespace scrm_dev_mvc.data_access.Migrations
                         .HasForeignKey("CompanyId")
                         .HasConstraintName("FK_deal_company");
 
-                    b.HasOne("scrm_dev_mvc.Models.Organization", "Organization")
-                        .WithMany()
-                        .HasForeignKey("OrganizationId");
-
                     b.HasOne("scrm_dev_mvc.Models.User", "Owner")
                         .WithMany("Deals")
                         .HasForeignKey("OwnerId")
@@ -1308,8 +1305,6 @@ namespace scrm_dev_mvc.data_access.Migrations
                         .HasConstraintName("FK_deal_stage");
 
                     b.Navigation("Company");
-
-                    b.Navigation("Organization");
 
                     b.Navigation("Owner");
 

@@ -86,11 +86,8 @@ namespace scrm_dev_mvc.Controllers
 
             if (invitation == null)
             {
-                // --- THIS BLOCK IS FIXED ---
-                // An active invitation already exists.
-                // Use TempData to send the error message back to the Index view.
                 TempData["Message"] = "An active invitation has already been sent to this email address.";
-                return RedirectToAction("Index"); // Redirect back to the page with the form
+                return RedirectToAction("Index"); 
             }
 
             string? adminId = configuration["Gmail:AdminEmailId"];
@@ -120,7 +117,7 @@ namespace scrm_dev_mvc.Controllers
         }
 
 
-        // GET: Organization/UpdateDetails/{organizationId}
+        
         [Authorize(Roles = "SalesAdminSuper")]
         [HttpGet]
         public async Task<IActionResult> UpdateDetails(int organizationId)
@@ -142,7 +139,7 @@ namespace scrm_dev_mvc.Controllers
             return View(vm);
         }
 
-        // POST: Organization/UpdateDetails
+       
         [Authorize(Roles = "SalesAdminSuper")]
         [HttpPost]
         [ValidateAntiForgeryToken]
