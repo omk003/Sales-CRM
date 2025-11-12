@@ -17,18 +17,21 @@ namespace scrm_dev_mvc.Controllers
     {
         private readonly ApplicationDbContext _context;
         private readonly IOrganizationService _organizationService; 
+        private readonly ICurrentUserService _currentUserService;
 
 
-        public WorkflowController(ApplicationDbContext context, IOrganizationService organizationService)
+        public WorkflowController(ApplicationDbContext context, IOrganizationService organizationService, ICurrentUserService currentUserService)
         {
             _context = context;
             _organizationService = organizationService;
+            _currentUserService = currentUserService;
         }
 
         // 1. INDEX: Shows all workflows
         public async Task<IActionResult> Index()
         {
-            var organization = await _organizationService.GetOrganizationViewModelByUserId(User.GetUserId());
+            var userId = _currentUserService.GetUserId();
+            var organization = await _organizationService.GetOrganizationViewModelByUserId(userId);
             if (organization == null) return Unauthorized();
 
             var workflows = await _context.Workflows
@@ -85,8 +88,9 @@ namespace scrm_dev_mvc.Controllers
                 // (You would repopulate all dropdowns here on failure)
                 return View(viewModel);
             }
+            var userId = _currentUserService.GetUserId();
 
-            var organization = await _organizationService.GetOrganizationViewModelByUserId(User.GetUserId());
+            var organization = await _organizationService.GetOrganizationViewModelByUserId(userId);
             if (organization == null) return Unauthorized();
 
             // 1. Create ONE Workflow
@@ -175,7 +179,9 @@ namespace scrm_dev_mvc.Controllers
         // Make sure this is protected, e.g., [Authorize]
         public async Task<IActionResult> ToggleActive(int id)
         {
-            var organization = await _organizationService.GetOrganizationViewModelByUserId(User.GetUserId());
+            var userId = _currentUserService.GetUserId();
+
+            var organization = await _organizationService.GetOrganizationViewModelByUserId(userId);
             if (organization == null)
             {
                 return Unauthorized();
@@ -204,7 +210,9 @@ namespace scrm_dev_mvc.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Delete(int id)
         {
-            var organization = await _organizationService.GetOrganizationViewModelByUserId(User.GetUserId());
+            var userId = _currentUserService.GetUserId();
+
+            var organization = await _organizationService.GetOrganizationViewModelByUserId(userId);
             if (organization == null)
             {
                 return Unauthorized();

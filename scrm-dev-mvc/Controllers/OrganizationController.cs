@@ -71,7 +71,7 @@ namespace scrm_dev_mvc.Controllers
         [Authorize(Roles ="SalesAdminSuper,SalesAdmin")]
         public async Task<IActionResult> SendInvitation(string email, int roleId)
         {
-            var userId = User.GetUserId();
+            var userId = currentUserService.GetUserId();
             
             // Get the organization of the user sending the invitation
             var organization = await organizationService.IsInOrganizationById(userId);
