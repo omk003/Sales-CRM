@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using scrm_dev_mvc.DataAccess.Data;
 using scrm_dev_mvc.Models;
+using scrm_dev_mvc.Models.Enums;
 using scrm_dev_mvc.Models.ViewModels;
 using scrm_dev_mvc.services;
 using scrm_dev_mvc.services.Interfaces;
@@ -106,7 +107,7 @@ namespace scrm_dev_mvc.Controllers
                         ExpiresUtc = DateTimeOffset.UtcNow.AddDays(7)
                     });
 
-            if(user.RoleId == 1)
+            if(user.RoleId == (int)UserRoleEnum.ApplicationAdmin)
             {
                 return RedirectToAction("Index", "ApplicationAdmin");
             }
@@ -169,7 +170,7 @@ namespace scrm_dev_mvc.Controllers
                     Email = model.Email,
                     PasswordHash = _passwordHasher.HashPassword(model.Password),
                     CreatedAt = DateTime.UtcNow,
-                    RoleId = 4
+                    RoleId = (int)UserRoleEnum.SalesUser
                 };
                 await _userService.CreateUserAsync(user);
             }
@@ -362,7 +363,7 @@ namespace scrm_dev_mvc.Controllers
                         Email = googleUser.Email,
                         FirstName = googleUser.FirstName,
                         LastName = googleUser.LastName,
-                        RoleId = 4 // default role
+                        RoleId = (int)UserRoleEnum.SalesUser // default role
                     };
                     await _userService.CreateUserAsync(user);
                 }
@@ -399,7 +400,7 @@ namespace scrm_dev_mvc.Controllers
                     CookieAuthenticationDefaults.AuthenticationScheme,
                     new ClaimsPrincipal(claimsIdentity),
                     authProperties);
-                if (user.RoleId == 1)
+                if (user.RoleId == (int)UserRoleEnum.ApplicationAdmin)
                 {
                     return RedirectToAction("Index", "ApplicationAdmin");
                 }
