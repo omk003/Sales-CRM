@@ -40,7 +40,7 @@ namespace scrm_dev_mvc.Controllers
             var userId = currentUserService.GetUserId();
 
             // Pass User in Service layer of organization
-            await organizationService.CreateOrganizationAsync(organization, userId));
+            await organizationService.CreateOrganizationAsync(organization, userId);
 
             // TODO: FIX
             if (string.IsNullOrEmpty(organizationService.IsInOrganizationById(userId).Result?.Name))

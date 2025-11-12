@@ -43,5 +43,16 @@ namespace scrm_dev_mvc.services
             var httpContext = _httpContextAccessor.HttpContext;
             return httpContext?.User?.IsInRole(role) ?? false;
         }
+
+        public string GetUserEmail()
+        {
+            var httpContext = _httpContextAccessor.HttpContext;
+            if (httpContext == null)
+            {
+                return string.Empty;
+            }
+            var email = httpContext.User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Name)?.Value;
+            return email ?? string.Empty;
+        }
     }
 }

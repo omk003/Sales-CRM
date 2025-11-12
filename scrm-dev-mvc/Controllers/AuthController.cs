@@ -21,7 +21,8 @@ namespace scrm_dev_mvc.Controllers
         private readonly IPasswordHasher _passwordHasher;
         private readonly IInvitationService _invitationService;
         private readonly IConfiguration _configuration;
-        public AuthController(IGmailService gmailService, IConfiguration configuration, IOrganizationService organizationService,IUserService userService, IPasswordHasher passwordHasher, IInvitationService invitationService)
+        private readonly ICurrentUserService _currentUserService;
+        public AuthController(IGmailService gmailService, IConfiguration configuration, IOrganizationService organizationService,IUserService userService, IPasswordHasher passwordHasher, IInvitationService invitationService, ICurrentUserService currentUserService)
         {
             
             _gmailService = gmailService;
@@ -30,6 +31,7 @@ namespace scrm_dev_mvc.Controllers
             _passwordHasher = passwordHasher;
             _invitationService = invitationService;
             _configuration = configuration;
+            _currentUserService = currentUserService;
         }
 
         [HttpGet]
@@ -415,7 +417,7 @@ namespace scrm_dev_mvc.Controllers
         public async Task<IActionResult> GmailSync()
         {
             // 1️⃣ Get the currently logged-in user's email from claims
-            var userEmail = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Name)?.Value;
+            var userEmail = _currentUserService.GetUserEmail();
             if (string.IsNullOrEmpty(userEmail))
                 return RedirectToAction("Login");
 

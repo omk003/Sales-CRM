@@ -10,7 +10,7 @@ namespace scrm_dev_mvc.services.Interfaces
     {
         Guid GetUserId();
         // You could also add other properties like:
-        // string GetUserEmail();
+        string GetUserEmail();
         bool IsAuthenticated();
 
         bool IsInRole(string role);
