@@ -168,108 +168,9 @@ namespace scrm_dev_mvc.services
         }
 
 
-        //public async Task<(bool Success, string Message)> UpdateTaskAndEntitiesAsync(
-        //TaskUpdateViewModel viewModel, Guid ownerId) 
-        //{
-        //    try
-        //    {
-        //        var task = await _unitOfWork.Tasks.FirstOrDefaultAsync(u=>u.Id == viewModel.TaskId);
-        //        if (task == null) return (false, "Task not found.");
-
-        //        // --- 1. AUDIT LOGIC: Compare Task fields ---
-        //        if (task.StatusId != viewModel.StatusId)
-        //        {
-        //            await _auditService.LogChangeAsync(new AuditLogDto
-        //            {
-        //                OwnerId = ownerId,
-        //                RecordId = task.Id,
-        //                TableName = "Task",
-        //                FieldName = "StatusId",
-        //                OldValue = task.StatusId.ToString(),
-        //                NewValue = viewModel.StatusId.ToString()
-        //            });
-        //            task.StatusId = viewModel.StatusId; // Apply change
-
-        //            // Check if new status is "Completed"
-        //            var completedStatus = await _unitOfWork.TaskStatuses.FirstOrDefaultAsync(s => s.StatusName == "Completed");
-        //            if (completedStatus != null && task.StatusId == completedStatus.Id)
-        //            {
-        //                task.CompletedAt = DateTime.UtcNow;
-
-        //                // --- FIRE THE TRIGGER ---
-        //                await _workflowService.RunTriggersAsync(
-        //                    WorkflowTrigger.TaskCompleted,
-        //                    task // Pass the completed task object
-        //                );
-        //                // ------------------------
-        //            }
-        //        }
-        //        _unitOfWork.Tasks.Update(task);
-
-        //        // --- 2. AUDIT LOGIC: Compare Contact fields ---
-        //        if (viewModel.ContactId.HasValue && viewModel.CurrentContactLeadStatusId.HasValue)
-        //        {
-        //            var contact = await _unitOfWork.Contacts.FirstOrDefaultAsync(u => u.Id == viewModel.ContactId.Value);
-        //            int newStatusId = viewModel.CurrentContactLeadStatusId.Value;
-
-        //            if (contact != null && contact.LeadStatusId != viewModel.CurrentContactLeadStatusId.Value)
-        //            {
-        //                await _auditService.LogChangeAsync(new AuditLogDto
-        //                {
-        //                    OwnerId = ownerId,
-        //                    RecordId = contact.Id,
-        //                    TableName = "Contact",
-        //                    FieldName = "LeadStatusId",
-        //                    OldValue = contact.LeadStatusId.ToString(),
-        //                    NewValue = viewModel.CurrentContactLeadStatusId.Value.ToString()
-        //                });
-        //                contact.LeadStatusId = newStatusId;//changed
-        //                // --- FIRE THE TRIGGER ---
-        //                // Convert the int ID to the correct trigger
-        //                if (TryGetTriggerForStatus(newStatusId, out WorkflowTrigger trigger))
-        //                {
-        //                    await _workflowService.RunTriggersAsync(trigger, contact);
-        //                }
-        //                // ------------------------
-
-        //                _unitOfWork.Contacts.Update(contact);
-        //            }
-        //        }
-
-        //        // --- 3. AUDIT LOGIC: Compare Deal fields ---
-        //        if (viewModel.DealId.HasValue && viewModel.CurrentDealStageId.HasValue)
-        //        {
-        //            var deal = await _unitOfWork.Deals.FirstOrDefaultAsync(u => u.Id == viewModel.DealId.Value);
-        //            if (deal != null && deal.StageId != viewModel.CurrentDealStageId.Value)
-        //            {
-        //                await _auditService.LogChangeAsync(new AuditLogDto
-        //                {
-        //                    OwnerId = ownerId,
-        //                    RecordId = deal.Id,
-        //                    TableName = "Deal",
-        //                    FieldName = "StageId",
-        //                    OldValue = deal.StageId.ToString(),
-        //                    NewValue = viewModel.CurrentDealStageId.Value.ToString()
-        //                });
-        //                deal.StageId = viewModel.CurrentDealStageId.Value; // Apply change
-        //                _unitOfWork.Deals.Update(deal);
-        //            }
-        //        }
-
-        //        // 4. Save all changes (Task, Contact, Deal, AND Audit logs) in one transaction
-        //        await _unitOfWork.SaveChangesAsync();
-        //        return (true, "Task updated successfully!");
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        _logger.LogError(ex, "Error updating task and entities.");
-        //        return (false, "A database error occurred.");
-        //    }
-        //}
-
 
         public async Task<(bool Success, string Message)> UpdateTaskAndEntitiesAsync(
-    TaskUpdateViewModel viewModel, Guid ownerId)
+                            TaskUpdateViewModel viewModel, Guid ownerId)
         {
             try
             {
@@ -407,6 +308,51 @@ namespace scrm_dev_mvc.services
                 default:
                     trigger = default;
                     return false;
+            }
+        }
+
+
+        public async Task<(bool Success, string Message)> DeleteTaskAsync(int taskId, Guid ownerId)
+        {
+            try
+            {
+                var task = await _unitOfWork.Tasks.FirstOrDefaultAsync(t => t.Id == taskId);
+                if (task == null)
+                {
+                    return (false, "Task not found.");
+                }
+
+                // 1. Log the deletion as an audit event
+                await _auditService.LogChangeAsync(new AuditLogDto
+                {
+                    OwnerId = ownerId,
+                    RecordId = task.Id,
+                    TableName = "Task",
+                    FieldName = "Deleted",
+                    OldValue = task.Title, // Store what was deleted
+                    NewValue = "DELETED"
+                });
+
+                var activityDeleted = await _activityService.DeleteActivityBySubjectAsync(taskId, "Task");
+                if (!activityDeleted)
+                {
+                    // Not a critical failure, but worth logging
+                    _logger.LogWarning("Task {TaskId} is being deleted, but its associated activity log could not be marked for deletion.", taskId);
+                }
+
+                // 2. Delete the task itself
+                _unitOfWork.Tasks.Delete(task);
+
+                // 3. Save changes
+                await _unitOfWork.SaveChangesAsync();
+
+                _logger.LogInformation("Task {TaskId} deleted successfully by user {OwnerId}.", taskId, ownerId);
+                return (true, "Task deleted successfully.");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error occurred while deleting task {TaskId}.", taskId);
+                return (false, "An error occurred while deleting the task.");
             }
         }
     }

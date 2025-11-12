@@ -159,6 +159,43 @@ namespace scrm_dev_mvc.services
             // 4. Apply sorting in-memory
             return activities.OrderByDescending(a => a.ActivityDate);
         }
+
+        public async Task<bool> DeleteActivityBySubjectAsync(int subjectId, string subjectType)
+        {
+            if (string.IsNullOrEmpty(subjectType))
+            {
+                return false;
+            }
+
+            try
+            {
+                // Find the activity record linked to the task
+                // Based on your table: subject_id is the TaskId, subject_type is "Task"
+                var activity = await _unitOfWork.Activities.FirstOrDefaultAsync(a =>
+                    a.SubjectId == subjectId &&
+                    a.SubjectType == subjectType
+                );
+
+                if (activity != null)
+                {
+                    _unitOfWork.Activities.Delete(activity);
+                    // Note: We don't call SaveChangesAsync here.
+                    // The calling service (TaskService) will do that.
+                    _logger.LogInformation("Activity {ActivityId} marked for deletion (Subject: {SubjectId}).", activity.Id, subjectId);
+                }
+                else
+                {
+                    _logger.LogWarning("No activity found to delete for Subject {SubjectId} of type {SubjectType}.", subjectId, subjectType);
+                }
+
+                return true;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error finding activity for deletion (Subject: {SubjectId}).", subjectId);
+                return false;
+            }
+        }
     }
     
 }

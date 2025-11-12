@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
 using scrm_dev_mvc.Data.Repository;
 using scrm_dev_mvc.Data.Repository.IRepository;
@@ -15,7 +16,7 @@ using System.Linq.Expressions;
 
 namespace SCRM_dev.Services
 {
-    public class ContactService(IUnitOfWork unitOfWork, IAuditService _auditService, ILogger<ContactService> _logger, IWorkflowService _workflowService) : IContactService
+    public class ContactService(IUnitOfWork unitOfWork, IAuditService _auditService, ILogger<ContactService> _logger, IWorkflowService _workflowService, IMemoryCache cache) : IContactService
     {
         
         public async Task<string> CreateContactAsync(ContactDto contactDto)
@@ -270,12 +271,13 @@ namespace SCRM_dev.Services
 
         public async Task<List<ContactResponseViewModel>> GetAllContacts(Guid userId)
         {
+
             var user = await unitOfWork.Users.GetByIdAsync(userId);
             if (user == null)
                 return new List<ContactResponseViewModel>();
 
             Expression<Func<Contact, bool>> predicate;
-            if (user.RoleId == 2 || user.RoleId == 3)
+            if (user.RoleId == (int)UserRoleEnum.SalesAdminSuper || user.RoleId == (int)UserRoleEnum.SalesAdmin)
             {
                 predicate = c => c.OrganizationId == user.OrganizationId && (!c.IsDeleted ?? false);
             }
@@ -379,21 +381,21 @@ namespace SCRM_dev.Services
         }
 
 
-        public async Task<string> UpdateContact(ContactDto contact, Guid ownerId) // <-- ADDED ownerId
+        public async Task<string> UpdateContact(ContactDto contact, Guid ownerId) 
         {
             if (contact != null)
             {
                 Contact existingContact = await unitOfWork.Contacts.FirstOrDefaultAsync(c => c.Id == contact.Id);
                 if (existingContact != null)
                 {
-                    // --- NEW EMAIL VALIDATION LOGIC ---
+                    
                     if (existingContact.Email != contact.Email)
                     {
                         // Check if the NEW email is already taken by ANOTHER contact in the same org
                         var emailOwner = await unitOfWork.Contacts.FirstOrDefaultAsync(c =>
                             c.Email == contact.Email &&
                             c.OrganizationId == existingContact.OrganizationId &&
-                            c.Id != existingContact.Id); // <-- Exclude the current contact
+                            c.Id != existingContact.Id); //  Exclude the current contact
 
                         if (emailOwner != null)
                         {
@@ -404,15 +406,13 @@ namespace SCRM_dev.Services
                             }
                             else
                             {
-                                // This is your exact scenario. The email belongs to a deleted contact.
                                 return "Email belongs to a deleted contact. Please use a different email or re-activate the other contact.";
                             }
                         }
                     }
-                    // --- END OF NEW VALIDATION LOGIC ---
 
 
-                    // --- AUDIT LOGIC START ---
+                    #region AUDIT
 
                     if (existingContact.FirstName != contact.FirstName)
                     {
@@ -525,10 +525,10 @@ namespace SCRM_dev.Services
                         });
                         existingContact.OwnerId = contact.OwnerId;
                     }
-                    // --- AUDIT LOGIC END ---
+                    #endregion 
 
                     unitOfWork.Contacts.Update(existingContact);
-                    await unitOfWork.SaveChangesAsync(); // Saves all Contact changes and all Audit logs
+                    await unitOfWork.SaveChangesAsync();
                     return "Contact updated successfully";
                 }
             }
@@ -596,7 +596,7 @@ namespace SCRM_dev.Services
             }
         }
 
-        // --- UPDATED METHOD ---
+        
         public async Task<(bool Success, string Message)> AssociateContactToDealAsync(int contactId, int dealId, Guid ownerId)
         {
             // 1. Fetch the contact and include its existing deals
@@ -716,7 +716,6 @@ namespace SCRM_dev.Services
             }
         }
 
-        // --- UPDATED METHOD ---
         public async Task<(bool Success, string Message)> DisassociateCompany(int contactId, Guid ownerId)
         {
             var contact = await unitOfWork.Contacts.FirstOrDefaultAsync(c => c.Id == contactId);

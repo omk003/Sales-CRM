@@ -14,7 +14,7 @@ $(document).ready(function () {
 
 function loadDataTable() {
     dataTable = $('#tblData').DataTable({
-        scrollY: '200px',
+        scrollY: '280px',
         scrollCollapse: true,
         paging: false,
         "ajax": { url: '/company/getall' },

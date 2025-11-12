@@ -11,5 +11,7 @@ namespace scrm_dev_mvc.services.Interfaces
         Task<IEnumerable<Activity>> GetActivitiesByContactAsync(int contactId);
         Task<IEnumerable<Activity>> GetActivitiesByDealAsync(int dealId);
         Task<IEnumerable<Activity>> GetActivitiesByCompanyAsync(int companyId);
+
+        Task<bool> DeleteActivityBySubjectAsync(int subjectId, string subjectType);
     }
 }
