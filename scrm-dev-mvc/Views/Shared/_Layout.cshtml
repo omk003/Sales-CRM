@@ -7,6 +7,8 @@
     <title>@ViewData["Title"]SCRM</title>
     <link rel="icon" type="image/png" href="images/logo.png">
     <link rel="icon" type="image/png" href="~/favicon.png">
+    <!-- Toastr CSS -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css" rel="stylesheet" />
 
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
@@ -205,9 +207,59 @@
             border-top: 1px solid var(--text-tertiary);
             
         }
+        /* === TOASTR BRAND THEME === */
+
+        /* Main success / brand toast */
+        .toast-success {
+            background-color: var(--color-secondary) !important;
+            color: #fff !important;
+        }
+
+        /* Info toast: soft gray-blue */
+        .toast-info {
+            background-color: hsl(220, 15%, 40%) !important;
+            color: #fff !important;
+        }
+
+        /* Warning toast: warm orange */
+        .toast-warning {
+            background-color: hsl(35, 100%, 55%) !important;
+            color: #fff !important;
+        }
+
+        /* Error toast: deeper version of your brand hue */
+        .toast-error {
+            background-color: hsl(347.78, 100%, 45%) !important;
+            color: #fff !important;
+        }
+
+        /* Toast container & close button tweaks */
+        .toast {
+            border-radius: 10px !important;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15) !important;
+        }
+
+        .toast-close-button {
+            color: #fff !important;
+            opacity: 0.8;
+        }
+
+            .toast-close-button:hover {
+                opacity: 1;
+            }
+
     </style>
 </head>
 <body>
+    @if (TempData["Message"] != null)
+    {
+        <script>
+            document.addEventListener("DOMContentLoaded", function () {
+                toastr.success("@TempData["Message"]");
+            });
+        </script>
+    }
+
     <div class="sidebar">
         <div>
             @* <div class="sidebar-header">SCRM</div> *@
@@ -326,6 +378,28 @@
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
     <script src="//cdn.datatables.net/1.13.3/js/jquery.dataTables.min.js" asp-append-version="true"></script>
+    <!-- Toastr JS -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
+    <script>
+        toastr.options = {
+            "closeButton": true,
+            "debug": false,
+            "newestOnTop": true,
+            "progressBar": true,
+            "positionClass": "toast-top-right",
+            "preventDuplicates": true,
+            "onclick": null,
+            "showDuration": "300",
+            "hideDuration": "1000",
+            "timeOut": "4000",
+            "extendedTimeOut": "1000",
+            "showEasing": "swing",
+            "hideEasing": "linear",
+            "showMethod": "fadeIn",
+            "hideMethod": "fadeOut"
+        };
+    </script>
+
     @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>

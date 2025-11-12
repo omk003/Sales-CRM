@@ -213,17 +213,6 @@
                     <input asp-for="Company.Country" class="form-control" />
                     <span asp-validation-for="Company.Country" class="text-danger"></span>
                 </div>
-
-                <!-- Company Owner -->
-                @* <div class="form-group">
-                    <label asp-for="Company.OwnerId"></label>
-                    <select asp-for="Company.OwnerId"
-                            asp-items="@(new SelectList(Model.Users, "Id", "FirstName","Email"))"
-                            class="form-control">
-                        <option value="">-- Select Owner --</option>
-                    </select>
-                    <span asp-validation-for="Company.OwnerId" class="text-danger"></span>
-                </div> *@
                 <div class="form-group">
                     <label asp-for="Company.userId"></label>
                     <select asp-for="Company.userId" class="form-control">

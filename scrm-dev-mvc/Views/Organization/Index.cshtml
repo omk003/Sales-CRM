@@ -28,14 +28,6 @@
     ViewData["Title"] = "Invite Team Member";
 }
 
-@* Display feedback messages (styled as a "toast") *@
-@if (TempData["Message"] != null)
-{
-    <div id="tempDataMessage" class="alert alert-info alert-dismissible fade show" role="alert" style="position: absolute; top: 80px; right: 20px; z-index: 1050;">
-        @TempData["Message"]
-        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-    </div>
-}
 
 <div class="profile-container">
     <header class="profile-header">

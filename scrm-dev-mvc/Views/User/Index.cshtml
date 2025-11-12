@@ -4,15 +4,6 @@
     // This view will now use your main _Layout.cshtml by default
 }
 
-@* Display feedback messages from the server *@
-@if (TempData["Message"] != null)
-{
-    <div id="tempDataMessage" class="alert alert-info alert-dismissible fade show" role="alert" style="position: absolute; top: 80px; right: 20px; z-index: 1050;">
-        @TempData["Message"]
-        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-    </div>
-}
-
 <div class="profile-container">
     <!-- Header Section with Tab Navigation -->
     <header class="profile-header">

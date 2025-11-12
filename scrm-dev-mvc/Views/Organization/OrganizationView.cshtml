@@ -281,16 +281,8 @@
     ViewData["Title"] = "Organization Management";
 }
 
-@* Display feedback messages from the server
-  (Using the styled version from your Profile page)
-*@
-@if (TempData["Message"] != null)
-{
-    <div id="tempDataMessage" class="alert alert-info alert-dismissible fade show" role="alert" style="position: absolute; top: 80px; right: 20px; z-index: 1050;">
-        @TempData["Message"]
-        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-    </div>
-}
+
+
 @if (TempData["Error"] != null)
 {
     <div id="tempDataError" class="alert alert-danger alert-dismissible fade show" role="alert" style="position: absolute; top: 80px; right: 20px; z-index: 1050;">

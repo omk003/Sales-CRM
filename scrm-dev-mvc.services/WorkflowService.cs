@@ -53,7 +53,7 @@ namespace scrm_dev_mvc.Services
 
         private class ChangeLifeCycleStageParams
         {
-            public int NewStageId { get; set; } // Assuming it's an int ID
+            public int NewStageId { get; set; } 
         }
 
         /// <summary>
@@ -85,7 +85,7 @@ namespace scrm_dev_mvc.Services
 
             // 3. Loop through each workflow and execute its actions
             foreach (var workflow in workflows)
-            {
+            { 
                 foreach (var action in workflow.Actions)
                 {
                     // Use a try-catch so one failed action doesn't
@@ -123,7 +123,6 @@ namespace scrm_dev_mvc.Services
                 case WorkflowActionType.ChangeLifeCycleStage:
                     await ExecuteChangeLifeCycleStageAsync(action, entity);
                     break;
-                // ---------------------------
 
                 case WorkflowActionType.SendEmail:
                     _logger.LogWarning("SendEmail action not yet implemented.");
@@ -177,18 +176,46 @@ namespace scrm_dev_mvc.Services
         // --- ADDED THIS NEW METHOD (for your LifeCycleStage idea) ---
         private async System.Threading.Tasks.Task ExecuteChangeLifeCycleStageAsync(WorkflowAction action, object entity)
         {
-            if (!TryGetContactId(entity, out int contactId))
+            // 1. Get the ContactId from the triggering entity
+            if (!TryGetContactId(entity, out int contactId))
             {
                 _logger.LogWarning("ChangeLifeCycleStage action {ActionId} was triggered by an entity with no ContactId. Skipping.", action.Id);
                 return;
             }
 
-            // ... (Logic is the same as above)
-            // 1. Deserialize `ChangeLifeCycleStageParams`
-            // 2. Find the contact
-            // 3. Update `contact.LifeCycleStageId = parameters.NewStageId`
-            // 4. SaveChanges
-            _logger.LogWarning("ChangeLifeCycleStage action not yet fully implemented.");
+            // 2. Deserialize the parameters
+            var parameters = JsonConvert.DeserializeObject<ChangeLifeCycleStageParams>(action.ParametersJson);
+            if (parameters == null)
+            {
+                _logger.LogError("Failed to deserialize ParametersJson for Action {ActionId}", action.Id);
+                return;
+            }
+
+            // 3. Create a new service scope to update the database
+            // This prevents "parallel transaction" errors
+            using (var scope = _serviceProvider.CreateScope())
+            {
+                var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+
+                // 4. Find the contact
+                var targetContact = await dbContext.Contacts.FindAsync(contactId);
+
+                if (targetContact == null)
+                {
+                    _logger.LogError("Could not find Contact {ContactId} to update for Action {ActionId}", contactId, action.Id);
+                    return;
+                }
+
+                // 5. Update the property
+                targetContact.LifeCycleStageId = parameters.NewStageId; // Assuming the property is named LifecycleId
+
+                // 6. Save changes
+                dbContext.Contacts.Update(targetContact);
+                await dbContext.SaveChangesAsync();
+
+                _logger.LogInformation("Successfully updated Contact {ContactId} LifeCycleStage to {NewStageId} via Workflow {ActionId}.",
+                  targetContact.Id, parameters.NewStageId, action.Id);
+            }
         }
         /// <summary>
         /// The "worker" for creating tasks.
