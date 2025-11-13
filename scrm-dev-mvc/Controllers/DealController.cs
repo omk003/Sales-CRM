@@ -23,7 +23,6 @@ namespace scrm_dev_mvc.Controllers
             _currentUserService = currentUserService;
         }
 
-        // ----------------------- KANBAN BOARD -----------------------
         public async Task<IActionResult> KanbanBoard()
         {
             try
@@ -39,7 +38,6 @@ namespace scrm_dev_mvc.Controllers
             }
         }
 
-        // ----------------------- CREATE (GET) -----------------------
         [HttpGet]
         public async Task<IActionResult> Create(int? companyId, int? contactId)
         {
@@ -47,7 +45,6 @@ namespace scrm_dev_mvc.Controllers
             return View(vm);
         }
 
-        // ----------------------- CREATE (POST) -----------------------
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Insert(DealFormViewModel vm)
@@ -86,7 +83,6 @@ namespace scrm_dev_mvc.Controllers
             }
         }
 
-        // ----------------------- UPDATE (GET) -----------------------
         [HttpGet]
         public async Task<IActionResult> Update(int id)
         {
@@ -100,7 +96,6 @@ namespace scrm_dev_mvc.Controllers
             return View(vm);
         }
 
-        // ----------------------- UPDATE (POST) -----------------------
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Update(DealFormViewModel vm)
@@ -131,7 +126,6 @@ namespace scrm_dev_mvc.Controllers
             }
         }
 
-        // ----------------------- DETAILS -----------------------
         [HttpGet]
         public async Task<IActionResult> Details(int id)
         {
@@ -145,7 +139,6 @@ namespace scrm_dev_mvc.Controllers
             return View(vm);
         }
 
-        // ----------------------- UPDATE DEAL STAGE -----------------------
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> UpdateDealStage([FromBody] UpdateDealStageRequest request)

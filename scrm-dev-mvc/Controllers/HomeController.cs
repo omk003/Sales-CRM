@@ -15,7 +15,7 @@ namespace scrm_dev_mvc.Controllers
             return View();
         }
 
-        [Authorize] // Requires any authenticated user
+        [Authorize] 
         public IActionResult Secret()
         {
             var userId = currentUserService.GetUserId();
@@ -29,21 +29,16 @@ namespace scrm_dev_mvc.Controllers
         {
             var exceptionHandlerPathFeature = HttpContext.Features.Get<IExceptionHandlerPathFeature>();
 
-            // You would log exceptionHandlerPathFeature.Error here with a real logging framework
-
             return View(new ErrorViewModel { RequestId = System.Diagnostics.Activity.Current?.Id ?? HttpContext.TraceIdentifier });
         }
 
         public IActionResult LandingPage()
         {
-            // Check if the user's identity is authenticated
             if (currentUserService.IsAuthenticated())
             {
-                // If logged in, redirect to the main dashboard
-                return RedirectToAction("Index", "Home");
+                return RedirectToAction("Index", "Workspace");
             }
 
-            // If not logged in, show the landing page view
             return View();
         }
     }

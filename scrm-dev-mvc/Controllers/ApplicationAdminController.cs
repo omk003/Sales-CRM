@@ -13,8 +13,7 @@ using scrm_dev_mvc.services.Interfaces;
 
 namespace scrm_dev_mvc.Controllers
 {
-    // This entire controller is restricted to Super Admins
-    //[Authorize(Roles = "ApplicationAdmin")]
+    [Authorize(Roles = "ApplicationAdmin")]
     public class ApplicationAdminController : Controller
     {
         private readonly ApplicationDbContext _context;
@@ -31,13 +30,12 @@ namespace scrm_dev_mvc.Controllers
 
         }
 
-        //
-        // GET: /SuperAdmin
+        
         public async Task<IActionResult> Index()
         {
             var organizations = await _context.Organizations
                 .Include(o => o.Users)
-                    .ThenInclude(u => u.Role) // Include Role for mapping
+                    .ThenInclude(u => u.Role) 
                 .ToListAsync();
 
             // Map to your existing ViewModel
@@ -52,22 +50,21 @@ namespace scrm_dev_mvc.Controllers
                 Users = o.Users.Select(u => new UserInOrganizationViewModel
                 {
                     UserId = u.Id,
-                    FullName = u.FirstName + " " +u.LastName, // Assuming User model has FullName
+                    FullName = u.FirstName + " " +u.LastName, 
                     Email = u.Email,
                     Role = u.Role?.Name ?? "N/A"
                 }).ToList()
             }).ToList();
 
-            return View(viewModel); // This now returns List<OrganizationViewModel>
+            return View(viewModel); 
         }
 
-        //
-        // GET: /SuperAdmin/Manage/5
+       
         public async Task<IActionResult> Manage(int id)
         {
             var organization = await _context.Organizations
                 .Include(o => o.Users)
-                    .ThenInclude(u => u.Role) // To get role name
+                    .ThenInclude(u => u.Role) 
                 .FirstOrDefaultAsync(o => o.Id == id);
 
             if (organization == null)
@@ -75,28 +72,24 @@ namespace scrm_dev_mvc.Controllers
                 return NotFound();
             }
 
-            // Map to your existing OrganizationViewModel
             var viewModel = new OrganizationViewModel
             {
                 OrganizationId = organization.Id,
                 OrganizationName = organization.Name,
-                // Again, CurrentUserRole logic might need to be set here
-                // e.g., CurrentUserRole = "SalesAdminSuper",
+                
                 Users = organization.Users.Select(u => new UserInOrganizationViewModel
                 {
                     UserId = u.Id,
-                    FullName = u.FirstName + " " + u.LastName, // Assuming User model has FullName
+                    FullName = u.FirstName + " " + u.LastName, 
                     Email = u.Email,
                     Role = u.Role?.Name ?? "N/A"
                 }).ToList()
             };
 
-            return View(viewModel); // This returns a single OrganizationViewModel
+            return View(viewModel); 
         }
 
 
-        //
-        // POST: /SuperAdmin/DeleteUser
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteUser(Guid id, int organizationId)
@@ -108,15 +101,9 @@ namespace scrm_dev_mvc.Controllers
                 return RedirectToAction(nameof(Manage), new { id = organizationId });
             }
 
-            // --- IMPORTANT CHECK ---
-            // Ensure this user isn't the DefaultSenderUser before deleting
+            
             var organization = await _context.Organizations.FindAsync(organizationId);
-            //if (organization?.DefaultSenderUserId == user.Id)
-            //{
-            //    TempData["Error"] = "Cannot delete this user as they are the 'Default Sender' for the organization. Please change the 'Default Sender' setting first.";
-            //    return RedirectToAction(nameof(Manage), new { id = organizationId });
-            //}
-            // --- End Check ---
+            
             try
             {
                 
@@ -128,34 +115,20 @@ namespace scrm_dev_mvc.Controllers
                 }
                 else
                 {
-                    // If it fails here, something is still linked, 
-                    // or it's an Identity-specific issue.
+                    
                     TempData["Error"] = "Error deleting user. ";
                 }
             }
             catch (Exception ex)
             {
-                // Catch any other potential DbUpdateException
                 _logger.LogError(ex, "Error during delete process for user {UserId}", id);
                 TempData["Error"] = "An error occurred. The user may still have other related data that must be removed first.";
             }
 
-
-            //var result = await _userService.DeleteAsync(user);
-            //if (result)
-            //{
-            //    TempData["Message"] = "User deleted successfully.";
-            //}
-            //else
-            //{
-            //    TempData["Error"] = "Error deleting user.";
-            //}
-
             return RedirectToAction(nameof(Manage), new { id = organizationId });
         }
 
-        //
-        // POST: /SuperAdmin/DeleteOrganization
+       
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteOrganization(int id)
@@ -169,7 +142,6 @@ namespace scrm_dev_mvc.Controllers
                 return NotFound();
             }
 
-            // Simple safety check
             if (organization.Users.Any())
             {
                 TempData["Error"] = $"Cannot delete {organization.Name} because it still has active users. Please remove users first.";

@@ -151,7 +151,6 @@ namespace scrm_dev_mvc.Controllers
             }
             else
             {
-                // Create new user (unverified yet)
                 user = new User
                 {
                     Email = model.Email,
@@ -169,7 +168,6 @@ namespace scrm_dev_mvc.Controllers
             await _userService.UpdateUserAsync(user);
             string? adminId = _configuration["Data:AdminEmailId"];
 
-            // Send OTP Email
             await _gmailService.SendEmailAsync(
                 Guid.Parse(adminId ?? ""),
                 user.Email,
@@ -212,7 +210,6 @@ namespace scrm_dev_mvc.Controllers
                 user.OtpExpiry = null;
                 await _userService.UpdateUserAsync(user);
 
-                // PROCESS THE INVITATION *AFTER* OTP IS VERIFIED
                 if (!string.IsNullOrEmpty(invitationCode))
                 {
                     await ProcessInvitationAsync(invitationCode, user.Id);
@@ -282,10 +279,7 @@ namespace scrm_dev_mvc.Controllers
         [HttpPost]
         public async Task<IActionResult> LoginWithGoogle(string? invitationCode, string returnUrl = null)
         {
-            // Redirect to Google OAuth
             var redirectDomain = _configuration["Google:RedirectDomain"];
-
-            // The redirect URI used during auth request
             var redirectUri = Url.Action(nameof(GoogleCallback), "Auth", null, Request.Scheme, redirectDomain);
             var authUrl = await _gmailService.GenerateAuthUrl(invitationCode ?? "", redirectUri);
             return Redirect(authUrl);
@@ -303,20 +297,15 @@ namespace scrm_dev_mvc.Controllers
             }
 
             var redirectDomain = _configuration["Google:RedirectDomain"];
-
-            // The redirect URI used during auth request
             var redirectUri = Url.Action(nameof(GoogleCallback), "Auth", null, Request.Scheme, redirectDomain);
 
             try
             {
-                // Exchange the code for tokens and get user info (including email) from Google
                 var googleUser = await _gmailService.ExchangeCodeForTokensAsync("", code, redirectUri);
 
-                // Check if the user already exists in your database
                 var user = await _userService.IsEmailExistsAsync(googleUser.Email);
                 if (user == null)
                 {
-                    // Create a new user if not exists
                     user = new User
                     {
                         Email = googleUser.Email,
@@ -327,16 +316,13 @@ namespace scrm_dev_mvc.Controllers
                     await _userService.CreateUserAsync(user);
                 }
 
-                // 5. PROCESS INVITATION FOR GOOGLE SIGN-IN
                 if (!string.IsNullOrEmpty(invitationCode))
                 {
                     await ProcessInvitationAsync(invitationCode, user.Id);
                 }
 
-                // Get organization if any
                 var org = await _organizationService.IsInOrganizationById(user.Id);
 
-                // Create claims
                 var claims = BuildClaims(user, org);
 
                 var claimsIdentity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
@@ -347,7 +333,6 @@ namespace scrm_dev_mvc.Controllers
                     ExpiresUtc = rememberMe ? DateTimeOffset.UtcNow.AddDays(7) : (DateTimeOffset?)null
                 };
 
-                // Sign in
                 await HttpContext.SignInAsync(
                     CookieAuthenticationDefaults.AuthenticationScheme,
                     new ClaimsPrincipal(claimsIdentity),
@@ -369,20 +354,16 @@ namespace scrm_dev_mvc.Controllers
         [HttpGet]
         public async Task<IActionResult> GmailSync()
         {
-            // 1️⃣ Get the currently logged-in user's email from claims
             var userEmail = _currentUserService.GetUserEmail();
             if (string.IsNullOrEmpty(userEmail))
                 return RedirectToAction("Login");
 
             var redirectDomain = _configuration["Google:RedirectDomain"];
 
-            // The redirect URI used during auth request
             var redirectUri = Url.Action(nameof(GoogleCallback), "Auth", null, Request.Scheme, redirectDomain);
 
-            // 3️⃣ Generate the Google OAuth URL using the logged-in user's email in 'state'
             var authUrl = await _gmailService.GenerateAuthUrl(userEmail, redirectUri);
 
-            // 4️⃣ Redirect user to Google's consent screen
             return Redirect(authUrl);
         }
 
@@ -394,12 +375,11 @@ namespace scrm_dev_mvc.Controllers
             if (string.IsNullOrEmpty(code))
             {
                 TempData["Message"] = "Authorization code not provided.";
-                return RedirectToAction("Index", "User"); // Or wherever you want
+                return RedirectToAction("Index", "User"); 
             }
 
             try
             {
-                // Exchange code for tokens and attach them to the user (state = email)
                 var user = await _gmailService.ExchangeCodeForTokensAsync(state, code,
                     Url.Action(nameof(GmailSyncCallback), "Auth", null, Request.Scheme));
                 if (user == null)
@@ -426,7 +406,6 @@ namespace scrm_dev_mvc.Controllers
                 return;
             }
 
-            // Your InvitationService should handle checking if the code is valid/expired
             var success = await _invitationService.AcceptInvitationAsync(invitationCode, userId);
 
             if (success)

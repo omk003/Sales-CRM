@@ -17,14 +17,12 @@ namespace scrm_dev_mvc.Controllers
             _currentUserService = currentUserService;
         }
 
-        // [HttpGet] - No change
         public async Task<IActionResult> Create(int? contactId, int? companyId, int? dealId)
         {
             var viewModel = await _taskService.GetTaskCreateViewModelAsync(contactId, companyId, dealId);
             return PartialView("_CreateTaskModal", viewModel);
         }
 
-        // [HttpPost] - Updated
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(TaskCreateViewModel viewModel)
@@ -71,7 +69,6 @@ namespace scrm_dev_mvc.Controllers
             }
         }
 
-        // --- NEW POST ACTION ---
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Update(TaskUpdateViewModel viewModel)
@@ -107,25 +104,7 @@ namespace scrm_dev_mvc.Controllers
         public async Task<IActionResult> Delete(int id)
         {
             var userId = _currentUserService.GetUserId();
-            //var organization = await _organizationService.GetOrganizationViewModelByUserId(userId);
-            //if (organization == null)
-            //{
-            //    return Json(new { success = false, message = "Unauthorized." });
-            //}
-
-            // Security Check: Make sure the task belongs to the user's org
-            //var task = await _unitOfWork.Tasks.FirstOrDefaultAsync(t => t.Id == id);
-            //if (task == null)
-            //{
-            //    return Json(new { success = false, message = "Task not found." });
-            //}
-
-            //if (task.OrganizationId != organization.OrganizationId)
-            //{
-            //    return Json(new { success = false, message = "Forbidden." });
-            //}
-
-            // Call the service
+            
             var (success, message) = await _taskService.DeleteTaskAsync(id, userId);
 
             return Json(new { success, message });

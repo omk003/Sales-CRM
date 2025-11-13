@@ -32,7 +32,6 @@ namespace scrm_dev_mvc.Services
             _unitOfWork = unitOfWork;
             _configuration = configuration;
 
-            // Initialize the Google Flow from client_secret.json or configuration
             _flow = new GoogleAuthorizationCodeFlow(new GoogleAuthorizationCodeFlow.Initializer
             {
                 ClientSecrets = new ClientSecrets
@@ -46,17 +45,11 @@ namespace scrm_dev_mvc.Services
             });
         }
 
-        /// <summary>
-        /// Step 1: Generate the URL for the user to click to start the auth process.
-        /// </summary>
-        /// <param name="email">The emailID of the user in your database.</param>
-        /// <param name="redirectUri">The callback URL you configured in Google Cloud Console.</param>
-        /// <returns>The URL to redirect the user to.</returns>
+       
         public async Task<string> GenerateAuthUrl(string userEmail,string redirectUri)
         {
             
             var request = _flow.CreateAuthorizationCodeRequest(redirectUri);
-            // State can be a random value for CSRF protection if you want
             if(string.IsNullOrEmpty(userEmail))
             {
                 request.State = Guid.NewGuid().ToString();
@@ -70,18 +63,15 @@ namespace scrm_dev_mvc.Services
 
         public async Task<User> ExchangeCodeForTokensAsync(string userEmail, string code, string redirectUri)
         {
-            // Exchange the authorization code for tokens
             TokenResponse tokenResponse = await _flow.ExchangeCodeForTokenAsync(
-                userId: null, // we no longer have the userEmail
+                userId: null,
                 code,
                 redirectUri,
                 CancellationToken.None
             );
 
-            // Create a credential object from the token response
             var credential = new UserCredential(_flow, "me", tokenResponse);
 
-            // Create an OAuth2 service to get user info
             var oauth2Service = new Oauth2Service(new BaseClientService.Initializer()
             {
                 HttpClientInitializer = credential,
@@ -106,7 +96,7 @@ namespace scrm_dev_mvc.Services
             {
                 user = await _unitOfWork.Users.FirstOrDefaultAsync(u => u.Email == googleEmail, "GmailCred");
             }
-                // Check if user exists in DB
+               
                 
             if (user == null)
             {
@@ -124,7 +114,6 @@ namespace scrm_dev_mvc.Services
                 await _unitOfWork.SaveChangesAsync();
             }
 
-            // Save/update tokens
             if (user.GmailCred == null)
                 user.GmailCred = new GmailCred();
 
@@ -133,14 +122,12 @@ namespace scrm_dev_mvc.Services
             if (!string.IsNullOrEmpty(tokenResponse.RefreshToken))
                 user.GmailCred.GmailRefreshToken = tokenResponse.RefreshToken;
 
-            // Update first/last name if empty
             if (!string.IsNullOrEmpty(firstName)) user.FirstName = firstName;
             if (!string.IsNullOrEmpty(lastName)) user.LastName = lastName;
             user.IsSyncedWithGoogle = true;
             _unitOfWork.Users.Update(user);
             await _unitOfWork.SaveChangesAsync();
 
-            // Reload user with Role for claims
             user = await _unitOfWork.Users.FirstOrDefaultAsync(u => u.Email == googleEmail, "Role");
 
             return user;
@@ -153,11 +140,9 @@ namespace scrm_dev_mvc.Services
         {
             var user = await _unitOfWork.Users.FirstOrDefaultAsync(u => u.Id == userId, "GmailCred");
 
-            // Check if the user is not found or has no refresh token
             if (user == null || string.IsNullOrEmpty(user.GmailCred.GmailRefreshToken))
             {
-                // User is not authenticated.
-                // Generate the auth URL for the frontend to use.
+               
                 string authUrl = await GenerateAuthUrl(user?.Email, redirectUri);
 
                 return new SendEmailResult
@@ -178,7 +163,6 @@ namespace scrm_dev_mvc.Services
 
                 bool success = await credential.RefreshTokenAsync(CancellationToken.None);
 
-                // checking refresh token is also invalid
                 if (!success || credential.Token == null)
                 {
                     string authUrl = await GenerateAuthUrl(user?.Email, redirectUri);

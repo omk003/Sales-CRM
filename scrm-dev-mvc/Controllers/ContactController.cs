@@ -74,7 +74,6 @@ namespace scrm_dev_mvc.Controllers
         {
             if (!ModelState.IsValid)
             {
-                // re-populate dropdowns if validation fails
                 var vm = new ContactFormViewModel
                 {
                     Contact = contact,
@@ -89,7 +88,6 @@ namespace scrm_dev_mvc.Controllers
             }
             var result = await contactService.CreateContactAsync(contact);
 
-            // Store message for next request
             TempData["Message"] = result;
             return RedirectToAction("Index");
         }
@@ -249,7 +247,6 @@ namespace scrm_dev_mvc.Controllers
         [HttpPost]
         public async Task<IActionResult> CallContact(string phoneNumber, int contactId)
         {
-            // 2. Get the current user's ID
             var userId = currentUserService.GetUserId();
             if (userId == Guid.Empty)
             {
@@ -266,7 +263,6 @@ namespace scrm_dev_mvc.Controllers
             {
                 var decodedNumber = HttpUtility.HtmlDecode(phoneNumber);
 
-                // 3. Call the updated service method with all required parameters
                 var sid = await callService.MakeCallAsync(decodedNumber, userId, contactId);
 
                 _logger.LogInformation("CallContact successful for User: {UserId}, Contact: {ContactId}, SID: {CallSid}", userId, contactId, sid);

@@ -28,10 +28,8 @@ namespace scrm_dev_mvc.Controllers
             var userId = _currentUserService.GetUserId();
             if (userId == Guid.Empty)
             {
-                // User not logged in, redirect to login
                 return RedirectToAction("Login", "Auth");
             }
-            // 2️⃣ Get user from the database
             var user = await _userService.GetFirstOrDefault(u => u.Id == userId , "Role");
             var organization = await _organizationService.IsInOrganizationById(userId);
 
@@ -40,7 +38,6 @@ namespace scrm_dev_mvc.Controllers
                 return NotFound("User not found");
             }
 
-            // 3️⃣ Map user data to ViewModel
             var model = new UserViewModel
             {
                 Id = user.Id,
@@ -52,7 +49,6 @@ namespace scrm_dev_mvc.Controllers
                 IsSyncedWithGoogle = user.IsSyncedWithGoogle,
             };
 
-            // 4️⃣ Pass to the Profile view
             return View(model);
         }
 
@@ -60,7 +56,6 @@ namespace scrm_dev_mvc.Controllers
         {
             var userId = _currentUserService.GetUserId();
             var user = await _userService.GetFirstOrDefault(u => u.Id == userId, "Role,Organization");
-            //var organization = await _organizationService.IsInOrganizationById(userId);
             var model = new UserViewModel
             {
                 Id = user.Id,
@@ -80,7 +75,6 @@ namespace scrm_dev_mvc.Controllers
         {
             if (!ModelState.IsValid)
             {
-                // Return the same view with validation errors
                 return View("Index", user);
             }
 
@@ -91,14 +85,13 @@ namespace scrm_dev_mvc.Controllers
                 return RedirectToAction("Index", "Home");
             }
 
-            // Update only editable fields
             existingUser.FirstName = user.FirstName;
             existingUser.LastName = user.LastName;
             var ownerId = _currentUserService.GetUserId();
             await _userService.UpdateUserProfileAsync(user.Id, user.FirstName, user.LastName, ownerId);
 
             TempData["Message"] = "Profile updated successfully!";
-            return RedirectToAction("Index"); // Redirect to refresh the data
+            return RedirectToAction("Index"); 
         }
 
 
@@ -106,7 +99,6 @@ namespace scrm_dev_mvc.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> ChangeUserRole(int organizationId, Guid userId, string newRole)
         {
-            // You may want to check if the current user has permission to change roles here.
             var adminId = _currentUserService.GetUserId();
             var success = await _userService.ChangeUserRoleAsync(userId, organizationId, newRole, adminId);
             if (!success)

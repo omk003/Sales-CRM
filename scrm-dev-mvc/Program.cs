@@ -24,10 +24,8 @@ var connectionString = builder.Configuration.GetConnectionString("DefaultConnect
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlServer(connectionString));
 
-// This makes IHttpContextAccessor available via DI
 builder.Services.AddHttpContextAccessor();
 
-// Register your service
 builder.Services.AddScoped<ICurrentUserService, CurrentUserService>();
 
 builder.Services.AddScoped<IPasswordHasher, PasswordHasher>();
@@ -43,9 +41,7 @@ builder.Services.AddScoped<ICallService, CallService>();
 builder.Services.AddScoped<IActivityService, ActivityService>();
 builder.Services.AddScoped<IGmailService, GmailService>(); 
 builder.Services.AddScoped<IEmailService, EmailService>();
-// In Program.cs
 builder.Services.AddScoped<IAuditService, AuditService>(); 
-// In Program.cs, with your other services:
 
 builder.Services.AddScoped<IDealService, DealService>();
 builder.Services.AddScoped<ITaskService, TaskService>();
@@ -78,7 +74,6 @@ try
     app.UseForwardedHeaders();
 
     app.UseSerilogRequestLogging();
-    // Configure the HTTP request pipeline.
     if (!app.Environment.IsDevelopment())
     {
         // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
@@ -86,7 +81,6 @@ try
     }
     else
     {
-        // In development, you want to see the detailed developer exception page.
         app.UseDeveloperExceptionPage();
     }
     
@@ -122,7 +116,6 @@ try
 }
 catch (Exception ex)
 {
-    // Log and fail gracefully
     Console.WriteLine($"Critical error starting the app: {ex.Message}");
     Log.Fatal(ex, "Critical error starting the app");
 }

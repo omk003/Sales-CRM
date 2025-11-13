@@ -2,15 +2,13 @@
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json;
-using scrm_dev_mvc.Data; // Your DbContext
 using scrm_dev_mvc.DataAccess.Data;
-using scrm_dev_mvc.Models; // Your Models
-using scrm_dev_mvc.Models.Enums; // Your Enums
-using scrm_dev_mvc.Models.ViewModels; // We'll create this
+using scrm_dev_mvc.Models;
+using scrm_dev_mvc.Models.Enums; 
+using scrm_dev_mvc.Models.ViewModels;
 using scrm_dev_mvc.services;
-using scrm_dev_mvc.services.Interfaces; // For IOrganizationService
+using scrm_dev_mvc.services.Interfaces;
 using scrm_dev_mvc.Utilities;
-using System.Text.Json; // For JSON
 
 namespace scrm_dev_mvc.Controllers
 {
@@ -28,7 +26,6 @@ namespace scrm_dev_mvc.Controllers
             _currentUserService = currentUserService;
         }
 
-        // 1. INDEX: Shows all workflows
         public async Task<IActionResult> Index()
         {
             var userId = _currentUserService.GetUserId();
@@ -43,7 +40,6 @@ namespace scrm_dev_mvc.Controllers
             return View(workflows);
         }
 
-        // 2. CREATE (GET): Shows the "Create" form
         [HttpGet]
         public async Task<IActionResult> Create()
         {
@@ -84,9 +80,7 @@ namespace scrm_dev_mvc.Controllers
         {
             if (!ModelState.IsValid)
             {
-                //_logger.LogWarning("ModelState is invalid. Repopulating dropdowns.");
                 await PopulateViewModelDropdownsAsync(viewModel);
-                // (You would repopulate all dropdowns here on failure)
                 return View(viewModel);
             }
             var userId = _currentUserService.GetUserId();
@@ -94,7 +88,6 @@ namespace scrm_dev_mvc.Controllers
             var organization = await _organizationService.GetOrganizationViewModelByUserId(userId);
             if (organization == null) return Unauthorized();
 
-            // 1. Create ONE Workflow
             var workflow = new Workflow
             {
                 Name = viewModel.Name,
@@ -103,7 +96,6 @@ namespace scrm_dev_mvc.Controllers
                 OrganizationId = organization.OrganizationId
             };
 
-            // 2. Check for "Change Lead Status" action
             if (viewModel.Action_ChangeLeadStatus)
             {
                 var parameters = new { NewStatus = viewModel.ChangeLeadStatus_NewStatusId };
@@ -114,7 +106,6 @@ namespace scrm_dev_mvc.Controllers
                 });
             }
 
-            // 3. Check for "Change LifeCycle Stage" action
             if (viewModel.Action_ChangeLifeCycleStage)
             {
                 var parameters = new { NewStageId = viewModel.ChangeLifeCycleStage_NewStageId };
@@ -125,7 +116,6 @@ namespace scrm_dev_mvc.Controllers
                 });
             }
 
-            // 4. Check for "Create Task" action
             if (viewModel.Action_CreateTask)
             {
                 var parameters = new
@@ -144,7 +134,6 @@ namespace scrm_dev_mvc.Controllers
                 });
             }
 
-            // 5. Save the Workflow (and all its actions)
             _context.Workflows.Add(workflow);
             await _context.SaveChangesAsync();
 
@@ -177,7 +166,6 @@ namespace scrm_dev_mvc.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        // Make sure this is protected, e.g., [Authorize]
         public async Task<IActionResult> ToggleActive(int id)
         {
             var userId = _currentUserService.GetUserId();
@@ -240,7 +228,6 @@ namespace scrm_dev_mvc.Controllers
 
 
 
-        // --- ADD THIS NEW GET ACTION ---
         [HttpGet]
         public async Task<IActionResult> Edit(int id)
         {
@@ -249,7 +236,7 @@ namespace scrm_dev_mvc.Controllers
             if (organization == null) return Unauthorized();
 
             var workflow = await _context.Workflows
-                .Include(w => w.Actions) // CRITICAL: Must include actions
+                .Include(w => w.Actions) 
                 .FirstOrDefaultAsync(w => w.Id == id && w.OrganizationId == organization.OrganizationId);
 
             if (workflow == null)
@@ -257,7 +244,6 @@ namespace scrm_dev_mvc.Controllers
                 return NotFound();
             }
 
-            // 1. Create the new Edit view model
             var viewModel = new WorkflowEditViewModel
             {
                 Id = workflow.Id,
@@ -265,12 +251,10 @@ namespace scrm_dev_mvc.Controllers
                 Trigger = workflow.Event
             };
 
-            // 2. Populate the view model by de-serializing the JSON
             var createTaskAction = workflow.Actions.FirstOrDefault(a => a.ActionType == WorkflowActionType.CreateTask);
             if (createTaskAction != null)
             {
                 viewModel.Action_CreateTask = true;
-                // Use the same DTO definition from your WorkflowService
                 var parameters = JsonConvert.DeserializeObject<CreateTaskParams>(createTaskAction.ParametersJson);
                 if (parameters != null)
                 {
@@ -304,12 +288,10 @@ namespace scrm_dev_mvc.Controllers
                 }
             }
 
-            // 3. Populate dropdowns
             await PopulateViewModelDropdownsAsync(viewModel);
             return View(viewModel);
         }
 
-        // --- ADD THIS NEW POST ACTION ---
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(int id, WorkflowEditViewModel viewModel)
