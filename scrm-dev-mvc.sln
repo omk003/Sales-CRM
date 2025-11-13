@@ -13,6 +13,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ScrmDevMvc.Models", "scrm-d
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ScrmDevMvc.Utilities", "ScrmDevMvc.Utilities\ScrmDevMvc.Utilities.csproj", "{B83709D2-6152-489D-A5DC-36A5F2344924}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "scrm_dev_mvc.Tests", "scrm_dev_mvc.Tests\scrm_dev_mvc.Tests.csproj", "{CCB30139-6646-4BAF-9B41-F75BA2912819}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -39,6 +41,10 @@ Global
 		{B83709D2-6152-489D-A5DC-36A5F2344924}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{B83709D2-6152-489D-A5DC-36A5F2344924}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{B83709D2-6152-489D-A5DC-36A5F2344924}.Release|Any CPU.Build.0 = Release|Any CPU
+		{CCB30139-6646-4BAF-9B41-F75BA2912819}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{CCB30139-6646-4BAF-9B41-F75BA2912819}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{CCB30139-6646-4BAF-9B41-F75BA2912819}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{CCB30139-6646-4BAF-9B41-F75BA2912819}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -11,6 +11,7 @@ using scrm_dev_mvc.Models.ViewModels;
 using scrm_dev_mvc.services;
 using scrm_dev_mvc.services.Interfaces;
 using System.Security.Claims;
+using System.Security.Cryptography;
 
 namespace scrm_dev_mvc.Controllers
 {
@@ -23,9 +24,9 @@ namespace scrm_dev_mvc.Controllers
         private readonly IInvitationService _invitationService;
         private readonly IConfiguration _configuration;
         private readonly ICurrentUserService _currentUserService;
-        public AuthController(IGmailService gmailService, IConfiguration configuration, IOrganizationService organizationService,IUserService userService, IPasswordHasher passwordHasher, IInvitationService invitationService, ICurrentUserService currentUserService)
+        public AuthController(IGmailService gmailService, IConfiguration configuration, IOrganizationService organizationService, IUserService userService, IPasswordHasher passwordHasher, IInvitationService invitationService, ICurrentUserService currentUserService)
         {
-            
+
             _gmailService = gmailService;
             _organizationService = organizationService;
             _userService = userService;
@@ -38,10 +39,8 @@ namespace scrm_dev_mvc.Controllers
         [HttpGet]
         public IActionResult Login(string? invitationcode, string returnUrl = null)
         {
-            // CAPTURE THE INVITATION CODE FROM THE URL
             if (!string.IsNullOrEmpty(invitationcode))
             {
-                // Store it in TempData to survive the redirect to the OTP page
                 TempData["InvitationCode"] = invitationcode;
             }
             ViewBag.InvitationCode = TempData["InvitationCode"]?.ToString();
@@ -50,13 +49,10 @@ namespace scrm_dev_mvc.Controllers
             return View();
         }
 
-        
 
         [HttpPost]
-        public async Task<IActionResult> Login(LoginViewModel model,  string? invitationCode,string returnUrl = null)
+        public async Task<IActionResult> Login(LoginViewModel model, string? invitationCode, string returnUrl = null)
         {
-
-            // Login
             var user = await _userService.IsEmailExistsAsync(model.Email);
             if (user == null)
             {
@@ -71,20 +67,17 @@ namespace scrm_dev_mvc.Controllers
                 return View(model);
             }
 
-            // verify password hash
-            if(_passwordHasher.VerifyPassword(user.PasswordHash, model.Password) == false)
+            if (_passwordHasher.VerifyPassword(user.PasswordHash, model.Password) == false)
             {
                 ModelState.AddModelError("", "Invalid password.");
                 return View(model);
             }
 
-            // 4. PROCESS THE INVITATION PASSWORD HASH IS VERIFIED
             if (!string.IsNullOrEmpty(invitationCode))
             {
-                 await ProcessInvitationAsync(invitationCode, user.Id);
+                await ProcessInvitationAsync(invitationCode, user.Id);
             }
 
-                // Now create claims and sign in
             var org = await _organizationService.IsInOrganizationById(user.Id);
 
             var claims = new List<Claim>
@@ -107,21 +100,19 @@ namespace scrm_dev_mvc.Controllers
                         ExpiresUtc = DateTimeOffset.UtcNow.AddDays(7)
                     });
 
-            if(user.RoleId == (int)UserRoleEnum.ApplicationAdmin)
+            if (user.RoleId == (int)UserRoleEnum.ApplicationAdmin)
             {
                 return RedirectToAction("Index", "ApplicationAdmin");
             }
             return RedirectToAction("Index", "Workspace");
-            
+
         }
 
         [HttpGet]
         public IActionResult Register(string? invitationcode, string returnUrl = null)
         {
-            // CAPTURE THE INVITATION CODE FROM THE URL
             if (!string.IsNullOrEmpty(invitationcode))
             {
-                // Store it in TempData to survive the redirect to the OTP page
                 TempData["InvitationCode"] = invitationcode;
             }
             ViewBag.InvitationCode = TempData["InvitationCode"]?.ToString();
@@ -139,16 +130,13 @@ namespace scrm_dev_mvc.Controllers
                 return View(model);
             ViewData["ReturnUrl"] = returnUrl;
 
-            if (!ModelState.IsValid)
-                return View(model);
-
-            if(model.ConfirmPassword != model.Password)
+            if (model.ConfirmPassword != model.Password)
             {
                 ModelState.AddModelError("", "Enter same password as confirm password");
                 return View(model);
             }
             var user = await _userService.IsEmailExistsAsync(model.Email);
-            
+
             if (user != null)
             {
                 if (string.IsNullOrEmpty(user.PasswordHash))
@@ -156,11 +144,10 @@ namespace scrm_dev_mvc.Controllers
                     ModelState.AddModelError("", "This account is linked with Google login. Please use Google Sign-In.");
                     return View(model);
                 }
-                // Account already exists
 
                 ModelState.AddModelError("", "Account already exists.");
-                    return View(model);
-                
+                return View(model);
+
             }
             else
             {
@@ -176,7 +163,7 @@ namespace scrm_dev_mvc.Controllers
             }
 
             // Generate 6-digit OTP
-            var otp = new Random().Next(100000, 999999).ToString();
+            var otp = RandomNumberGenerator.GetInt32(100000, 1000000).ToString();
             user.OtpCode = otp;
             user.OtpExpiry = DateTime.UtcNow.AddMinutes(5);
             await _userService.UpdateUserAsync(user);
@@ -203,11 +190,9 @@ namespace scrm_dev_mvc.Controllers
             if (string.IsNullOrEmpty(email))
                 return RedirectToAction("Login");
 
-            // 3. PASS THE INVITATION CODE TO THE VERIFY OTP VIEW
             ViewBag.Email = email;
-            ViewBag.InvitationCode = TempData["InvitationCode"]?.ToString(); // Pass it to the view
+            ViewBag.InvitationCode = TempData["InvitationCode"]?.ToString(); 
 
-            // Re-keep TempData in case the user needs to resend OTP
             TempData.Keep("InvitationCode");
             TempData.Keep("Email");
 
@@ -227,23 +212,15 @@ namespace scrm_dev_mvc.Controllers
                 user.OtpExpiry = null;
                 await _userService.UpdateUserAsync(user);
 
-                // 4. PROCESS THE INVITATION *AFTER* OTP IS VERIFIED
+                // PROCESS THE INVITATION *AFTER* OTP IS VERIFIED
                 if (!string.IsNullOrEmpty(invitationCode))
                 {
                     await ProcessInvitationAsync(invitationCode, user.Id);
                 }
 
-                // Now create claims and sign in
                 var org = await _organizationService.IsInOrganizationById(user.Id);
 
-                var claims = new List<Claim>
-                {
-                    new Claim(ClaimTypes.Name, user.Email),
-                    new Claim(ClaimTypes.GivenName, user.FirstName ?? string.Empty),
-                    new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
-                    new Claim(ClaimTypes.Role, user.Role?.Name ?? string.Empty),
-                    new Claim("OrganizationName", org?.Name ?? string.Empty)
-                };
+                var claims = BuildClaims(user, org);
 
                 var claimsIdentity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
 
@@ -261,7 +238,7 @@ namespace scrm_dev_mvc.Controllers
 
             ModelState.AddModelError("", "Invalid or expired OTP.");
             ViewBag.Email = email;
-            ViewBag.InvitationCode = invitationCode; // Pass it back to the view on failure
+            ViewBag.InvitationCode = invitationCode; 
             return View();
         }
 
@@ -290,15 +267,6 @@ namespace scrm_dev_mvc.Controllers
             return RedirectToAction("VerifyOtp");
         }
 
-
-        [HttpPost]
-        public async Task<IActionResult> LoginWithGoogle(string? invitationCode, string returnUrl = null)
-        {
-            // Redirect to Google OAuth
-            var redirectUri = Url.Action(nameof(GoogleCallback), "Auth", null, Request.Scheme, "maudlinly-nonreactive-arturo.ngrok-free.dev");
-            var authUrl = await _gmailService.GenerateAuthUrl(invitationCode ?? "", redirectUri);
-            return Redirect(authUrl);
-        }
         public async Task<IActionResult> Logout()
         {
             await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
@@ -310,29 +278,18 @@ namespace scrm_dev_mvc.Controllers
             return View();
         }
 
-        private async System.Threading.Tasks.Task ProcessInvitationAsync(string invitationCode, Guid userId)
+
+        [HttpPost]
+        public async Task<IActionResult> LoginWithGoogle(string? invitationCode, string returnUrl = null)
         {
-            var organization = await _organizationService.IsInOrganizationById(userId);
-            if (organization != null)
-            {
-                TempData["Warning"] = "You are already in an organization. The invitation was disregarded.";
-                return;
-            }
+            // Redirect to Google OAuth
+            var redirectDomain = _configuration["Google:RedirectDomain"];
 
-            // Your InvitationService should handle checking if the code is valid/expired
-            var success = await _invitationService.AcceptInvitationAsync(invitationCode, userId);
-
-            if (success)
-            {
-                TempData["Message"] = "Welcome! You have successfully joined the organization.";
-            }
-            else
-            {
-                TempData["Error"] = "The invitation code is invalid, expired, or could not be processed.";
-            }
-            return;
+            // The redirect URI used during auth request
+            var redirectUri = Url.Action(nameof(GoogleCallback), "Auth", null, Request.Scheme, redirectDomain);
+            var authUrl = await _gmailService.GenerateAuthUrl(invitationCode ?? "", redirectUri);
+            return Redirect(authUrl);
         }
-
 
         [AllowAnonymous]
         public async Task<IActionResult> GoogleCallback([FromQuery] string code, [FromQuery] string state)
@@ -345,8 +302,10 @@ namespace scrm_dev_mvc.Controllers
                 return BadRequest("Error: Authorization code was not provided by Google.");
             }
 
+            var redirectDomain = _configuration["Google:RedirectDomain"];
+
             // The redirect URI used during auth request
-            var redirectUri = Url.Action(nameof(GoogleCallback), "Auth", null, Request.Scheme, "maudlinly-nonreactive-arturo.ngrok-free.dev");
+            var redirectUri = Url.Action(nameof(GoogleCallback), "Auth", null, Request.Scheme, redirectDomain);
 
             try
             {
@@ -378,14 +337,7 @@ namespace scrm_dev_mvc.Controllers
                 var org = await _organizationService.IsInOrganizationById(user.Id);
 
                 // Create claims
-                var claims = new List<Claim>
-        {
-            new Claim(ClaimTypes.Name, user.Email),
-            new Claim(ClaimTypes.GivenName, user.FirstName ?? string.Empty),
-            new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
-            new Claim(ClaimTypes.Role, user.Role?.Name ?? string.Empty),
-            new Claim("OrganizationName", org?.Name ?? string.Empty)
-        };
+                var claims = BuildClaims(user, org);
 
                 var claimsIdentity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
 
@@ -408,7 +360,7 @@ namespace scrm_dev_mvc.Controllers
             }
             catch (Exception ex)
             {
-                TempData["Message"] = ex.Message;
+                TempData["Message"] = "Login Failed"; //ex.Message;
                 return RedirectToAction("Login");
             }
         }
@@ -422,8 +374,10 @@ namespace scrm_dev_mvc.Controllers
             if (string.IsNullOrEmpty(userEmail))
                 return RedirectToAction("Login");
 
-            // 2️⃣ Generate redirect URI for Gmail OAuth callback
-            var redirectUri = Url.Action(nameof(GmailSyncCallback), "Auth", null, Request.Scheme, "maudlinly-nonreactive-arturo.ngrok-free.dev");
+            var redirectDomain = _configuration["Google:RedirectDomain"];
+
+            // The redirect URI used during auth request
+            var redirectUri = Url.Action(nameof(GoogleCallback), "Auth", null, Request.Scheme, redirectDomain);
 
             // 3️⃣ Generate the Google OAuth URL using the logged-in user's email in 'state'
             var authUrl = await _gmailService.GenerateAuthUrl(userEmail, redirectUri);
@@ -432,9 +386,9 @@ namespace scrm_dev_mvc.Controllers
             return Redirect(authUrl);
         }
 
-        
+
         [HttpGet]
-        [AllowAnonymous] 
+        [AllowAnonymous]
         public async Task<IActionResult> GmailSyncCallback([FromQuery] string code, [FromQuery] string state)
         {
             if (string.IsNullOrEmpty(code))
@@ -461,6 +415,41 @@ namespace scrm_dev_mvc.Controllers
                 TempData["Message"] = $"Error linking Gmail: {ex.Message}";
                 return RedirectToAction("Index", "User");
             }
+        }
+
+        private async System.Threading.Tasks.Task ProcessInvitationAsync(string invitationCode, Guid userId)
+        {
+            var organization = await _organizationService.IsInOrganizationById(userId);
+            if (organization != null)
+            {
+                TempData["Warning"] = "You are already in an organization. The invitation was disregarded.";
+                return;
+            }
+
+            // Your InvitationService should handle checking if the code is valid/expired
+            var success = await _invitationService.AcceptInvitationAsync(invitationCode, userId);
+
+            if (success)
+            {
+                TempData["Message"] = "Welcome! You have successfully joined the organization.";
+            }
+            else
+            {
+                TempData["Error"] = "The invitation code is invalid, expired, or could not be processed.";
+            }
+            return;
+        }
+
+        private List<Claim> BuildClaims(User user, Organization org)
+        {
+            return new List<Claim>
+                {
+                    new Claim(ClaimTypes.Name, user.Email),
+                    new Claim(ClaimTypes.GivenName, user.FirstName ?? string.Empty),
+                    new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
+                    new Claim(ClaimTypes.Role, user.Role?.Name ?? string.Empty),
+                    new Claim("OrganizationName", org?.Name ?? string.Empty)
+                };
         }
 
     }
