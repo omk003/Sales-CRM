@@ -1,20 +1,14 @@
 ﻿@model scrm_dev_mvc.Models.ViewModels.WorkspaceViewModel
-<!--
-This page is now updated with the "Completed" tasks tab.
--->
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>My Workspace</title>
-    <!-- 1. Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- 2. Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <!-- 3. Font Awesome for icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- 4. jQuery (required for partial view loading) -->
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 
     <style>
@@ -136,15 +130,9 @@ This page is now updated with the "Completed" tasks tab.
     @Html.AntiForgeryToken()
     <div class="max-w-7xl mx-auto space-y-8">
 
-        @* <h1 class="text-3xl font-bold text-gray-900">My Workspace</h1> *@
-
-        <!-- ================================== -->
-        <!-- Section 1: Tasks -->
-        <!-- ================================== -->
         <div class="bg-white p-4 sm:p-6 rounded-lg shadow-sm ">
             <h3 class="text-2xl font-bold mb-4">My Tasks</h3>
 
-            <!-- *** UPDATED: Task Tabs: Pending / Due / Completed *** -->
             <div class="border-b border-gray-200 mb-4">
                 <nav class="-mb-px flex space-x-6" aria-label="Tabs">
                     <button id="tab-btn-pending" class="tab-btn task-tab-btn active" onclick="switchTaskTab('pending')">
@@ -153,7 +141,6 @@ This page is now updated with the "Completed" tasks tab.
                     <button id="tab-btn-due" class="tab-btn task-tab-btn" onclick="switchTaskTab('due')">
                         Due <span id="due-count-badge" class="ml-1.5 inline-block bg-red-100 text-red-700 text-xs font-bold px-2 py-0.5 rounded-full"></span>
                     </button>
-                    <!-- *** NEW TAB BUTTON *** -->
                     <button id="tab-btn-completed" class="tab-btn task-tab-btn" onclick="switchTaskTab('completed')">
                         Completed
                     </button>
@@ -180,9 +167,7 @@ This page is now updated with the "Completed" tasks tab.
             </div>
         </div>
 
-        <!-- ================================== -->
-        <!-- Section 2: My Stats (Line Chart) -->
-        <!-- ================================== -->
+       
         <div class="bg-white p-4 sm:p-6 rounded-lg shadow-sm ">
             <div class="flex flex-col sm:flex-row justify-between sm:items-center mb-4">
                 <h2 class="text-xl font-semibold">My Activity</h2>
@@ -197,9 +182,7 @@ This page is now updated with the "Completed" tasks tab.
             </div>
         </div>
 
-        <!-- ================================== -->
-        <!-- Section 3: Admin Stats (Bar Chart) -->
-        <!-- ================================== -->
+      
         @if (Model.IsAdmin)
         {
             <div id="admin-stats-section" class="bg-white p-4 sm:p-6 rounded-lg shadow-sm ">
@@ -218,11 +201,9 @@ This page is now updated with the "Completed" tasks tab.
         }
     </div>
 
-    <!-- ================================== -->
-    <!-- Task Update Modal (Real) -->
-    <!-- ================================== -->
+ 
     <div id="taskUpdateModalContainer">
-        <!-- The _UpdateTaskModal partial view will be loaded here -->
+        
     </div>
 
 
@@ -276,38 +257,33 @@ This page is now updated with the "Completed" tasks tab.
         </div>
     </div>
 
-    <!-- ================================== -->
-    <!-- SCRIPT BLOCK -->
-    <!-- ================================== -->
+
     <script>
 
 
         function deleteTask(event, taskId, buttonElement) {
-            // 1. Stop the click from bubbling up to the parent div
+            
             event.stopPropagation();
 
             if (!confirm("Are you sure you want to delete this task? This cannot be undone.")) {
                 return;
             }
 
-            // 2. Get the Anti-Forgery Token
+           
             const token = $('input[name="__RequestVerificationToken"]').val();
 
-            // 3. Disable button to prevent double-click
             $(buttonElement).prop('disabled', true);
 
-            // 4. Send AJAX request
             $.ajax({
-                url: '@Url.Action("Delete", "Task")', // Calls the Task/Delete action
+                url: '@Url.Action("Delete", "Task")', 
                 type: 'POST',
                 data: {
-                    __RequestVerificationToken: token, // Send token
-                    id: taskId // Send the ID
+                    __RequestVerificationToken: token, 
+                    id: taskId 
                 },
                 success: function (response) {
                     if (response.success) {
                         alert(response.message || "Task deleted.");
-                        // Reload the page to refresh all lists and counts
                         location.reload();
                     } else {
                         alert(response.message || "Failed to delete task.");
@@ -325,7 +301,6 @@ This page is now updated with the "Completed" tasks tab.
                 function submitTaskUpdateForm(formElement) {
             var form = $(formElement);
 
-            // Optional: Re-run validation
             if ($.validator && $.validator.unobtrusive && !form.valid()) {
                 return false;
             }
@@ -337,7 +312,7 @@ This page is now updated with the "Completed" tasks tab.
                 success: function (response) {
                     closeUpdateTaskModal();
                     alert(response.message || "Task updated successfully!");
-                    location.reload(); // This is the original, correct success handler
+                    location.reload(); 
                 },
                 error: function (xhr) {
                     var response = xhr.responseJSON;
@@ -352,7 +327,6 @@ This page is now updated with the "Completed" tasks tab.
         }
 
 
-                    // UPDATE THIS FUNCTION
         function completeTaskAndSubmit() {
             try {
                 const statusDropdown = $('#taskStatusDropdown');
@@ -370,11 +344,9 @@ This page is now updated with the "Completed" tasks tab.
                 });
 
                 if (completedOptionValue) {
-                    // Set the dropdown value
                     statusDropdown.val(completedOptionValue);
 
-                    // --- THIS IS THE FIX ---
-                    // Call the reusable function directly instead of using .trigger()
+                    
                     submitTaskUpdateForm($('#updateTaskForm'));
 
                 } else {
@@ -388,12 +360,8 @@ This page is now updated with the "Completed" tasks tab.
             }
         }
 
-        // --- Email Modal ---
         function openEmailModal(contactEmail) {
-            // Set the hidden field with the email
             $('#emailModalContactEmail').val(contactEmail);
-
-            // Reset form fields
             $('#emailSubject').val('');
             $('#emailBody').val('');
             $('#emailModal').css('display', 'flex');
@@ -406,13 +374,12 @@ This page is now updated with the "Completed" tasks tab.
         $('#emailForm').on('submit', function(event){
             event.preventDefault();
 
-            // Get data from the form and the hidden input
             var subject = $('#emailSubject').val();
             var body = $('#emailBody').val();
-            var contactEmail = $('#emailModalContactEmail').val(); // Get email from hidden input
+            var contactEmail = $('#emailModalContactEmail').val(); 
 
             $.ajax({
-                url: '/Contact/SendEmail', // Make sure this URL is correct
+                url: '/Contact/SendEmail', 
                 type: 'POST',
                 data: { contactEmail: contactEmail, subject: subject, body: body },
                 success: function(response) {
@@ -427,16 +394,13 @@ This page is now updated with the "Completed" tasks tab.
         });
 
         
-           // --- Call Modal ---
         function openCallModal(phoneNumber, contactId) {
-            // Set hidden fields and display field
             $('#callModalPhoneNumber').val(phoneNumber);
             $('#callModalContactId').val(contactId);
             $('#callModalPhoneNumberDisplay').text(phoneNumber);
 
-            // --- THIS IS THE FIX ---
-            // Was: $('#emailModal').css('display', 'flex');
-            $('#callModal').css('display', 'flex'); // Corrected to target #callModal
+           
+            $('#callModal').css('display', 'flex'); 
         }
 
         function closeCallModal() {
@@ -444,12 +408,11 @@ This page is now updated with the "Completed" tasks tab.
         }
 
         function makeCall() {
-            // Get data from hidden inputs
             var phoneNumber = $('#callModalPhoneNumber').val();
             var contactId = $('#callModalContactId').val();
 
             $.ajax({
-                url: '/Contact/CallContact', // Make sure this URL is correct
+                url: '/Contact/CallContact', 
                 type: 'POST',
                 data: { phoneNumber: phoneNumber, contactId: contactId },
                 success: function(response) {
@@ -462,32 +425,28 @@ This page is now updated with the "Completed" tasks tab.
                 }
             });
         }
-        // --- 1. REAL DATA (from @Model) ---
+        
 
         const pendingTasks = @Html.Raw(Json.Serialize(Model.PendingTasks));
         const dueTasks = @Html.Raw(Json.Serialize(Model.DueTasks));
-        // *** NEW DATA ***
         const completedTasks = @Html.Raw(Json.Serialize(Model.CompletedTasks));
 
         const myChartData = @Html.Raw(Json.Serialize(Model.MyActivityData));
         const isAdmin = @Html.Raw(Json.Serialize(Model.IsAdmin));
         const adminChartData = @Html.Raw(Json.Serialize(Model.TeamActivityData));
 
-        // Chart.js instances
         let myStatsChartInstance = null;
         let adminStatsChartInstance = null;
 
-        // --- 2. TASK RENDERING ---
-
-        // *** UPDATED: renderTasks() ***
+     
         function renderTasks() {
             const pendingList = document.getElementById('task-list-pending');
             const dueList = document.getElementById('task-list-due');
-            const completedList = document.getElementById('task-list-completed'); // New
+            const completedList = document.getElementById('task-list-completed');
 
             pendingList.innerHTML = '';
             dueList.innerHTML = '';
-            completedList.innerHTML = ''; // New
+            completedList.innerHTML = ''; 
 
             if (!pendingTasks || pendingTasks.length === 0) {
                 pendingList.innerHTML = '<p class="text-gray-500">No pending tasks. Great job!</p>';
@@ -505,7 +464,6 @@ This page is now updated with the "Completed" tasks tab.
                 });
             }
 
-            // *** NEW: Render Completed Tasks ***
             if (!completedTasks || completedTasks.length === 0) {
                 completedList.innerHTML = '<p class="text-gray-500">No completed tasks found.</p>';
             } else {
@@ -514,7 +472,6 @@ This page is now updated with the "Completed" tasks tab.
                 });
             }
 
-            // Update due count badge
             const badge = document.getElementById('due-count-badge');
             if (dueTasks && dueTasks.length > 0) {
                 badge.textContent = dueTasks.length;
@@ -524,7 +481,6 @@ This page is now updated with the "Completed" tasks tab.
             }
         }
 
-        // *** UPDATED: createTaskElement() ***
         function createTaskElement(task, type) {
             let dateColor = 'text-gray-600';
             let icon = 'fa-clock';
@@ -555,9 +511,7 @@ This page is now updated with the "Completed" tasks tab.
                 `;
             }
 
-            // This is the only block that changes.
-            // We are changing the right-side `<div>` to be a flex container
-            // and adding the new delete button.
+           
             return `
                 <div class="task-list-item flex items-center justify-between p-3 rounded-lg cursor-pointer border border-transparent hover:border-yellow-300 hover:bg-yellow-50"
                      onclick="openUpdateTaskModal(${task.id})">
@@ -590,24 +544,19 @@ This page is now updated with the "Completed" tasks tab.
             `;
         }
 
-        // *** UPDATED: switchTaskTab() ***
         function switchTaskTab(tab) {
-            // Hide all lists
             document.getElementById('task-list-pending').classList.add('hidden');
             document.getElementById('task-list-due').classList.add('hidden');
             document.getElementById('task-list-completed').classList.add('hidden');
 
-            // Deactivate all buttons
             document.getElementById('tab-btn-pending').classList.remove('active');
             document.getElementById('tab-btn-due').classList.remove('active');
             document.getElementById('tab-btn-completed').classList.remove('active');
 
-            // Show the selected list and activate the selected button
             document.getElementById(`task-list-${tab}`).classList.remove('hidden');
             document.getElementById(`tab-btn-${tab}`).classList.add('active');
         }
 
-        // --- 3. CHART RENDERING (No changes here) ---
 
         function renderMyStatsChart(type) {
             const data = myChartData[type] || [];
@@ -692,16 +641,13 @@ This page is now updated with the "Completed" tasks tab.
             });
         }
 
-        // --- 4. REAL MODAL FUNCTIONS (No changes here) ---
-
-        // Delegated submit handler
+    
         $('#taskUpdateModalContainer').on('submit', '#updateTaskForm', function (event) {
             event.preventDefault();
             submitTaskUpdateForm(this);
             
         });
 
-        // Open modal
         function openUpdateTaskModal(taskId) {
             var url = '@Url.Action("Update", "Task")' + '?taskId=' + taskId;
 
@@ -719,28 +665,20 @@ This page is now updated with the "Completed" tasks tab.
             });
         }
 
-        // Close modal
         function closeUpdateTaskModal() {
             $('#taskUpdateModalContainer').html('');
         }
 
-        // --- 5. INITIALIZATION ---
 
         document.addEventListener('DOMContentLoaded', () => {
-            // Render all task lists
             renderTasks();
-
-            // Init "My Stats" chart
             renderMyStatsChart('tasks');
 
-            // Init "Admin Stats" chart
             if (isAdmin) {
-                // *** UPDATED: Show admin section based on Model.IsAdmin ***
                 document.getElementById('admin-stats-section').style.display = 'block';
                 renderAdminStatsChart('tasks');
             }
 
-            // Add tab listeners
             document.getElementById('my-stats-tabs').addEventListener('click', (e) => {
                 if (e.target.classList.contains('tab-btn')) {
                     document.querySelectorAll('#my-stats-tabs .tab-btn').forEach(btn => btn.classList.remove('active'));
@@ -749,7 +687,6 @@ This page is now updated with the "Completed" tasks tab.
                 }
             });
 
-            // *** UPDATED: Check if admin section exists before adding listener ***
             const adminTabs = document.getElementById('admin-stats-tabs');
             if (adminTabs) {
                 adminTabs.addEventListener('click', (e) => {

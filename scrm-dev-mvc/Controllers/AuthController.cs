@@ -3,8 +3,6 @@ using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using scrm_dev_mvc.DataAccess.Data;
 using scrm_dev_mvc.Models;
 using scrm_dev_mvc.Models.Enums;
 using scrm_dev_mvc.Models.ViewModels;

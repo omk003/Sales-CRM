@@ -1,8 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using Newtonsoft.Json; // Make sure you have Newtonsoft.Json package
-using scrm_dev_mvc.Data; // For ApplicationDbContext
+using Newtonsoft.Json; 
 using scrm_dev_mvc.DataAccess.Data;
 using scrm_dev_mvc.Models;
 using scrm_dev_mvc.Models.Enums;
@@ -13,10 +12,9 @@ namespace scrm_dev_mvc.Services
 {
     public class WorkflowService : IWorkflowService
     {
-        // We'll need the database, a logger, and your TaskService
         private readonly ApplicationDbContext _context;
         private readonly ILogger<WorkflowService> _logger;
-        private readonly IServiceProvider _serviceProvider; // Assumes you have this
+        private readonly IServiceProvider _serviceProvider; 
 
         public WorkflowService(
             ApplicationDbContext context,
@@ -30,19 +28,17 @@ namespace scrm_dev_mvc.Services
 
         private class UpdateContactParams
         {
-            // The enum value for the new status, e.g., 3 (Connected)
             public LeadStatusEnum NewLeadStatus { get; set; }
         }
-        // The private DTO class for parsing JSON
-        // This makes your `ParametersJson` strongly-typed and easy to use
+  
         private class CreateTaskParams
         {
             public string Title { get; set; }
             public int DaysDue { get; set; }
             public string TaskType { get; set; }
             public string AssignedTo { get; set; } // e.g., "ContactOwner"
-            public int PriorityId { get; set; } // NEW
-            public int StatusId { get; set; }   // NEW
+            public int PriorityId { get; set; } 
+            public int StatusId { get; set; }   
         }
 
 
@@ -56,21 +52,17 @@ namespace scrm_dev_mvc.Services
             public int NewStageId { get; set; } 
         }
 
-        /// <summary>
-        /// The main entry point. Finds and runs all workflows for a given trigger.
-        /// </summary>
+        
         public async System.Threading.Tasks.Task RunTriggersAsync(WorkflowTrigger trigger, object entity)
         {
-            // 1. Get the OrganizationId from the entity (Contact, Task, etc.)
             if (!TryGetOrganizationId(entity, out int organizationId))
             {
                 _logger.LogWarning("Could not determine OrganizationId for trigger {Trigger}.", trigger);
                 return;
             }
 
-            // 2. Find all active workflows that match this trigger
             var workflows = await _context.Workflows
-                .Include(wf => wf.Actions) // Eager-load the actions
+                .Include(wf => wf.Actions) 
                 .Where(wf => wf.Event == trigger &&
                              wf.OrganizationId == organizationId &&
                              wf.IsActive)
@@ -78,18 +70,18 @@ namespace scrm_dev_mvc.Services
 
             if (!workflows.Any())
             {
-                return; // No workflows for this trigger, which is fine.
+                return; 
             }
 
             _logger.LogInformation("Found {Count} workflows for trigger {Trigger}.", workflows.Count, trigger);
 
-            // 3. Loop through each workflow and execute its actions
+            
             foreach (var workflow in workflows)
             { 
                 foreach (var action in workflow.Actions)
                 {
-                    // Use a try-catch so one failed action doesn't
-                    // stop all other workflows.
+                    
+                    
                     try
                     {
                         await ExecuteActionAsync(action, entity);
@@ -102,21 +94,22 @@ namespace scrm_dev_mvc.Services
             }
             }
 
-        /// <summary>
-        /// A "router" that calls the correct method for each action type.
-        /// </summary>
-        /// <summary>
-        /// A "router" that calls the correct method for each action type.
-        /// </summary>
+       
         private async System.Threading.Tasks.Task ExecuteActionAsync(WorkflowAction action, object entity)
         {
+            if (!MatchesCondition(action.ConditionJson, entity))
+            {
+                _logger.LogInformation($"Action {action.Id} skipped due to condition mismatch.");
+                return;
+            }
+
             switch (action.ActionType)
             {
                 case WorkflowActionType.CreateTask:
                     await ExecuteCreateTaskActionAsync(action, entity);
                     break;
 
-                // --- UPDATED THIS SECTION ---
+                
                 case WorkflowActionType.ChangeLeadStatus:
                     await ExecuteChangeLeadStatusAsync(action, entity);
                     break;
@@ -134,10 +127,7 @@ namespace scrm_dev_mvc.Services
         }
 
 
-        // --- ADD THIS ENTIRE NEW METHOD ---
-        /// <summary>
-        /// The "worker" for updating a contact's lead status.
-        /// </summary>
+        
         private async System.Threading.Tasks.Task ExecuteChangeLeadStatusAsync(WorkflowAction action, object entity)
         {
             if (!TryGetContactId(entity, out int contactId))
@@ -173,17 +163,17 @@ namespace scrm_dev_mvc.Services
             }
         }
 
-        // --- ADDED THIS NEW METHOD (for your LifeCycleStage idea) ---
+        
         private async System.Threading.Tasks.Task ExecuteChangeLifeCycleStageAsync(WorkflowAction action, object entity)
         {
-            // 1. Get the ContactId from the triggering entity
+           
             if (!TryGetContactId(entity, out int contactId))
             {
                 _logger.LogWarning("ChangeLifeCycleStage action {ActionId} was triggered by an entity with no ContactId. Skipping.", action.Id);
                 return;
             }
 
-            // 2. Deserialize the parameters
+            
             var parameters = JsonConvert.DeserializeObject<ChangeLifeCycleStageParams>(action.ParametersJson);
             if (parameters == null)
             {
@@ -191,13 +181,13 @@ namespace scrm_dev_mvc.Services
                 return;
             }
 
-            // 3. Create a new service scope to update the database
-            // This prevents "parallel transaction" errors
+            
+            
             using (var scope = _serviceProvider.CreateScope())
             {
                 var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
 
-                // 4. Find the contact
+                
                 var targetContact = await dbContext.Contacts.FindAsync(contactId);
 
                 if (targetContact == null)
@@ -206,10 +196,10 @@ namespace scrm_dev_mvc.Services
                     return;
                 }
 
-                // 5. Update the property
-                targetContact.LifeCycleStageId = parameters.NewStageId; // Assuming the property is named LifecycleId
+                
+                targetContact.LifeCycleStageId = parameters.NewStageId; 
 
-                // 6. Save changes
+                
                 dbContext.Contacts.Update(targetContact);
                 await dbContext.SaveChangesAsync();
 
@@ -217,11 +207,7 @@ namespace scrm_dev_mvc.Services
                   targetContact.Id, parameters.NewStageId, action.Id);
             }
         }
-        /// <summary>
-        /// The "worker" for creating tasks.
-        /// </summary>
-        // In scrm_dev_mvc/Services/WorkflowService.cs
-        // --- ADD THIS NEW HELPER to find ContactId from any entity ---
+        
         private bool TryGetContactId(object entity, out int contactId)
         {
             contactId = 0;
@@ -239,19 +225,16 @@ namespace scrm_dev_mvc.Services
         }
         private async System.Threading.Tasks.Task ExecuteCreateTaskActionAsync(WorkflowAction action, object entity)
         {
-            Contact contact = null; // 1. Define a placeholder for the contact
+            Contact contact = null; 
 
-            // 2. Check what kind of entity triggered the workflow
             if (entity is Contact c)
             {
-                // The trigger was 'ContactCreated', so we just use the entity
+                
                 contact = c;
             }
             else if (entity is Models.Task task && task.ContactId.HasValue)
             {
-                // The trigger was 'TaskCompleted'. We need to find the contact
-                // associated with that task.
-                // We must do this in a new scope, just like our other methods.
+                
                 using (var scope = _serviceProvider.CreateScope())
                 {
                     var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
@@ -259,14 +242,14 @@ namespace scrm_dev_mvc.Services
                 }
             }
 
-            // 3. If we couldn't find a contact, we can't create a task.
+            
             if (contact == null)
             {
                 _logger.LogWarning("CreateTask action {ActionId} was triggered but a valid contact could not be found. Skipping.", action.Id);
                 return;
             }
 
-            // 4. Deserialize the JSON parameters
+            
             var parameters = JsonConvert.DeserializeObject<CreateTaskParams>(action.ParametersJson);
             if (parameters == null)
             {
@@ -274,7 +257,7 @@ namespace scrm_dev_mvc.Services
                 return;
             }
 
-            // 5. Determine the assignee (uses the 'contact' we found)
+            
             Guid assigneeId;
             if (parameters.AssignedTo == "ContactOwner" && contact.OwnerId.HasValue)
             {
@@ -289,7 +272,7 @@ namespace scrm_dev_mvc.Services
                 }
             }
 
-            // 6. Build the new ViewModel (uses the 'contact' we found)
+            
             var viewModel = new TaskCreateViewModel
             {
                 Title = parameters.Title,
@@ -298,10 +281,10 @@ namespace scrm_dev_mvc.Services
                 StatusId = parameters.StatusId,
                 PriorityId = parameters.PriorityId,
                 ContactId = contact.Id,
-                CompanyId = contact.CompanyId // Gets the CompanyId from the contact
+                CompanyId = contact.CompanyId 
             };
 
-            // 7. Use your existing TaskService (in its own scope)
+            
             using (var scope = _serviceProvider.CreateScope())
             {
                 var taskService = scope.ServiceProvider.GetRequiredService<ITaskService>();
@@ -321,9 +304,7 @@ namespace scrm_dev_mvc.Services
             }
         }
 
-        /// <summary>
-        // Helper to get OrganizationId from any entity
-        /// </summary>
+        
         private bool TryGetOrganizationId(object entity, out int organizationId)
         {
             organizationId = 0;
@@ -338,6 +319,33 @@ namespace scrm_dev_mvc.Services
                     // Add other entities here (Company, Deal, etc.)
             }
             return false;
+        }
+
+
+        private bool MatchesCondition(string conditionJson, object entity)
+        {
+            if (string.IsNullOrEmpty(conditionJson))
+                return true; 
+
+            var conditionDict = JsonConvert.DeserializeObject<Dictionary<string, object>>(conditionJson);
+
+            foreach (var kvp in conditionDict)
+            {
+                var keys = kvp.Key.Split('.'); 
+                object value = entity;
+
+                foreach (var key in keys)
+                {
+                    var prop = value?.GetType().GetProperty(key);
+                    if (prop == null)
+                        return false;
+                    value = prop.GetValue(value);
+                }
+
+                if (value == null || value.ToString() != kvp.Value.ToString())
+                    return false;
+            }
+            return true;
         }
     }
 }

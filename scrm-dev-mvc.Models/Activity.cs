@@ -11,7 +11,7 @@ public partial class Activity
 
     public int? DealId { get; set; }
 
-    public int? ContactId { get; set; }
+    public int? ContactId { get; set; } 
 
     public int? ActivityTypeId { get; set; }
 

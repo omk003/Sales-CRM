@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json;
@@ -37,31 +38,27 @@ namespace scrm_dev_mvc.Controllers
                 .Where(w => w.OrganizationId == organization.OrganizationId)
                 .ToListAsync();
 
+            ViewData["IsAdmin"] = _currentUserService.IsInRole("SalesAdminSuper") || _currentUserService.IsInRole("SalesAdmin");
+
             return View(workflows);
         }
 
+        [Authorize(Roles = "SalesAdminSuper,SalesAdmin")]
         [HttpGet]
         public async Task<IActionResult> Create()
         {
             var viewModel = new WorkflowCreateViewModel
             {
-                // Populate dropdowns
                 AvailableTriggers = Enum.GetValues(typeof(WorkflowTrigger))
                     .Cast<WorkflowTrigger>()
                     .Select(e => new SelectListItem { Text = e.GetDisplayName(), Value = ((int)e).ToString() }),
 
-                //AvailableActionTypes = Enum.GetValues(typeof(WorkflowActionType))
-                //    .Cast<WorkflowActionType>()
-                //    .Select(e => new SelectListItem { Text = e.GetDisplayName(), Value = ((int)e).ToString() }),
-
-                // For the "Create Task" parameters
                 AvailablePriorities = (await _context.Priorities.ToListAsync())
                     .Select(p => new SelectListItem { Text = p.Name, Value = p.Id.ToString() }),
 
                 AvailableTaskStatuses = (await _context.TaskStatuses.ToListAsync())
                     .Select(s => new SelectListItem { Text = s.StatusName, Value = s.Id.ToString() }),
 
-                // For the "Update Status" parameters
                 AvailableLeadStatuses = Enum.GetValues(typeof(LeadStatusEnum))
                     .Cast<LeadStatusEnum>()
                     .Select(e => new SelectListItem { Text = e.GetDisplayName(), Value = ((int)e).ToString() }),
@@ -73,7 +70,7 @@ namespace scrm_dev_mvc.Controllers
             return View(viewModel);
         }
 
-        
+        [Authorize(Roles = "SalesAdminSuper,SalesAdmin")]
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(WorkflowCreateViewModel viewModel)
@@ -96,28 +93,36 @@ namespace scrm_dev_mvc.Controllers
                 OrganizationId = organization.OrganizationId
             };
 
+            // Action: Change Lead Status
             if (viewModel.Action_ChangeLeadStatus)
             {
                 var parameters = new { NewStatus = viewModel.ChangeLeadStatus_NewStatusId };
+
                 workflow.Actions.Add(new WorkflowAction
                 {
                     ActionType = WorkflowActionType.ChangeLeadStatus,
-                    ParametersJson = Newtonsoft.Json.JsonConvert.SerializeObject(parameters)
+                    ParametersJson = Newtonsoft.Json.JsonConvert.SerializeObject(parameters),
+                    ConditionJson = "{}" // <-- FIX 1: Use empty JSON object instead of null
                 });
             }
 
+            // Action: Change LifeCycle Stage
             if (viewModel.Action_ChangeLifeCycleStage)
             {
                 var parameters = new { NewStageId = viewModel.ChangeLifeCycleStage_NewStageId };
+
                 workflow.Actions.Add(new WorkflowAction
                 {
                     ActionType = WorkflowActionType.ChangeLifeCycleStage,
-                    ParametersJson = Newtonsoft.Json.JsonConvert.SerializeObject(parameters)
+                    ParametersJson = Newtonsoft.Json.JsonConvert.SerializeObject(parameters),
+                    ConditionJson = "{}" // <-- FIX 2: Use empty JSON object instead of null
                 });
             }
 
+            // Action: Create Task (This one has conditions)
             if (viewModel.Action_CreateTask)
             {
+                // 1. Set the main action parameters
                 var parameters = new
                 {
                     Title = viewModel.Task_Title,
@@ -127,21 +132,38 @@ namespace scrm_dev_mvc.Controllers
                     PriorityId = viewModel.Task_PriorityId,
                     StatusId = viewModel.Task_StatusId
                 };
-                workflow.Actions.Add(new WorkflowAction
+
+                // 2. Build the condition dictionary
+                var conditionDict = new Dictionary<string, string>();
+                if (!string.IsNullOrWhiteSpace(viewModel.Task_ConditionTaskType))
+                {
+                    conditionDict["TaskType"] = viewModel.Task_ConditionTaskType;
+                }
+                if (viewModel.Task_ConditionLeadStatus.HasValue)
+                {
+                    conditionDict["LeadStatus"] = viewModel.Task_ConditionLeadStatus.Value.ToString();
+                }
+
+                // 3. Create the action
+                var action = new WorkflowAction
                 {
                     ActionType = WorkflowActionType.CreateTask,
-                    ParametersJson = Newtonsoft.Json.JsonConvert.SerializeObject(parameters)
-                });
+                    ParametersJson = Newtonsoft.Json.JsonConvert.SerializeObject(parameters),
+                    ConditionJson = conditionDict.Count > 0
+                        ? Newtonsoft.Json.JsonConvert.SerializeObject(conditionDict)
+                        : "{}" // <-- FIX 3: Use empty JSON object instead of null
+                };
+
+                workflow.Actions.Add(action);
             }
 
+            // Save the new workflow and all its actions
             _context.Workflows.Add(workflow);
             await _context.SaveChangesAsync();
 
             TempData["Message"] = "Workflow created successfully!";
             return RedirectToAction(nameof(Index));
         }
-
-
 
         private async System.Threading.Tasks.Task PopulateViewModelDropdownsAsync(WorkflowCreateViewModel viewModel)
         {
@@ -163,7 +185,7 @@ namespace scrm_dev_mvc.Controllers
                     .Select(s => new SelectListItem { Text = s.StatusName, Value = s.Id.ToString() });
         }
 
-
+        [Authorize(Roles = "SalesAdminSuper,SalesAdmin")]
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> ToggleActive(int id)
@@ -184,7 +206,6 @@ namespace scrm_dev_mvc.Controllers
                 return NotFound();
             }
 
-            // Flip the boolean
             workflow.IsActive = !workflow.IsActive;
 
             _context.Workflows.Update(workflow);
@@ -194,7 +215,7 @@ namespace scrm_dev_mvc.Controllers
             return RedirectToAction(nameof(Index));
         }
 
-
+        [Authorize(Roles = "SalesAdminSuper,SalesAdmin")]
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Delete(int id)
@@ -207,7 +228,6 @@ namespace scrm_dev_mvc.Controllers
                 return Unauthorized();
             }
 
-            // Find the workflow, including its actions, to make sure we delete them all
             var workflow = await _context.Workflows
                 .Include(w => w.Actions)
                 .FirstOrDefaultAsync(w => w.Id == id && w.OrganizationId == organization.OrganizationId);
@@ -217,8 +237,6 @@ namespace scrm_dev_mvc.Controllers
                 return NotFound();
             }
 
-            // EF Core will automatically delete the related 'Actions'
-            // because they are part of the workflow object we loaded.
             _context.Workflows.Remove(workflow);
             await _context.SaveChangesAsync();
 
@@ -227,7 +245,7 @@ namespace scrm_dev_mvc.Controllers
         }
 
 
-
+        [Authorize(Roles = "SalesAdminSuper,SalesAdmin")]
         [HttpGet]
         public async Task<IActionResult> Edit(int id)
         {
@@ -292,6 +310,7 @@ namespace scrm_dev_mvc.Controllers
             return View(viewModel);
         }
 
+        [Authorize(Roles = "SalesAdminSuper,SalesAdmin")]
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(int id, WorkflowEditViewModel viewModel)

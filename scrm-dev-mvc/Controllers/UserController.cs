@@ -97,6 +97,7 @@ namespace scrm_dev_mvc.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [Authorize(Roles = "SalesAdminSuper,SalesAdmin")]
         public async Task<IActionResult> ChangeUserRole(int organizationId, Guid userId, string newRole)
         {
             var adminId = _currentUserService.GetUserId();

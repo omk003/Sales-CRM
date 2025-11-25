@@ -34,16 +34,13 @@ namespace SCRM_dev.Services
             if (user == null)
                 return null;
 
-            //check if contact already exists
             var existingContact = await unitOfWork.Contacts.FirstOrDefaultAsync(c => c.Email == contactDto.Email && c.OrganizationId == user.OrganizationId);
             if (existingContact != null)
             {
                 if (existingContact.IsDeleted == true)
                 {
-                    // --- 3. AUDIT LOGIC FOR RE-ACTIVATION ---
                     var auditOwnerId = contactDto.OwnerId;
 
-                    // Log activation
                     await _auditService.LogChangeAsync(new AuditLogDto
                     {
                         OwnerId = auditOwnerId ?? new Guid(),
@@ -54,7 +51,6 @@ namespace SCRM_dev.Services
                         NewValue = "false"
                     });
 
-                    // Log all changed fields
                     if (existingContact.FirstName != contactDto.FirstName)
                         await _auditService.LogChangeAsync(new AuditLogDto
                         {
@@ -121,7 +117,6 @@ namespace SCRM_dev.Services
                             NewValue = contactDto.OwnerId.ToString()
                         });
 
-                    // Apply changes
                     existingContact.IsDeleted = false;
                     existingContact.FirstName = contactDto.FirstName;
                     existingContact.LastName = contactDto.LastName;
@@ -132,19 +127,17 @@ namespace SCRM_dev.Services
                     existingContact.OwnerId = contactDto.OwnerId;
                     unitOfWork.Contacts.Update(existingContact);
 
-                    // Saves the Contact update AND all the Audit logs in one transaction
                     await unitOfWork.SaveChangesAsync();
 
                     try
                     {
                         await _workflowService.RunTriggersAsync(
                             WorkflowTrigger.ContactCreated,
-                            existingContact // Pass the new contact object
+                            existingContact 
                         );
                     }
                     catch (Exception ex)
                     {
-                        // Log the error, but don't stop the user's action
                         _logger.LogError(ex, "Workflow failed for ContactCreated: {ContactId}", existingContact.Id);
                     }
 
@@ -160,7 +153,6 @@ namespace SCRM_dev.Services
 
             }
 
-            // Map ContactDto to Contact entity
             var contact = new Contact
             {
                 FirstName = contactDto.FirstName,
@@ -169,16 +161,16 @@ namespace SCRM_dev.Services
                 Number = contactDto.Number,
                 JobTitle = contactDto.JobTitle,
                 LeadStatusId = contactDto.LeadStatusId ?? 1,
-                LifeCycleStageId = contactDto.LifeCycleStageId,
+                LifeCycleStageId = contactDto.LifeCycleStageId ?? 1,
                 OrganizationId = user?.OrganizationId ?? 0,
                 OwnerId = contactDto.OwnerId,
             };
             await unitOfWork.Contacts.AddAsync(contact);
-            await unitOfWork.SaveChangesAsync(); // <-- First save to get the new contact.Id
+            await unitOfWork.SaveChangesAsync(); 
 
-            // --- 4. AUDIT LOGIC FOR NEW CONTACT ---
             try
             {
+                #region Audit Code
                 var auditOwnerId = contact.OwnerId;
                 await _auditService.LogChangeAsync(new AuditLogDto
                 {
@@ -244,24 +236,22 @@ namespace SCRM_dev.Services
                     NewValue = contact.LifeCycleStageId.ToString()
                 });
 
-                // Save the audit logs
+                #endregion 
                 await unitOfWork.SaveChangesAsync();
                 try
                 {
                     await _workflowService.RunTriggersAsync(
                         WorkflowTrigger.ContactCreated,
-                        contact // Pass the new contact object
+                        contact 
                     );
                 }
                 catch (Exception ex)
                 {
-                    // Log the error, but don't stop the user's action
                     _logger.LogError(ex, "Workflow failed for ContactCreated: {ContactId}", contact.Id);
                 }
             }
             catch (Exception ex)
             {
-                // Log the error, but the contact was already created.
                 _logger.LogError(ex, "Contact {ContactId} was created, but failed to write audit logs.", contact.Id);
             }
 
@@ -286,7 +276,6 @@ namespace SCRM_dev.Services
                 predicate = c => c.OwnerId == userId && c.OrganizationId == user.OrganizationId && (!c.IsDeleted ?? false);
             }
 
-            // Eager load LeadStatus to avoid N+1 queries
             var contacts = await unitOfWork.Contacts.GetAllAsync(predicate, asNoTracking: true, c => c.LeadStatus, c => c.Owner);
 
             var contactResponseViewModels = contacts.Select(contact => new ContactResponseViewModel
@@ -311,16 +300,30 @@ namespace SCRM_dev.Services
                 return new List<ContactResponseViewModel>();
 
             Expression<Func<Contact, bool>> predicate;
-            if (user.RoleId == 2 || user.RoleId == 3)
+            if(companyId == null)
             {
-                predicate = c => c.OrganizationId == user.OrganizationId && (!c.IsDeleted ?? false) && c.CompanyId == companyId;
+                if (user.RoleId == 2 || user.RoleId == 3)
+                {
+                    predicate = c => c.OrganizationId == user.OrganizationId && (!c.IsDeleted ?? false) ;
+                }
+                else
+                {
+                    predicate = c => c.OwnerId == userId && c.OrganizationId == user.OrganizationId && (!c.IsDeleted ?? false) ;
+                }
             }
             else
             {
-                predicate = c => c.OwnerId == userId && c.OrganizationId == user.OrganizationId && (!c.IsDeleted ?? false) && c.CompanyId == companyId;
+                if (user.RoleId == 2 || user.RoleId == 3)
+                {
+                    predicate = c => c.OrganizationId == user.OrganizationId && (!c.IsDeleted ?? false) && c.CompanyId == companyId;
+                }
+                else
+                {
+                    predicate = c => c.OwnerId == userId && c.OrganizationId == user.OrganizationId && (!c.IsDeleted ?? false) && c.CompanyId == companyId;
+                }
             }
+            
 
-            // Eager load LeadStatus to avoid N+1 queries
             var contacts = await unitOfWork.Contacts.GetAllAsync(predicate, asNoTracking: true, c => c.LeadStatus, c => c.Owner);
 
             var contactResponseViewModels = contacts.Select(contact => new ContactResponseViewModel
@@ -355,10 +358,8 @@ namespace SCRM_dev.Services
 
             foreach (var contact in contacts)
             {
-                // Only log if the value is actually changing
                 if (contact.IsDeleted == false)
                 {
-                    // Log the change
                     await _auditService.LogChangeAsync(new AuditLogDto
                     {
                         OwnerId = ownerId,
@@ -369,13 +370,11 @@ namespace SCRM_dev.Services
                         NewValue = "true"
                     });
 
-                    // Apply the change
                     contact.IsDeleted = true;
                     unitOfWork.Contacts.Update(contact);
                 }
             }
 
-            // Save all updates and all audit logs in one transaction
             await unitOfWork.SaveChangesAsync();
             return true;
         }
@@ -548,27 +547,22 @@ namespace SCRM_dev.Services
             if (contact == null)
                 return (false, "Contact not found.");
 
-            // Optional: Check if company exists
             var companyExists = await unitOfWork.Company.AnyAsync(c => c.Id == companyId);
             if (!companyExists)
                 return (false, "Company not found.");
 
-            // Check if the contact is already associated
             if (contact.CompanyId != null)
             {
                 if (contact.CompanyId == companyId)
                 {
-                    // This is a success, just no work was needed.
                     return (true, "Contact is already associated with this company.");
                 }
                 else
                 {
-                    // This is the specific error you wanted to propagate.
                     return (false, "Contact already belongs to another company.");
                 }
             }
 
-            // --- AUDIT LOGIC ---
             await _auditService.LogChangeAsync(new AuditLogDto
             {
                 OwnerId = ownerId,
@@ -578,15 +572,13 @@ namespace SCRM_dev.Services
                 OldValue = "[NULL]",
                 NewValue = companyId.ToString()
             });
-            // --- END AUDIT LOGIC ---
-
-            // If we are here, contact.CompanyId is null, so we can associate.
+            
             contact.CompanyId = companyId;
             unitOfWork.Contacts.Update(contact);
 
             try
             {
-                await unitOfWork.SaveChangesAsync(); // Saves contact AND audit log
+                await unitOfWork.SaveChangesAsync(); 
                 return (true, "Contact associated successfully.");
             }
             catch (Exception ex)
@@ -599,10 +591,10 @@ namespace SCRM_dev.Services
         
         public async Task<(bool Success, string Message)> AssociateContactToDealAsync(int contactId, int dealId, Guid ownerId)
         {
-            // 1. Fetch the contact and include its existing deals
+            
             var contact = await unitOfWork.Contacts.FirstOrDefaultAsync(
                 c => c.Id == contactId,
-                "Deals" // Eager load the Deals collection
+                "Deals" 
             );
 
             if (contact == null)
@@ -611,7 +603,7 @@ namespace SCRM_dev.Services
                 return (false, "Contact not found.");
             }
 
-            // 2. Fetch the deal
+            
             var deal = await unitOfWork.Deals.FirstOrDefaultAsync(d => d.Id == dealId);
             if (deal == null)
             {
@@ -619,14 +611,14 @@ namespace SCRM_dev.Services
                 return (false, "Deal not found.");
             }
 
-            // 3. Check if the association already exists
+            
             if (contact.Deals.Any(d => d.Id == dealId))
             {
                 Debug.WriteLine($"AssociateContactToDeal: Contact {contactId} is already associated with Deal {dealId}.");
                 return (true, "Contact is already associated with this deal.");
             }
 
-            // --- AUDIT LOGIC ---
+            
             await _auditService.LogChangeAsync(new AuditLogDto
             {
                 OwnerId = ownerId,
@@ -636,16 +628,14 @@ namespace SCRM_dev.Services
                 OldValue = "[N/A]",
                 NewValue = $"Associated with Deal ID: {deal.Id} ({deal.Name})"
             });
-            // --- END AUDIT LOGIC ---
-
-            // 4. Create the association
+            
             contact.Deals.Add(deal);
             unitOfWork.Contacts.Update(contact);
 
-            // 5. Save
+            
             try
             {
-                await unitOfWork.SaveChangesAsync(); // Saves contact AND audit log
+                await unitOfWork.SaveChangesAsync(); 
                 return (true, "Contact associated successfully.");
             }
             catch (Exception ex)
@@ -655,16 +645,10 @@ namespace SCRM_dev.Services
             }
         }
 
-        /// <summary>
-        /// Disassociates a Contact from a Deal.
-        /// </summary>
-        /// <param name="contactId">The ID of the contact.</param>
-        /// <param name="dealId">The ID of the deal to remove.</param>
-        /// <param name="ownerId">The ID of the user performing the action (for auditing).</param>
-        /// <returns>A tuple indicating success and a message.</returns>
+        
         public async Task<(bool Success, string Message)> DisassociateContactFromDealAsync(int contactId, int dealId, Guid ownerId)
         {
-            // 1. Fetch the contact and include its existing deals
+            
             var contact = await unitOfWork.Contacts.FirstOrDefaultAsync(
                 c => c.Id == contactId,
                 "Deals" // Eager load the Deals collection

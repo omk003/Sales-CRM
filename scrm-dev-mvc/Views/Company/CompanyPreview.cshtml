@@ -190,7 +190,7 @@
         <section style="flex:1; background:var(--bg-secondary);border-radius:var(--border-radius-lg);box-shadow:var(--shadow-sm);padding:var(--space-lg);margin-bottom:var(--space-lg);">
             <div style="display:flex;justify-content:space-between;align-items:center;">
                 <h3 style="font-size:var(--fs-lg);color:var(--color-accent1);margin-bottom:var(--space-md);">Deals</h3>
-                <button type="button" class="btn btn-custom" style="font-size:var(--fs-sm);padding:var(--space-xs) var(--space-sm);" onclick="openDealModal()">+ Add</button>
+                @* <button type="button" class="btn btn-custom" style="font-size:var(--fs-sm);padding:var(--space-xs) var(--space-sm);" onclick="openDealModal()">+ Add</button> *@
             </div>
             @if (Model.Deals != null && Model.Deals.Any())
             {
@@ -203,7 +203,7 @@
                                 @deal.Name
                             </a>
                             <div style="color:var(--text-secondary); font-size: 0.9rem; padding-left: 28px;">@deal.Value?.ToString("C0")</div>
-                            <div style="color:var(--text-secondary); font-size: 0.9rem; padding-left: 28px;">Stage: @deal.Stage?.Name</div>
+                            @* <div style="color:var(--text-secondary); font-size: 0.9rem; padding-left: 28px;">Stage: @deal.Stage?.Name</div> *@
                         </li>
                     }
                 </ul>

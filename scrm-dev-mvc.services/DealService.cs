@@ -17,17 +17,17 @@ namespace scrm_dev_mvc.services
         private readonly IUnitOfWork _unitOfWork;
         private readonly ILogger<DealService> _logger;
         private readonly IUserService _userService;
+        private readonly ICurrentUserService _currentUserService;
 
-        public DealService(IUnitOfWork unitOfWork, ILogger<DealService> logger, IUserService userService)
+        public DealService(IUnitOfWork unitOfWork, ILogger<DealService> logger, IUserService userService, ICurrentUserService currentUserService)
         {
             _unitOfWork = unitOfWork;
             _logger = logger;
             _userService = userService;
+            _currentUserService = currentUserService;
         }
 
-        // =======================
-        // 1️⃣ KANBAN BOARD
-        // =======================
+
         public async Task<KanbanBoardViewModel> GetKanbanBoardAsync(Guid ownerId)
         {
             try
@@ -63,8 +63,8 @@ namespace scrm_dev_mvc.services
                      d => d.Stage, d => d.Owner, d => d.Company
                     );
                 }
-                
-                   
+
+
 
                 var dealsByStage = stages.ToDictionary(
                     stage => stage.Name,
@@ -96,11 +96,21 @@ namespace scrm_dev_mvc.services
             }
         }
 
-        // =======================
-        // 2️⃣ CREATE DEAL
-        // =======================
+
         public async Task<DealFormViewModel> GetCreateFormAsync(int? companyId)
         {
+            var userId = _currentUserService.GetUserId();
+            var userFromDb = await _userService.GetUserByIdAsync(userId);
+            List<Company> CompaniesFromDb;
+
+            if (userFromDb.RoleId == 2)
+            {
+                CompaniesFromDb = await _unitOfWork.Company.GetAllAsync(c => c.IsDeleted == false && c.OrganizationId == userFromDb.OrganizationId, asNoTracking: true);
+            }
+            else
+            {
+                CompaniesFromDb = await _unitOfWork.Company.GetAllAsync(c => c.IsDeleted == false && c.OrganizationId == userFromDb.OrganizationId && c.UserId == userId, asNoTracking: true);
+            }
             var vm = new DealFormViewModel
             {
                 Deal = new Deal
@@ -108,9 +118,9 @@ namespace scrm_dev_mvc.services
                     CompanyId = companyId,
                     CloseDate = DateTime.UtcNow.AddMonths(1)
                 },
-                Users = await _unitOfWork.Users.GetAllAsync(u => true, asNoTracking: true),
+                Users = await _unitOfWork.Users.GetAllAsync(u => u.IsDeleted == false && u.OrganizationId == userFromDb.OrganizationId, asNoTracking: true),
                 Stages = await _unitOfWork.Stages.GetAllAsync(s => true, asNoTracking: true),
-                Companies = await _unitOfWork.Company.GetAllAsync(c => c.IsDeleted == false, asNoTracking: true)
+                Companies = CompaniesFromDb
             };
 
             return vm;
@@ -118,11 +128,14 @@ namespace scrm_dev_mvc.services
 
         public async Task<bool> InsertDealAsync(DealFormViewModel vm, Guid userId)
         {
+
             try
             {
+                var user = await _userService.GetUserByIdAsync(userId);
                 vm.Deal.OwnerId = vm.Deal.OwnerId ?? userId;
                 vm.Deal.CreatedAt = DateTime.UtcNow;
                 vm.Deal.IsDeleted = false;
+                vm.Deal.OrganizationId = user.OrganizationId;
 
                 await _unitOfWork.Deals.AddAsync(vm.Deal);
                 await _unitOfWork.SaveChangesAsync();
@@ -137,9 +150,7 @@ namespace scrm_dev_mvc.services
             }
         }
 
-        // =======================
-        // 3️⃣ UPDATE DEAL
-        // =======================
+
         public async Task<DealFormViewModel?> GetUpdateFormAsync(int id)
         {
             var deal = await _unitOfWork.Deals.FirstOrDefaultAsync(u => u.Id == id);
@@ -155,22 +166,46 @@ namespace scrm_dev_mvc.services
         {
             try
             {
-                var dealFromDb = await _unitOfWork.Deals.FirstOrDefaultAsync(u => u.Id == vm.Deal.Id);
+                var dealFromDb = await _unitOfWork.Deals.FirstOrDefaultAsync(u => u.Id == vm.Deal.Id, "Contacts");
                 if (dealFromDb == null || dealFromDb.IsDeleted == true)
                     return false;
+                List<Contact> contactListDeal = dealFromDb.Contacts.ToList();
+                if(contactListDeal.Count == 0)
+                {
+                    dealFromDb.Name = vm.Deal.Name;
+                    dealFromDb.Value = vm.Deal.Value;
+                    dealFromDb.StageId = vm.Deal.StageId;
+                    dealFromDb.CompanyId = vm.Deal.CompanyId;
+                    dealFromDb.OwnerId = vm.Deal.OwnerId;
+                    dealFromDb.CloseDate = vm.Deal.CloseDate;
 
-                dealFromDb.Name = vm.Deal.Name;
-                dealFromDb.Value = vm.Deal.Value;
-                dealFromDb.StageId = vm.Deal.StageId;
-                dealFromDb.CompanyId = vm.Deal.CompanyId;
-                dealFromDb.OwnerId = vm.Deal.OwnerId;
-                dealFromDb.CloseDate = vm.Deal.CloseDate;
+                    _unitOfWork.Deals.Update(dealFromDb);
+                    await _unitOfWork.SaveChangesAsync();
 
-                _unitOfWork.Deals.Update(dealFromDb);
-                await _unitOfWork.SaveChangesAsync();
+                    _logger.LogInformation("Deal updated. ID: {DealId}", vm.Deal.Id);
+                    return true;
+                }
+                else
+                {
+                    var companyIdFromContact = contactListDeal[0].CompanyId;
+                    if(companyIdFromContact != vm.Deal.CompanyId)
+                    {
+                        return false;
+                    }
+                    dealFromDb.Name = vm.Deal.Name;
+                    dealFromDb.Value = vm.Deal.Value;
+                    dealFromDb.StageId = vm.Deal.StageId;
+                    dealFromDb.CompanyId = vm.Deal.CompanyId;
+                    dealFromDb.OwnerId = vm.Deal.OwnerId;
+                    dealFromDb.CloseDate = vm.Deal.CloseDate;
 
-                _logger.LogInformation("Deal updated. ID: {DealId}", vm.Deal.Id);
-                return true;
+                    _unitOfWork.Deals.Update(dealFromDb);
+                    await _unitOfWork.SaveChangesAsync();
+
+                    _logger.LogInformation("Deal updated. ID: {DealId}", vm.Deal.Id);
+                    return true;
+                }
+                
             }
             catch (Exception ex)
             {
@@ -179,9 +214,7 @@ namespace scrm_dev_mvc.services
             }
         }
 
-        // =======================
-        // 4️⃣ DETAILS
-        // =======================
+
         public async Task<DealPreviewViewModel?> GetDealDetailsAsync(int id)
         {
             var deal = await _unitOfWork.Deals.FirstOrDefaultAsync(
@@ -208,9 +241,7 @@ namespace scrm_dev_mvc.services
             return vm;
         }
 
-        // =======================
-        // 5️⃣ GET ALL DEALS (for DataTable)
-        // =======================
+
         public async Task<IEnumerable<object>> GetAllDealsForUserAsync(Guid userId)
         {
             var user = await _unitOfWork.Users.FirstOrDefaultAsync(u => u.Id == userId);
@@ -230,9 +261,7 @@ namespace scrm_dev_mvc.services
             return deals.Select(d => new { d.Id, d.Name, d.Value });
         }
 
-        // =======================
-        // 6️⃣ UPDATE DEAL STAGE (Your Original Method)
-        // =======================
+
         public async Task<bool> UpdateDealStageAsync(int dealId, string newStageName)
         {
             try
@@ -276,14 +305,77 @@ namespace scrm_dev_mvc.services
             }
         }
 
-        // =======================
-        // 🔧 HELPER
-        // =======================
+
         private async System.Threading.Tasks.Task RepopulateDealFormAsync(DealFormViewModel vm)
         {
-            vm.Users = await _unitOfWork.Users.GetAllAsync(u => true, asNoTracking: true);
+            var userId = _currentUserService.GetUserId();
+            var userFromDb = await _userService.GetUserByIdAsync(userId);
+
+            vm.Users = await _unitOfWork.Users.GetAllAsync(u => u.IsDeleted == false && u.OrganizationId == userFromDb.OrganizationId, asNoTracking: true);
             vm.Stages = await _unitOfWork.Stages.GetAllAsync(s => true, asNoTracking: true);
-            vm.Companies = await _unitOfWork.Company.GetAllAsync(c => c.IsDeleted == false, asNoTracking: true);
+            vm.Companies = await _unitOfWork.Company.GetAllAsync(c => c.IsDeleted == false && c.OrganizationId == userFromDb.OrganizationId, asNoTracking: true);
+        }
+
+
+        public async Task<bool> DeleteDealAsync(int dealId)
+        {
+            try
+            {
+                var deal = await _unitOfWork.Deals.FirstOrDefaultAsync(d => d.Id == dealId);
+                if (deal == null || deal.IsDeleted == true)
+                {
+                    _logger.LogWarning("DeleteDealAsync: Deal {DealId} not found.", dealId);
+                    return false;
+                }
+                deal.IsDeleted = true;
+                _unitOfWork.Deals.Update(deal);
+                await _unitOfWork.SaveChangesAsync();
+                _logger.LogInformation("Deleted Deal {DealId}", dealId);
+                return true;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error deleting deal ID {DealId}", dealId);
+                return false;
+            }
+        }
+
+        public async Task<bool> AssociateCompanyAsync(int dealId, int companyId)
+        {
+            var dealFromDb = await _unitOfWork.Deals.FirstOrDefaultAsync(d => d.Id == dealId, "Contacts");
+            if (dealFromDb == null || dealFromDb.IsDeleted == true)
+            {
+                _logger.LogWarning("AssociateCompanyAsync: Deal {DealId} not found.", dealId);
+                return false;
+            }
+            List<Contact> contacts = dealFromDb.Contacts.ToList();
+            if(contacts.Count != 0)
+            {
+                var companyIdFromContact = contacts[0].CompanyId;
+                if(companyIdFromContact != companyId)
+                {
+                    return false;
+                }
+                else
+                {
+                    dealFromDb.CompanyId = companyId;
+                }
+            }
+            else
+            {
+                dealFromDb.CompanyId = companyId;
+            }
+            await _unitOfWork.SaveChangesAsync();
+            return true;
+        }
+
+        public async Task<bool> DisassociateCompanyAsync(int dealId)
+        {
+            var dealFromDb = await _unitOfWork.Deals.FirstOrDefaultAsync(d => d.Id == dealId);
+
+            dealFromDb.CompanyId = null;
+            await _unitOfWork.SaveChangesAsync();
+            return true;
         }
     }
 }

@@ -13,5 +13,10 @@ namespace scrm_dev_mvc.services.Interfaces
         Task<DealPreviewViewModel?> GetDealDetailsAsync(int id);
         Task<IEnumerable<object>> GetAllDealsForUserAsync(Guid userId);
         Task<bool> UpdateDealStageAsync(int dealId, string newStageName);
+
+        Task<bool> DeleteDealAsync(int dealId);
+        Task<bool> AssociateCompanyAsync(int dealId, int companyId);
+
+        Task<bool> DisassociateCompanyAsync(int dealId);
     }
 }

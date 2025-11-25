@@ -8,7 +8,6 @@ using scrm_dev_mvc.DataAccess.Data;
 using scrm_dev_mvc.services;
 using scrm_dev_mvc.services.Interfaces;
 using scrm_dev_mvc.Services;
-
 using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -48,7 +47,7 @@ builder.Services.AddScoped<ITaskService, TaskService>();
 
 builder.Services.AddScoped<IWorkflowService, WorkflowService>();
 builder.Services.AddScoped<IWorkspaceService, WorkspaceService>(); 
-
+ 
 
 builder.Services.AddHostedService<GmailPollingHostedService>();
 

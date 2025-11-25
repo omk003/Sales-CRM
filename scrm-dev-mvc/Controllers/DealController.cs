@@ -112,7 +112,9 @@ namespace scrm_dev_mvc.Controllers
                 if (!updated)
                 {
                     _logger.LogWarning("Deal update failed for DealId {DealId}", vm.Deal.Id);
-                    return NotFound();
+                    ModelState.AddModelError(string.Empty, "Unexpected error occurred while updating the deal. check if contacts company and updated company is same");
+                    return View("Update", vm);
+
                 }
 
                 _logger.LogInformation("Deal updated successfully. ID: {DealId}", vm.Deal.Id);
@@ -173,6 +175,92 @@ namespace scrm_dev_mvc.Controllers
                 return StatusCode(500, new { success = false, message = "Unexpected error occurred." });
             }
         }
+
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Delete(int id)
+        {
+            if (id <= 0)
+            {
+                return BadRequest(new { success = false, message = "Invalid Deal ID." });
+            }
+
+            try
+            {
+                bool success = await _dealService.DeleteDealAsync(id);
+
+                if (success)
+                {
+                    _logger.LogInformation("Deal {DealId} deleted successfully.", id);
+                    return Json(new { success = true, message = "Deal deleted successfully." });
+                }
+
+                _logger.LogWarning("Deal deletion failed for DealId {DealId}.", id);
+                return StatusCode(500, new { success = false, message = "Failed to delete the deal." });
+            }
+            catch (KeyNotFoundException ex)
+            {
+                _logger.LogWarning(ex, "Deal not found for deletion: {DealId}", id);
+                return NotFound(new { success = false, message = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Unexpected error deleting deal {DealId}", id);
+                return StatusCode(500, new { success = false, message = "An error occurred. The deal might have related records that prevent deletion." });
+            }
+        }
+
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> AssociateCompanyToDeal(int dealId, int companyId)
+        {
+            if (dealId <= 0 || companyId <= 0)
+            {
+                return BadRequest(new { success = false, message = "Invalid data." });
+            }
+            try
+            {
+                bool success = await _dealService.AssociateCompanyAsync(dealId, companyId);
+                if (success)
+                {
+                    return Json(new { success = true, message = "Company associated." });
+                }
+                return StatusCode(500, new { success = false, message = "Failed to associate company." });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error associating company {CompanyId} to deal {DealId}", companyId, dealId);
+                return StatusCode(500, new { success = false, message = ex.Message });
+            }
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> DisassociateCompanyFromDeal(int dealId)
+        {
+            if (dealId <= 0)
+            {
+                return BadRequest(new { success = false, message = "Invalid Deal ID." });
+            }
+            try
+            {
+                bool success = await _dealService.DisassociateCompanyAsync(dealId);
+                if (success)
+                {
+                    return Json(new { success = true, message = "Company disassociated." });
+                }
+                return StatusCode(500, new { success = false, message = "Failed to disassociate company." });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error disassociating company from deal {DealId}", dealId);
+                return StatusCode(500, new { success = false, message = ex.Message });
+            }
+        }
+
+
     }
 
     public class UpdateDealStageRequest

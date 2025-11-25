@@ -127,7 +127,11 @@
                         </div>
                         <div>
                             <label asp-for="Task_TaskType" class="form-label"></label>
-                            <input asp-for="Task_TaskType" class="form-input" />
+                            <select asp-for="Task_TaskType" class="form-input">
+                                <option value="">-- Select Task Type --</option>
+                                <option value="Call">Call</option>
+                                <option value="Email">Email</option>
+                            </select>
                         </div>
                         <div>
                             <label asp-for="Task_PriorityId" class="form-label"></label>
@@ -136,6 +140,25 @@
                         <div>
                             <label asp-for="Task_StatusId" class="form-label"></label>
                             <select asp-for="Task_StatusId" asp-items="Model.AvailableTaskStatuses" class="form-input"></select>
+                        </div>
+                        <div class="mt-6">
+                            <label class="form-label">Run this action ONLY if...</label>
+                            <div class="flex gap-2">
+                                <div>
+                                    <label class="form-label">Task Type is</label>
+                                    <select asp-for="Task_ConditionTaskType" class="form-input">
+                                        <option value="">-- Select Task Type --</option>
+                                        <option value="Call">Call</option>
+                                        <option value="Email">Email</option>
+                                        _                
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="form-label">Lead Status is</label>
+                                    <select asp-for="Task_ConditionLeadStatus" asp-items="Model.AvailableLeadStatuses" class="form-input"></select>
+                                </div>
+                            </div>
+                            <span class="text-gray-500 text-xs">Leave blank for no condition (will always run).</span>
                         </div>
                     </div>
                 </div>

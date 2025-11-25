@@ -44,6 +44,21 @@
     </div>
 </div>
 
+<div id="companyModal" class="modal" tabindex="-1" style="display:none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.3); z-index: 9999; align-items: center; justify-content: center;">
+    <div class="modal-dialog" style="max-width: 400px; margin: 4rem auto;">
+        <div class="modal-content" style="background:var(--bg-primary);border-radius:var(--border-radius-lg);padding:var(--space-lg);">
+            <div class="modal-header" style="display: flex; justify-content: space-between; align-items: center;">
+                <h5 class="modal-title">Select a Company to Associate</h5>
+                <button type="button" class="btn-close" onclick="closeCompanyModal()"></button>
+            </div>
+            <div class="modal-body" style="max-height: 350px; overflow-y: auto;">
+                <ul id="companyList" style="list-style:none;padding:0;margin:0;">
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
 <div id="taskModalContainer">
 </div>
 <div id="taskUpdateModalContainer">
@@ -81,6 +96,12 @@
                        style="color: var(--color-primary);font-size:var(--fs);padding:var(--space-xs) var(--space-sm);"
                        onclick="openCreateTaskModal(null, @Model.Deal.Id)">
                         <i class="fas fa-tasks"></i>
+                    </a>
+                    <a href="javascript:void(0);"
+                       title="Delete Deal"
+                       style="color: #dc3545; /* Danger Red */ font-size:var(--fs);padding:var(--space-xs) var(--space-sm);"
+                       onclick="deleteDeal(@Model.Deal.Id)">
+                        <i class="fas fa-trash-alt"></i>
                     </a>
                 </div>
             </section>
@@ -202,12 +223,33 @@
             <section style="background:var(--bg-secondary);border-radius:var(--border-radius-lg);box-shadow:var(--shadow-sm);padding:var(--space-lg);margin-bottom:var(--space-lg);">
                 <div style="display:flex;justify-content:space-between;align-items:center;">
                     <h3 style="font-size:var(--fs-lg);color:var(--color-accent1);margin-bottom:var(--space-md);">Company</h3>
+                    @if (Model.Deal.Company == null)
+                    {
+                        <div style="display:flex; gap: 5px;">
+                            <button class="btn btn-custom" type="button"
+                                    style="font-size:var(--fs-sm);padding:var(--space-xs) var(--space-sm);"
+                                    onclick="openCompanyModal()">
+                                + Add
+                            </button>
+                        </div>
+                    }
                 </div>
                 @if (Model.Deal.Company != null)
                 {
-                    <div style="background:var(--bg-primary);border-radius:var(--border-radius-sm);padding:var(--space-md);box-shadow:var(--shadow-sm);margin-bottom:var(--space-sm);">
+                    @* <div style="background:var(--bg-primary);border-radius:var(--border-radius-sm);padding:var(--space-md);box-shadow:var(--shadow-sm);margin-bottom:var(--space-sm);">
                         <div style="font-weight:var(--fw-bold);margin-bottom:var(--space-xs);">@Model.Deal.Company.Name</div>
                         <span style="color:var(--text-secondary);font-size:var(--fs-sm);">Domain: @Model.Deal.Company.Domain</span>
+                    </div> *@
+                    <div style="background:var(--bg-primary);border-radius:var(--border-radius-sm);padding:var(--space-md);box-shadow:var(--shadow-sm);margin-bottom:var(--space-sm); display:flex; justify-content:space-between; align-items:center;">
+                        <div>
+                            <div style="font-weight:var(--fw-bold);margin-bottom:var(--space-xs);">@Model.Deal.Company.Name</div>
+                            <span style="color:var(--text-secondary);font-size:var(--fs-sm);">Domain: @Model.Deal.Company.Domain</span>
+                        </div>
+                        <button class="btn-hover-shadow"
+                                title="Disassociate Company"
+                                onclick="removeCompanyFromDeal(@Model.Deal.Id)">
+                            <i class="fas fa-trash-alt"></i>
+                        </button>
                     </div>
                 }
                 else
@@ -423,10 +465,10 @@
     });
 
     // 2. Open Create Task Modal
-    function openCreateTaskModal(contactId, dealId) { // *** FIXED: Removed companyId ***
+    function openCreateTaskModal(contactId, dealId) { 
         var url = '@Url.Action("Create", "Task")' +
                     '?contactId=' + (contactId || '') +
-                    '&dealId=' + (dealId || '');     // *** FIXED: Removed companyId ***
+                    '&dealId=' + (dealId || '');     
 
         $.get(url, function (data) {
             $('#taskModalContainer').html(data);
@@ -498,6 +540,119 @@
     // 6. Close Update Task Modal
     function closeUpdateTaskModal() {
         $('#taskUpdateModalContainer').html('');
+    }
+
+
+
+    function deleteDeal(dealId) {
+        if (!confirm("Are you sure you want to delete this deal? This action cannot be undone.")) {
+            return;
+        }
+
+        var token = $('input[name="__RequestVerificationToken"]').val();
+
+        $.ajax({
+            url: '@Url.Action("Delete", "Deal")', // This controller action needs to be added
+            type: 'POST',
+            data: {
+                id: dealId
+            },
+            headers: {
+                "RequestVerificationToken": token
+            },
+            success: function (response) {
+                alert(response.message || "Deal deleted successfully!");
+                // Redirect to the main deals board
+                window.location.href = '@Url.Action("KanbanBoard", "Deal")';
+            },
+            error: function (xhr) {
+                var msg = xhr.responseJSON?.message || xhr.responseText || "Failed to delete the deal.";
+                alert("Error: " + msg);
+            }
+        });
+    }
+
+
+
+    function openCompanyModal() {
+        // NOTE: This assumes you have a 'CompanyController' with a 'GetAllCompanies' action
+        // that returns JSON like { data: [ { id: 1, name: "Acme Inc.", domain: "acme.com" } ] }
+        var url = '@Url.Action("GetAll", "Company")';
+
+        $.get(url, function (response) {
+            var list = $('#companyList');
+            list.empty();
+            if (response.data && response.data.length > 0) {
+                response.data.forEach(function (company) {
+                    list.append(
+                        `<li style="padding:8px; border-bottom:1px solid var(--border-color); cursor:pointer;" onclick="selectCompany(${company.id})">
+                            <b>${company.name ?? 'Unnamed Company'}</b>
+                            <span style="color:var(--text-secondary); font-size:var(--fs-sm); display:block;">${company.domain ?? ''}</span>
+                        </li>`
+                    );
+                });
+            } else {
+                list.append('<li>No companies found.</li>');
+            }
+            $('#companyModal').css('display', 'flex');
+        }).fail(function() {
+            alert("Error: Could not load company list. Ensure 'CompanyController' and 'GetAllCompanies' action exist.");
+        });
+    }
+
+    function closeCompanyModal() {
+        $('#companyModal').hide();
+    }
+
+    function selectCompany(companyId) {
+        var dealId = @Model.Deal.Id;
+        var token = $('input[name="__RequestVerificationToken"]').val();
+
+        $.ajax({
+            url: '@Url.Action("AssociateCompanyToDeal", "Deal")', // Action to be added to DealController
+            type: 'POST',
+            data: {
+                companyId: companyId,
+                dealId: dealId
+            },
+            headers: {
+                "RequestVerificationToken": token
+            },
+            success: function () {
+                closeCompanyModal();
+                location.reload();
+            },
+            error: function(xhr) {
+                alert("Failed to associate company: " + (xhr.responseJSON?.message || xhr.responseText));
+            }
+        });
+    }
+
+    function removeCompanyFromDeal(dealId) {
+        if (!confirm("Are you sure you want to disassociate this company from the deal?")) {
+            return;
+        }
+
+        var token = $('input[name="__RequestVerificationToken"]').val();
+
+        $.ajax({
+            url: '@Url.Action("DisassociateCompanyFromDeal", "Deal")', // Action to be added to DealController
+            type: 'POST',
+            data: {
+                dealId: dealId
+            },
+            headers: {
+                "RequestVerificationToken": token
+            },
+            success: function (response) {
+                alert(response.message || "Company removed successfully!");
+                location.reload();
+            },
+            error: function (xhr) {
+                var msg = xhr.responseJSON?.message || xhr.responseText || "Failed to remove company.";
+                alert("Error: " + msg);
+            }
+        });
     }
 
 </script>

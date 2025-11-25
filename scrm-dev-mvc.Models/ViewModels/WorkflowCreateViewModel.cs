@@ -13,7 +13,6 @@ namespace scrm_dev_mvc.Models.ViewModels
         [Display(Name = "When this happens... (Trigger)")]
         public WorkflowTrigger Trigger { get; set; }
 
-        // --- Action Checkboxes ---
         [Display(Name = "Change Contact Lead Status")]
         public bool Action_ChangeLeadStatus { get; set; }
 
@@ -23,15 +22,12 @@ namespace scrm_dev_mvc.Models.ViewModels
         [Display(Name = "Create a new Task")]
         public bool Action_CreateTask { get; set; }
 
-        // --- Parameters for "Change Lead Status" ---
         [Display(Name = "Set Lead Status to")]
         public LeadStatusEnum ChangeLeadStatus_NewStatusId { get; set; }
 
-        // --- Parameters for "Change LifeCycle Stage" ---
         [Display(Name = "Set LifeCycle Stage to")]
         public int ChangeLifeCycleStage_NewStageId { get; set; }
 
-        // --- Parameters for "Create Task" ---
         [Display(Name = "Task Title")]
         public string Task_Title { get; set; } = "Follow-up";
         [Display(Name = "Days Until Due")]
@@ -43,9 +39,17 @@ namespace scrm_dev_mvc.Models.ViewModels
         [Display(Name = "Status")]
         public int Task_StatusId { get; set; }
 
+        public string? ChangeLeadStatus_ConditionKey { get; set; }
+        public string? ChangeLeadStatus_ConditionValue { get; set; }
+        public string? ChangeLifeCycleStage_ConditionKey { get; set; }
+        public string? ChangeLifeCycleStage_ConditionValue { get; set; }
+        public string? Task_ConditionKey { get; set; }
+        public string? Task_ConditionValue { get; set; }
 
-        // --- Dropdown Lists ---
+        public string Task_ConditionTaskType { get; set; }  // e.g. "email", "call"
+        public int? Task_ConditionLeadStatus { get; set; }
         
+
         public IEnumerable<SelectListItem>? AvailableTriggers { get; set; }
         public IEnumerable<SelectListItem>? AvailableLeadStatuses { get; set; }
         public IEnumerable<SelectListItem>? AvailableLifeCycleStages { get; set; }

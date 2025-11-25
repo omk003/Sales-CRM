@@ -88,7 +88,6 @@ namespace scrm_dev_mvc.Services
                 _logger.LogError(ex, "Error fetching user tasks for workspace.");
             }
 
-            // --- 2. Get "My Activity" Data (No changes here) ---
             try
             {
                 var myActivities = await _unitOfWork.Activities.GetAllAsync(

@@ -10,7 +10,6 @@ namespace scrm_dev_mvc.Models.Enums
         [Display(Name = "Send an Email")]
         SendEmail = 2,
 
-        // --- REPLACED 'UpdateContactField' ---
         [Display(Name = "Change Contact Lead Status")]
         ChangeLeadStatus = 3,
 

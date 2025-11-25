@@ -12,7 +12,7 @@ using System.Security.Claims;
 namespace scrm_dev_mvc.Controllers
 {
     [Authorize]
-    public class OrganizationController(IOrganizationService organizationService,IConfiguration configuration, IInvitationService invitationService, IGmailService gmailService, ICurrentUserService currentUserService) : Controller
+    public class OrganizationController(IOrganizationService organizationService,IConfiguration configuration, IInvitationService invitationService, IGmailService gmailService, ICurrentUserService currentUserService,IUserService userService) : Controller
     {
         public IActionResult Index()
         {
@@ -24,7 +24,6 @@ namespace scrm_dev_mvc.Controllers
         {
             var userId = currentUserService.GetUserId();
 
-            // check if he is in organization
             if (!string.IsNullOrEmpty(organizationService.IsInOrganizationById(userId).Result?.Name))
             {
                 //TempData["Error"] = "You are already in an organization.";
@@ -41,16 +40,27 @@ namespace scrm_dev_mvc.Controllers
 
             await organizationService.CreateOrganizationAsync(organization, userId);
 
-            // TODO: FIX
-            if (string.IsNullOrEmpty(organizationService.IsInOrganizationById(userId).Result?.Name))
+            
+            if (!string.IsNullOrEmpty(organizationService.IsInOrganizationById(userId).Result?.Name))
             {
                 var org = organizationService.IsInOrganizationById(userId).Result;
-                var identity = (ClaimsIdentity)User.Identity;
 
-                if (!identity.HasClaim(c => c.Type == "OrganizationName"))
+                var identity = new ClaimsIdentity(
+                    User.Identity.AuthenticationType,
+                    ClaimTypes.Name,
+                    ClaimTypes.Role
+                );
+
+                identity.AddClaims(User.Claims);
+
+                var oldOrgClaim = identity.FindFirst("OrganizationName");
+                if (oldOrgClaim != null)
                 {
-                    identity.AddClaim(new Claim("OrganizationName", org.Name));
+                    identity.RemoveClaim(oldOrgClaim);
                 }
+
+                identity.AddClaim(new Claim("OrganizationName", org.Name));
+
 
                 await HttpContext.SignInAsync(
                     CookieAuthenticationDefaults.AuthenticationScheme,
@@ -96,8 +106,14 @@ namespace scrm_dev_mvc.Controllers
         public async Task<IActionResult> OrganizationView()
         {
             var userId = currentUserService.GetUserId();
+
             if (userId == Guid.Empty) {
                 return Unauthorized();
+            }
+            var user = await  userService.GetUserByIdAsync(userId);
+            if (user.OrganizationId == null)
+            {
+                return NotFound();
             }
             var organizationViewModel = await organizationService.GetOrganizationViewModelByUserId(userId);
             return View(organizationViewModel);

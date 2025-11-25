@@ -86,15 +86,21 @@
     /* ------------------------------------- */
 </style>
 
+@{
+    var isAdmin = (bool)(ViewData["IsAdmin"] ?? false);
+}
 <div class="max-w-7xl mx-auto py-4 space-y-4">
 
     <div class="bg-white p-4 sm:p-6 rounded-lg shadow-sm">
 
         <div class="flex flex-col sm:flex-row justify-between sm:items-center mb-4">
             <h3 class="text-2xl font-bold text-gray-900">Workflows</h3>
-            <a asp-action="Create" class="btn-brand flex items-center font-bold py-2 px-4 rounded-lg shadow-sm text-sm transition duration-150 mt-3 sm:mt-0">
-                <i class="fas fa-plus mr-2"></i> Create New Workflow
-            </a>
+            @if (isAdmin)
+            {
+                <a asp-action="Create" class="btn-brand flex items-center font-bold py-2 px-4 rounded-lg shadow-sm text-sm transition duration-150 mt-3 sm:mt-0">
+                    <i class="fas fa-plus mr-2"></i> Create New Workflow
+                </a>
+            }
         </div>
 
         <div class="space-y-4">
@@ -113,7 +119,8 @@
                             <span class="text-sm font-medium @(workflow.IsActive ? "bg-green-100 text-green-800" : "bg-gray-100 text-gray-800") px-2 py-0.5 rounded-full">
                                 @(workflow.IsActive ? "Active" : "Inactive")
                             </span>
-
+                            @if (isAdmin)
+                            {
                             <form asp-action="ToggleActive" asp-route-id="@workflow.Id" method="post" class="mb-0">
                                 @Html.AntiForgeryToken()
                                 @if (workflow.IsActive)
@@ -139,6 +146,7 @@
                                     <i class="fas fa-trash-alt"></i>
                                 </button>
                             </form>
+                            }
                         </div>
                     </div>
                     <div class="mt-2">

@@ -16,7 +16,7 @@ public partial class Audit
     public string? FieldName { get; set; }
 
     public string? OldValue { get; set; }
-
+     
     public string? NewValue { get; set; }
 
     public DateTime? Timestamp { get; set; }
