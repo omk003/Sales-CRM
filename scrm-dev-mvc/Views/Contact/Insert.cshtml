@@ -194,21 +194,21 @@
 
                 <!-- First Name -->
                 <div class="form-group">
-                    <label asp-for="Contact.FirstName"></label>
+                    <label asp-for="Contact.FirstName">First Name</label>
                     <input asp-for="Contact.FirstName" class="form-control" />
                     <span asp-validation-for="Contact.FirstName" class="text-danger"></span>
                 </div>
 
                 <!-- Last Name -->
                 <div class="form-group">
-                    <label asp-for="Contact.LastName"></label>
+                    <label asp-for="Contact.LastName">Last Name</label>
                     <input asp-for="Contact.LastName" class="form-control" />
                     <span asp-validation-for="Contact.LastName" class="text-danger"></span>
                 </div>
 
                 <!-- Job Title -->
                 <div class="form-group">
-                    <label asp-for="Contact.JobTitle"></label>
+                    <label asp-for="Contact.JobTitle">Job Title</label>
                     <input asp-for="Contact.JobTitle" class="form-control" />
                     <span asp-validation-for="Contact.JobTitle" class="text-danger"></span>
                 </div>
@@ -224,7 +224,7 @@
                     <span asp-validation-for="Contact.OwnerId" class="text-danger"></span>
                 </div> *@
                 <div class="form-group">
-                    <label asp-for="Contact.OwnerId"></label>
+                    <label asp-for="Contact.OwnerId">Owner</label>
                 <select asp-for="Contact.OwnerId" class="form-control">
                     <option value="">-- Select Owner --</option>
                     @foreach (var user in Model.Users)
@@ -243,7 +243,7 @@
 
                 <!-- Lead Status -->
                 <div class="form-group">
-                    <label asp-for="Contact.LeadStatusId"></label>
+                    <label asp-for="Contact.LeadStatusId">Lead Status</label>
                     <select asp-for="Contact.LeadStatusId"
                             asp-items="@(new SelectList(Model.LeadStatuses, "Id", "LeadStatusName"))"
                             class="form-control">
@@ -254,7 +254,7 @@
 
                 <!-- Life Cycle Stage -->
                 <div class="form-group">
-                    <label asp-for="Contact.LifeCycleStageId"></label>
+                    <label asp-for="Contact.LifeCycleStageId">LifeCycle Stage</label>
                     <select asp-for="Contact.LifeCycleStageId"
                             asp-items="@(new SelectList(Model.Lifecycle, "Id", "LifeCycleStageName"))"
                             class="form-control">

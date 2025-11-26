@@ -291,6 +291,115 @@
             text-align: center;
             margin-top: 10px; /* Adjust this value to get the space you want */
         }
+        /* --- Floating Test Button & Popup Styles --- */
+        .test-float-btn {
+            position: fixed;
+            bottom: 20px;
+            left: 20px; /* Positioned bottom-left to avoid chat widgets/art */
+            z-index: 1000;
+            padding: 10px 20px;
+            background-color: var(--color-secondary, #6c757d); /* Fallback color */
+            color: #fff;
+            border: none;
+            border-radius: 50px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            font-family: var(--font-primary);
+        }
+
+            .test-float-btn:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 6px 16px rgba(0,0,0,0.2);
+            }
+
+        .test-popup {
+            position: fixed;
+            bottom: 70px; /* Appears just above the button */
+            left: 20px;
+            width: 280px;
+            background: white;
+            border: 1px solid var(--border-color, #ddd);
+            border-radius: var(--border-radius-lg, 8px);
+            box-shadow: 0 5px 20px rgba(0,0,0,0.15);
+            z-index: 1001;
+            display: none; /* Hidden by default */
+            overflow: hidden;
+            font-family: var(--font-primary);
+        }
+
+            .test-popup.show {
+                display: block;
+                animation: fadeInUp 0.3s ease;
+            }
+
+        .popup-header {
+            background: var(--bg-primary, #f8f9fa);
+            padding: 10px 15px;
+            border-bottom: 1px solid var(--border-color, #eee);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-weight: bold;
+            font-size: 14px;
+        }
+
+        .close-popup {
+            background: none;
+            border: none;
+            font-size: 18px;
+            cursor: pointer;
+            color: var(--text-secondary, #666);
+        }
+
+        .credential-item {
+            padding: 12px 15px;
+            border-bottom: 1px solid #eee;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+            .credential-item:last-child {
+                border-bottom: none;
+            }
+
+            .credential-item:hover {
+                background-color: var(--bg-primary, #f0f2f5);
+            }
+
+            .credential-item strong {
+                display: block;
+                font-size: 14px;
+                color: var(--text-primary, #333);
+            }
+
+            .credential-item small {
+                color: var(--text-secondary, #666);
+                font-size: 12px;
+            }
+
+        .credential-hint {
+            font-size: 10px;
+            color: #28a745;
+            margin-top: 2px;
+            display: block;
+        }
+
+        @@keyframes fadeInUp {
+            from
+
+        {
+            opacity: 0;
+            transform: translateY(10px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        }
     </style>
 </head>
 <body>
@@ -355,6 +464,29 @@
         </div>
     </div>
 
+    <button type="button" class="test-float-btn" onclick="toggleTestPopup()">
+        Test Credentials
+    </button>
+
+    <div id="testCredsPopup" class="test-popup">
+        <div class="popup-header">
+            <span>Select Account</span>
+            <button type="button" class="close-popup" onclick="toggleTestPopup()">&times;</button>
+        </div>
+
+        <div class="credential-item" onclick="fillLogin('arjun.mehta@gmail.com', 'Pass@123')">
+            <strong>Admin User</strong>
+            <small>arjun.mehta@gmail.com</small>
+            <span class="credential-hint">Click to Autofill</span>
+        </div>
+
+        <div class="credential-item" onclick="fillLogin('priya.sharma@gmail.com', 'Pass@123')">
+            <strong>Standard User</strong>
+            <small>priya.sharma@gmail.com</small>
+            <span class="credential-hint">Click to Autofill</span>
+        </div>
+    </div>
+
     @section Scripts {
         @{
             await Html.RenderPartialAsync("_ValidationScriptsPartial");
@@ -391,6 +523,46 @@
                 }, 5000); // 5000 milliseconds = 5 seconds
             }
         }, 300);
+
+
+                // Function to toggle the popup visibility
+        function toggleTestPopup() {
+            const popup = document.getElementById('testCredsPopup');
+            popup.classList.toggle('show');
+        }
+
+        // Function to autofill the form
+        function fillLogin(email, password) {
+            // ASP.NET Core usually generates IDs matching the property name (Email, Password)
+            const emailInput = document.getElementById('Email');
+            const passInput = document.getElementById('Password');
+
+            if (emailInput && passInput) {
+                emailInput.value = email;
+                passInput.value = password;
+
+                // Optional: Highlight the fields visually to show they changed
+                emailInput.style.backgroundColor = "#e8f0fe";
+                passInput.style.backgroundColor = "#e8f0fe";
+
+                // Close popup after selection
+                toggleTestPopup();
+            } else {
+                console.error("Could not find input fields with IDs 'Email' and 'Password'");
+            }
+        }
+
+        // Close popup if clicking outside of it
+        document.addEventListener('click', function(event) {
+            const popup = document.getElementById('testCredsPopup');
+            const btn = document.querySelector('.test-float-btn');
+
+            if (popup.classList.contains('show') &&
+                !popup.contains(event.target) &&
+                !btn.contains(event.target)) {
+                popup.classList.remove('show');
+            }
+        });
     </script>
 </body>
 

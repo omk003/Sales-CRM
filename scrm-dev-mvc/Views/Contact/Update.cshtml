@@ -193,7 +193,6 @@
         <div class="form-content">
             <form id="contactForm" asp-action="Update" method="post">
                 <input type="hidden" asp-for="Contact.Id" />
-                <!-- Email (Required) -->
                 <div class="form-group">
                     <label asp-for="Contact.Email" style="display: inline-block; margin-right: 0.25rem;"></label>
                     <span class="text-danger" style="display: inline-block;">*</span>
@@ -201,52 +200,27 @@
                     <span asp-validation-for="Contact.Email" class="text-danger"></span>
                 </div>
 
-                <!-- First Name -->
                 <div class="form-group">
-                    <label asp-for="Contact.FirstName"></label>
+                    <label asp-for="Contact.FirstName">First Name</label>
                     <input asp-for="Contact.FirstName" class="form-control" />
                     <span asp-validation-for="Contact.FirstName" class="text-danger"></span>
                 </div>
 
-                <!-- Last Name -->
                 <div class="form-group">
-                    <label asp-for="Contact.LastName"></label>
+                    <label asp-for="Contact.LastName">Last Name</label>
                     <input asp-for="Contact.LastName" class="form-control" />
                     <span asp-validation-for="Contact.LastName" class="text-danger"></span>
                 </div>
 
-                <!-- Job Title -->
                 <div class="form-group">
-                    <label asp-for="Contact.JobTitle"></label>
+                    <label asp-for="Contact.JobTitle">Job Title</label>
                     <input asp-for="Contact.JobTitle" class="form-control" />
                     <span asp-validation-for="Contact.JobTitle" class="text-danger"></span>
                 </div>
 
-                <!-- Contact Owner -->
-                @* <div class="form-group">
-                    <label asp-for="Contact.OwnerId"></label>
-                    <select asp-for="Contact.OwnerId"
-                            asp-items="@(new SelectList(Model.Users, "Id", "FirstName"))"
-                            class="form-control">
-                        <option value="">-- Select Owner --</option>
-                    </select>
-                    <span asp-validation-for="Contact.OwnerId" class="text-danger"></span>
-                </div> *@
-                @* <div class="form-group">
-                    <label asp-for="Contact.OwnerId"></label>
-                    <select id="OwnerSelect" asp-for="Contact.OwnerId" class="form-control">
-                        <option value="">-- Select Owner --</option>
-                        @foreach (var user in Model.Users)
-                        {
-                            <option value="@user.Id" data-email="@user.Email">
-                                @user.FirstName
-                            </option>
-                        }
-                    </select>
-                    <span asp-validation-for="Contact.OwnerId" class="text-danger"></span>
-                </div> *@
+               
                 <div class="form-group">
-                    <label asp-for="Contact.OwnerId"></label>
+                    <label asp-for="Contact.OwnerId">Owner</label>
                     <select asp-for="Contact.OwnerId" class="form-control">
                         <option value="">-- Select Owner --</option>
                         @foreach (var user in Model.Users)
@@ -256,16 +230,14 @@
                     </select>
                 </div>
 
-                <!-- Phone Number -->
                 <div class="form-group">
                     <label asp-for="Contact.Number"></label>
                     <input asp-for="Contact.Number" class="form-control" />
                     <span asp-validation-for="Contact.Number" class="text-danger"></span>
                 </div>
 
-                <!-- Lead Status -->
                 <div class="form-group">
-                    <label asp-for="Contact.LeadStatusId"></label>
+                    <label asp-for="Contact.LeadStatusId">Lead Status</label>
                     <select asp-for="Contact.LeadStatusId"
                             asp-items="@(new SelectList(Model.LeadStatuses, "Id", "LeadStatusName"))"
                             class="form-control">
@@ -274,9 +246,8 @@
                     <span asp-validation-for="Contact.LeadStatusId" class="text-danger"></span>
                 </div>
 
-                <!-- Life Cycle Stage -->
                 <div class="form-group">
-                    <label asp-for="Contact.LifeCycleStageId"></label>
+                    <label asp-for="Contact.LifeCycleStageId">LifeCycle Stage</label>
                     <select asp-for="Contact.LifeCycleStageId"
                             asp-items="@(new SelectList(Model.Lifecycle, "Id", "LifeCycleStageName"))"
                             class="form-control">
@@ -285,7 +256,6 @@
                     <span asp-validation-for="Contact.LifeCycleStageId" class="text-danger"></span>
                 </div>
 
-                <!-- Buttons -->
                 <div class="button-group">
                     <button type="submit" class="btn btn-primary">Update</button>
                     <button type="button" class="btn btn-cancel" onclick="closeForm()">Cancel</button>
@@ -316,7 +286,7 @@
             });
 
             function formatUser(user) {
-                if (!user.id) return user.text; // placeholder
+                if (!user.id) return user.text; 
 
                 var email = $(user.element).data('email');
                 return $(

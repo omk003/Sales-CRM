@@ -186,9 +186,8 @@
                     <span asp-validation-for="Deal.StageId" class="text-danger"></span>
                 </div>
 
-                <!-- Company -->
                 <div class="form-group">
-                    <label asp-for="Deal.CompanyId"></label>
+                    <label asp-for="Deal.CompanyId">Company</label>
                     <select asp-for="Deal.CompanyId"
                             asp-items="@(new SelectList(Model.Companies, "Id", "Name"))"
                             class="form-control">
@@ -212,7 +211,7 @@
 
                 <!-- Close Date -->
                 <div class="form-group">
-                    <label asp-for="Deal.CloseDate"></label>
+                    <label asp-for="Deal.CloseDate">Close Date</label>
                     <input asp-for="Deal.CloseDate" type="date" class="form-control" asp-format="{0:yyyy-MM-dd}" />
                     <span asp-validation-for="Deal.CloseDate" class="text-danger"></span>
                 </div>
