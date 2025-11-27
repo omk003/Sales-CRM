@@ -23,7 +23,12 @@ namespace scrm_dev_mvc.Controllers
 
         public IActionResult ContactPreview(int id)
         {
-            var contact = contactService.GetContactById(id);
+            var userId = currentUserService.GetUserId();
+            var contact = contactService.GetContactById(id, userId);
+            if(contact == null)
+            {
+                return NotFound();
+            }
             var ContactPreview = new ContactPreviewViewModel
             {
                 Id = id,
@@ -136,7 +141,7 @@ namespace scrm_dev_mvc.Controllers
             var userId = currentUserService.GetUserId();
             var organization = await organizationService.IsInOrganizationById(userId);
 
-            var contactEntity = contactService.GetContactById(id);
+            var contactEntity = contactService.GetContactById(id, userId);
             if (contactEntity == null) return NotFound();
 
             var leadStatuses = await contactService.GetLeadStatusesAsync();
@@ -171,7 +176,6 @@ namespace scrm_dev_mvc.Controllers
         {
             if (!ModelState.IsValid)
             {
-                // If invalid, reload dropdowns and return form
                 var vm = new ContactFormViewModel
                 {
                     Contact = contact,
@@ -189,8 +193,7 @@ namespace scrm_dev_mvc.Controllers
 
             var result = await contactService.UpdateContact(contact, userId); 
 
-            // You can either:
-            // 1. Redirect to Index with TempData message
+            
             TempData["Message"] = result;
             return RedirectToAction("Index");
         }
@@ -199,33 +202,28 @@ namespace scrm_dev_mvc.Controllers
         [HttpPost]
         public async Task<IActionResult> SendEmail(string contactEmail, string subject, string body)
         {
-            // 1. Get User ID
             var userId = currentUserService.GetUserId();
             if (userId == Guid.Empty)
             {
                 return StatusCode(401, new { message = "User is not authenticated." });
             }
 
-            // 2. Get Redirect URI
             string redirectUri = Url.Action("YourGoogleCallbackMethod", "Auth", null, Request.Scheme);
-            // --- IMPORTANT: Replace with your actual callback URL/method ---
 
-            // 3. Call the service (passing contactEmail, not contact.Id)
             var result = await emailService.SendEmailAsync(
                 userId,
-                contactEmail, // <-- Pass the email string directly
+                contactEmail, 
                 subject,
                 body,
                 redirectUri
             );
 
-            // 4. Handle the detailed result
             if (result.IsSuccess)
             {
                 return Ok(new { message = "Email sent and activity logged.", data = result.SentMessage });
             }
 
-            if (result.IsNotFound) // <-- Handle the new property
+            if (result.IsNotFound)
             {
                 return NotFound(new { message = result.ErrorMessage });
             }
@@ -239,7 +237,6 @@ namespace scrm_dev_mvc.Controllers
                 });
             }
 
-            // Catch-all for other failures
             return StatusCode(500, new { message = result.ErrorMessage ?? "An unknown error occurred." });
         }
 
@@ -288,12 +285,10 @@ namespace scrm_dev_mvc.Controllers
 
             if (result.Success)
             {
-                // Send a success response
                 return Ok(new { message = result.Message });
             }
             else
             {
-                // Send a 400 Bad Request response with the error message
                 return BadRequest(new { message = result.Message });
             }
         }

@@ -38,15 +38,10 @@ namespace scrm_dev_mvc.Controllers
                     .ThenInclude(u => u.Role) 
                 .ToListAsync();
 
-            // Map to your existing ViewModel
             var viewModel = organizations.Select(o => new OrganizationViewModel
             {
                 OrganizationId = o.Id,
                 OrganizationName = o.Name,
-                // Note: CurrentUserRole is not set here, as we don't know the *current* user's role
-                // relative to this specific organization in this context. 
-                // We just know they are a SuperAdmin. You may need to adjust this logic
-                // if CurrentUserRole is critical for the Index view.
                 Users = o.Users.Select(u => new UserInOrganizationViewModel
                 {
                     UserId = u.Id,

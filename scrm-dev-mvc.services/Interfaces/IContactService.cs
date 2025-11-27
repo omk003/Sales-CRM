@@ -15,7 +15,7 @@ namespace scrm_dev_mvc.services.Interfaces
         Task<bool> DeleteContactsByIdsAsync(List<int> ids, Guid ownerId);
         Task<string> UpdateContact(ContactDto contact, Guid ownerId);
 
-        Contact GetContactById(int id);
+        Contact GetContactById(int id,Guid userId);
 
         Task<(bool Success, string Message)> AssociateContactToCompany(int contactId, int companyId, Guid ownerId);
 

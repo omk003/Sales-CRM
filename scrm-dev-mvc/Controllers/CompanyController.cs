@@ -46,7 +46,6 @@ namespace scrm_dev_mvc.Controllers
             }
             var result = await companyService.CreateCompanyAsync(company);
 
-            // Store message for next request
             TempData["Message"] = result;
             return RedirectToAction("Index");
         }
@@ -59,7 +58,6 @@ namespace scrm_dev_mvc.Controllers
             if (userId == Guid.Empty)
                 return Unauthorized();
 
-            //Guid id = Guid.Parse(userId);
             List<CompanyViewModel> CompanyList = await companyService.GetAllCompany(userId);
             return Json(new { data = CompanyList });
         }
@@ -77,7 +75,7 @@ namespace scrm_dev_mvc.Controllers
             var userId = currentUserService.GetUserId();
             var organization = await organizationService.IsInOrganizationById(userId);
 
-            var companyEntity = companyService.GetCompanyById(id);
+            var companyEntity = companyService.GetCompanyById(id, userId);
             if (companyEntity == null) return NotFound();
 
             var users = await userService.GetAllUsersByOrganizationIdAsync(organization.Id);
@@ -106,7 +104,6 @@ namespace scrm_dev_mvc.Controllers
         {
             if (!ModelState.IsValid)
             {
-                // If invalid, reload dropdowns and return form
                 var vm = new CompanyFormViewModel
                 {
                     Company = company,
@@ -124,7 +121,6 @@ namespace scrm_dev_mvc.Controllers
             var result = await companyService.UpdateCompany(company);
 
             
-            // 1. Redirect to Index with TempData message
             TempData["SuccessMessage"] = result;
             return RedirectToAction("Index");
 
@@ -133,7 +129,8 @@ namespace scrm_dev_mvc.Controllers
 
         public async Task<IActionResult> CompanyPreview(int id)
         {
-            var company = await companyService.GetCompanyForPreviewAsync(id);
+            var userId = currentUserService.GetUserId();
+            var company = await companyService.GetCompanyForPreviewAsync(id, userId);
 
             if (company == null)
             {
@@ -141,15 +138,13 @@ namespace scrm_dev_mvc.Controllers
                 return NotFound();
             }
 
-            // --- THIS COMPLETES THE TODO ---
-            // 2. Flatten the activities from all contacts into one list
+           
             var allActivities = company.Contacts?
-                .SelectMany(c => c.Activities) // Get all activities from all contacts
-                .OrderByDescending(a => a.ActivityDate) // Order them
+                .SelectMany(c => c.Activities) 
+                .OrderByDescending(a => a.ActivityDate) 
                 .ToList() ?? new List<scrm_dev_mvc.Models.Activity>();
-            // --- END TODO ---
+            
 
-            // 3. Create the ViewModel
             var model = new CompanyPreviewViewModel()
             {
                 Id = id,
@@ -160,7 +155,7 @@ namespace scrm_dev_mvc.Controllers
                 CreatedAt = company.CreatedAt,
                 City = company.City,
                 Country = company.Country,
-                Activities = allActivities // Assign the new flattened list
+                Activities = allActivities 
             };
 
             return View(model);

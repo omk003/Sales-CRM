@@ -34,14 +34,12 @@ namespace scrm_dev_mvc.Controllers
                 return BadRequest(new { message = "Validation failed.", errors = errors });
             }
 
-            // --- NEW: Get the Owner's ID from the authenticated user ---
             var ownerId = _currentUserService.GetUserId();
             if (ownerId == Guid.Empty)
             {
                 return Unauthorized(new { message = "You must be logged in to create a task." });
             }
 
-            // --- Pass the ownerId to the service ---
             var result = await _taskService.CreateTaskAsync(viewModel, ownerId);
 
             if (result.Success)

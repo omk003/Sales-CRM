@@ -535,9 +535,23 @@ namespace SCRM_dev.Services
         }
 
 
-        public Contact GetContactById(int id)
+        public Contact GetContactById(int id,Guid userId)
         {
             var contact = unitOfWork.Contacts.FirstOrDefaultAsync(c => c.Id == id, "LeadStatus,LifeCycleStage,Company,Deals,Activities.ActivityType").Result;
+            if(userId != null)
+            {
+                var user =  unitOfWork.Users.GetByIdAsync(userId).Result;
+                if(user != null)
+                {
+                    if(user.RoleId != (int)UserRoleEnum.SalesAdminSuper && user.RoleId != (int)UserRoleEnum.SalesAdmin)
+                    {
+                        if(contact.OwnerId != userId)
+                        {
+                            return null;
+                        }
+                    }
+                }
+            }
             return contact;
         }
 

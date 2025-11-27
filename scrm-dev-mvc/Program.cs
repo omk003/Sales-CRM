@@ -19,7 +19,7 @@ Log.Logger = new LoggerConfiguration()
 
 builder.Host.UseSerilog();
 builder.Services.AddControllersWithViews();
-var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+var connectionString = builder.Configuration.GetConnectionString("ProductionConnection");
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlServer(connectionString));
 

@@ -36,7 +36,7 @@ namespace scrm_dev_mvc.Services
             public string Title { get; set; }
             public int DaysDue { get; set; }
             public string TaskType { get; set; }
-            public string AssignedTo { get; set; } // e.g., "ContactOwner"
+            public string AssignedTo { get; set; } // e.g. "ContactOwner"
             public int PriorityId { get; set; } 
             public int StatusId { get; set; }   
         }

@@ -5,7 +5,6 @@
 }
 @if (TempData["Message"] != null)
 {
-    // Added an id="tempDataMessage" to the div
     <div id="tempDataMessage" class="alert alert-info">
         @TempData["Message"]
     </div>
@@ -367,15 +366,12 @@
        kgroundImage = `url('${randomImage}')`;
 
         setTimeout(function () {
-            // Find the alert message element by its ID
             var alert = document.getElementById('tempDataMessage');
 
-            // If the element exists, set another timeout to hide it
-            if (alert) {
+=            if (alert) {
                 setTimeout(function () {
-                    // Hides the element by setting its display style to 'none'
                     alert.style.display = 'none';
-                }, 5000); // 5000 milliseconds = 5 seconds
+                }, 5000);
             }
         }, 300);
     </script>

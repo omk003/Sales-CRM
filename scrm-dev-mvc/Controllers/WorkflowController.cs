@@ -93,7 +93,6 @@ namespace scrm_dev_mvc.Controllers
                 OrganizationId = organization.OrganizationId
             };
 
-            // Action: Change Lead Status
             if (viewModel.Action_ChangeLeadStatus)
             {
                 var parameters = new { NewStatus = viewModel.ChangeLeadStatus_NewStatusId };
@@ -102,11 +101,10 @@ namespace scrm_dev_mvc.Controllers
                 {
                     ActionType = WorkflowActionType.ChangeLeadStatus,
                     ParametersJson = Newtonsoft.Json.JsonConvert.SerializeObject(parameters),
-                    ConditionJson = "{}" // <-- FIX 1: Use empty JSON object instead of null
+                    ConditionJson = "{}" 
                 });
             }
 
-            // Action: Change LifeCycle Stage
             if (viewModel.Action_ChangeLifeCycleStage)
             {
                 var parameters = new { NewStageId = viewModel.ChangeLifeCycleStage_NewStageId };
@@ -115,14 +113,12 @@ namespace scrm_dev_mvc.Controllers
                 {
                     ActionType = WorkflowActionType.ChangeLifeCycleStage,
                     ParametersJson = Newtonsoft.Json.JsonConvert.SerializeObject(parameters),
-                    ConditionJson = "{}" // <-- FIX 2: Use empty JSON object instead of null
+                    ConditionJson = "{}" 
                 });
             }
 
-            // Action: Create Task (This one has conditions)
             if (viewModel.Action_CreateTask)
             {
-                // 1. Set the main action parameters
                 var parameters = new
                 {
                     Title = viewModel.Task_Title,
@@ -133,7 +129,6 @@ namespace scrm_dev_mvc.Controllers
                     StatusId = viewModel.Task_StatusId
                 };
 
-                // 2. Build the condition dictionary
                 var conditionDict = new Dictionary<string, string>();
                 if (!string.IsNullOrWhiteSpace(viewModel.Task_ConditionTaskType))
                 {
@@ -144,20 +139,18 @@ namespace scrm_dev_mvc.Controllers
                     conditionDict["LeadStatus"] = viewModel.Task_ConditionLeadStatus.Value.ToString();
                 }
 
-                // 3. Create the action
                 var action = new WorkflowAction
                 {
                     ActionType = WorkflowActionType.CreateTask,
                     ParametersJson = Newtonsoft.Json.JsonConvert.SerializeObject(parameters),
                     ConditionJson = conditionDict.Count > 0
                         ? Newtonsoft.Json.JsonConvert.SerializeObject(conditionDict)
-                        : "{}" // <-- FIX 3: Use empty JSON object instead of null
+                        : "{}" 
                 };
 
                 workflow.Actions.Add(action);
             }
 
-            // Save the new workflow and all its actions
             _context.Workflows.Add(workflow);
             await _context.SaveChangesAsync();
 
@@ -339,16 +332,13 @@ namespace scrm_dev_mvc.Controllers
                 return NotFound();
             }
 
-            // 1. Update main properties
             workflowToUpdate.Name = viewModel.Name;
             workflowToUpdate.Event = viewModel.Trigger;
 
-            // 2. Clear ALL old actions
-            // This is the simplest and safest way to handle updates.
+            
             _context.WorkflowActions.RemoveRange(workflowToUpdate.Actions);
             workflowToUpdate.Actions.Clear();
 
-            // 3. Re-add actions based on the form (just like in Create)
             if (viewModel.Action_ChangeLeadStatus)
             {
                 var parameters = new { NewLeadStatus = viewModel.ChangeLeadStatus_NewStatusId };
@@ -387,7 +377,6 @@ namespace scrm_dev_mvc.Controllers
                 });
             }
 
-            // 4. Save changes
             _context.Workflows.Update(workflowToUpdate);
             await _context.SaveChangesAsync();
 

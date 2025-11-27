@@ -26,7 +26,6 @@ namespace scrm_dev_mvc.Controllers
 
             if (!string.IsNullOrEmpty(organizationService.IsInOrganizationById(userId).Result?.Name))
             {
-                //TempData["Error"] = "You are already in an organization.";
                 return RedirectToAction("Index", "Organization");
             }
             return View();

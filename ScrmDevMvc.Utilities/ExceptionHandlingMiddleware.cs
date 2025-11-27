@@ -17,14 +17,13 @@ public class ExceptionHandlingMiddleware
     {
         try
         {
-            await _next(context); // proceed to next middleware
+            await _next(context);
         }
         catch (Exception ex)
         {
             Log.Error(ex, "An unhandled exception occurred while processing the request");
 
-            // Optional: return JSON response if API, or redirect to error page
-            // The Clear() method is not needed here. Just set the status and write the response.
+            
             context.Response.StatusCode = (int)HttpStatusCode.InternalServerError;
 
             if (context.Request.Path.StartsWithSegments("/api"))
@@ -38,7 +37,7 @@ public class ExceptionHandlingMiddleware
             }
             else
             {
-                // redirect to a generic error page
+                
                 context.Response.Redirect("/Home/Error");
             }
         }

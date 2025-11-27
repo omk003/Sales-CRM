@@ -75,7 +75,19 @@ namespace scrm_dev_mvc.Controllers
         {
             if (!ModelState.IsValid)
             {
-                return View("Index", user);
+                var userFromDb = await _userService.GetFirstOrDefault(u => u.Id == user.Id, "Role");
+                scrm_dev_mvc.Models.ViewModels.UserViewModel userPopulate;
+                userPopulate = new scrm_dev_mvc.Models.ViewModels.UserViewModel
+                {
+                    Id = userFromDb.Id,
+                    FirstName = userFromDb.FirstName ?? "",
+                    LastName = userFromDb.LastName ?? "",
+                    Email = userFromDb.Email,
+                    OrganizationName = (await _organizationService.IsInOrganizationById(userFromDb.Id))?.Name ?? "N/A",
+                    Role = userFromDb.Role?.Name,
+                    IsSyncedWithGoogle = userFromDb.IsSyncedWithGoogle,
+                };
+                return View("Index", userPopulate);
             }
 
             var existingUser = await _userService.GetUserByIdAsync(user.Id);

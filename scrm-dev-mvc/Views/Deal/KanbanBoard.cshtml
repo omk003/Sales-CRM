@@ -182,12 +182,11 @@
         --k-accent-green: #36b37e;
     }
 
-    /* --- Layout --- */
     .kanban-container {
         display: flex;
         flex-direction: column;
         width:1100px;
-        height: calc(100vh - 120px); /* Adjust based on your navbar height */
+        height: calc(100vh - 120px); 
         padding: 0 20px 20px 20px;
         background-color: var(--k-bg-page);
         font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
@@ -225,17 +224,16 @@
             text-decoration: none;
         }
 
-    /* --- Board & Columns --- */
     .kanban-board {
         display: flex;
         overflow-x: auto;
         gap: 16px;
         height: 100%;
-        padding-bottom: 10px; /* Space for scrollbar */
+        padding-bottom: 10px;
     }
 
     .kanban-column {
-        flex: 0 0 220px; /* Fixed width columns */
+        flex: 0 0 220px; 
         max-width: 300px;
         background-color: var(--k-bg-column);
         border-radius: var(--k-border-radius);
@@ -244,7 +242,6 @@
         max-height: 100%;
     }
 
-    /* --- Column Header --- */
     .kanban-column-header {
         padding: 12px 12px 8px 12px;
         display: flex;
@@ -265,26 +262,22 @@
         font-size: 12px;
     }
 
-    /* --- Column Body (Droppable Area) --- */
     .kanban-column-body {
         padding: 0 8px;
         flex-grow: 1;
         overflow-y: auto;
-        min-height: 50px; /* Ensure drop target exists even if empty */
+        min-height: 50px; 
     }
 
-    /* Scrollbar Styling for Column Body */
     .kanban-column-body::-webkit-scrollbar { width: 6px; }
     .kanban-column-body::-webkit-scrollbar-thumb { background: #dcdfe4; border-radius: 4px; }
     .kanban-column-body::-webkit-scrollbar-thumb:hover { background: #c1c7d0; }
 
-    /* Visual feedback when dragging over a column */
     .kanban-column-body.drag-over {
-        background-color: rgba(0, 82, 204, 0.1); /* Light blue tint */
+        background-color: rgba(0, 82, 204, 0.1);
         border-radius: 4px;
     }
 
-    /* --- Cards --- */
     .kanban-card {
         background-color: var(--k-bg-card);
         border-radius: 4px;
@@ -293,7 +286,7 @@
         margin-bottom: 8px;
         cursor: grab;
         transition: box-shadow 0.2s, transform 0.2s;
-        border-left: 4px solid transparent; /* Placeholder for priority color */
+        border-left: 4px solid transparent;
     }
 
     .kanban-card:hover {
@@ -329,7 +322,6 @@
         border-radius: 4px;
     }
 
-    /* Avatar Circle for Owner */
     .owner-avatar {
         width: 24px;
         height: 24px;
@@ -346,7 +338,7 @@
     }
 
     .deal-actions {
-        display: none; /* Hide buttons unless hovering (cleaner look) */
+        display: none;
         margin-top: 8px;
         padding-top: 8px;
         border-top: 1px solid #eee;
@@ -367,7 +359,6 @@
     }
     .btn-view:hover { background: #eee; }
 
-    /* --- Column Footer --- */
     .kanban-column-footer {
         padding: 12px;
         border-top: 2px solid rgba(9, 30, 66, 0.08);
@@ -447,7 +438,6 @@
         let draggedCard = null;
         let originalColumn = null;
 
-        // --- Drag Start ---
         cards.forEach(card => {
             card.addEventListener('dragstart', function(e) {
                 draggedCard = this;
@@ -455,7 +445,6 @@
                 e.dataTransfer.setData('text/plain', this.dataset.dealId);
                 e.dataTransfer.effectAllowed = "move";
                 
-                // Add a class for visual styling if needed, or just opacity
                 requestAnimationFrame(() => {
                     this.style.opacity = '0.4';
                     this.style.transform = 'scale(0.95)';
@@ -468,19 +457,16 @@
                 draggedCard = null;
                 originalColumn = null;
                 
-                // Clean up any hover effects
                 columns.forEach(col => col.classList.remove('drag-over'));
             });
         });
 
-        // --- Drag Over & Enter/Leave ---
         columns.forEach(col => {
             col.addEventListener('dragover', function(e) {
                 e.preventDefault();
                 e.dataTransfer.dropEffect = "move";
             });
 
-            // Visual highlight for the column
             col.addEventListener('dragenter', function(e) {
                 e.preventDefault();
                 this.classList.add('drag-over');
@@ -490,10 +476,9 @@
                 this.classList.remove('drag-over');
             });
 
-            // --- Drop ---
             col.addEventListener('drop', function(e) {
                 e.preventDefault();
-                this.classList.remove('drag-over'); // Remove highlight
+                this.classList.remove('drag-over'); 
 
                 if (!draggedCard || !originalColumn) return;
 
@@ -503,15 +488,12 @@
                 const token = document.querySelector('input[name="__RequestVerificationToken"]')?.value;
 
                 if (dealId && newStageName && newColumn !== originalColumn) {
-                    // Optimistic UI Update: Move card immediately
                     this.appendChild(draggedCard);
                     
-                    // Update Summaries immediately for snappiness
                     const oldStageName = originalColumn.dataset.stageName;
                     updateColumnSummary(oldStageName);
                     updateColumnSummary(newStageName);
 
-                    // Send to Server
                     updateDealStageOnServer(dealId, newStageName, draggedCard, originalColumn, newColumn, token);
                 }
             });
@@ -532,11 +514,9 @@
                 });
 
                 if (!response.ok) {
-                    // Revert UI if server fails
                     const error = await response.json();
                     alert(`Failed to move deal: ${error.message || 'Server error'}`);
                     
-                    // Move card back
                     oldColumnEl.querySelector('.kanban-column-body').appendChild(cardElement);
                     updateColumnSummary(oldColumnEl.dataset.stageName);
                     updateColumnSummary(newColumnEl.dataset.stageName);
@@ -544,7 +524,6 @@
             } catch (error) {
                 console.error('Error updating deal stage:', error);
                 alert('An error occurred. Please refresh the page.');
-                // Revert logic could go here too
             }
         }
 
@@ -556,16 +535,13 @@
             const totalSpan = column.querySelector('.column-total-value');
             const cardsInColumn = column.querySelectorAll('.kanban-column-body .kanban-card');
 
-            // 1. Update Count
             countSpan.textContent = cardsInColumn.length;
 
-            // 2. Update Total
             let totalValue = 0;
             cardsInColumn.forEach(card => {
                 totalValue += parseFloat(card.dataset.value || 0);
             });
 
-            // 3. Format and display
             totalSpan.textContent = new Intl.NumberFormat('en-IN', {
                 style: 'currency',
                 currency: 'USD',

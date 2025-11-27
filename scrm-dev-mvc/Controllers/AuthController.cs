@@ -159,7 +159,6 @@ namespace scrm_dev_mvc.Controllers
                 await _userService.CreateUserAsync(user);
             }
 
-            // Generate 6-digit OTP
             var otp = RandomNumberGenerator.GetInt32(100000, 1000000).ToString();
             user.OtpCode = otp;
             user.OtpExpiry = DateTime.UtcNow.AddMinutes(5);

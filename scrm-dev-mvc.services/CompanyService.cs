@@ -26,7 +26,6 @@ namespace scrm_dev_mvc.services
                 return null;
             }
             var user = await unitOfWork.Users.FirstOrDefaultAsync(u => u.Id == companyViewModel.userId);
-            //check if Company already exists
             var existingCompany = await unitOfWork.Company.FirstOrDefaultAsync(c => c.Domain == companyViewModel.Domain && c.OrganizationId == user.OrganizationId);
             if (existingCompany != null)
             {
@@ -49,7 +48,6 @@ namespace scrm_dev_mvc.services
                 }
 
             }
-            // Map CompanyDto to Company entity
             var Company = new Company
             {
                 Name = companyViewModel.Name,
@@ -69,11 +67,9 @@ namespace scrm_dev_mvc.services
         {
 
             var user = await unitOfWork.Users.GetByIdAsync(userId);
-            // if user is null return empty list
             if (user == null)
                 return new List<CompanyViewModel>();
 
-            // user is admin, fetch all companies in the organization
             if (user.RoleId == 2 || user.RoleId == 3)
             {
                 var organizationId = user.OrganizationId;
@@ -97,7 +93,6 @@ namespace scrm_dev_mvc.services
                 return CompanyResponseViewModels;
 
             }
-            // user is regular user, fetch only companies created by the user
             var CompanyObject = await unitOfWork.Company.GetAllAsync(c => c.OrganizationId == user.OrganizationId && c.UserId == user.Id);
            
             List<CompanyViewModel> CompanyResponseViewModelsObject = new List<CompanyViewModel>();
@@ -157,24 +152,39 @@ namespace scrm_dev_mvc.services
             }
             return "Company updation Failed";
         }
-        public async Task<Company?> GetCompanyForPreviewAsync(int id)
-        {
+        public async Task<Company?> GetCompanyForPreviewAsync(int id, Guid userId)
+        {   
             try
             {
-                // 1. Define the include string to get all nested data
-                // We use dot notation for .ThenInclude()
+                
                 string includeProperties =
                     "Deals," +
                     "Contacts," +
                     "Contacts.Activities," +
                     "Contacts.Activities.ActivityType,"+ "Contacts.Activities.Owner";
 
-                // 2. Eagerly load ALL required navigation properties using your repository method
                 var company = await unitOfWork.Company.FirstOrDefaultAsync(
                     predicate: c => c.Id == id,
                     include: includeProperties
                 );
-
+                if(userId != Guid.Empty && company != null)
+                {
+                    var user =  unitOfWork.Users.GetByIdAsync(userId).Result;
+                    if(user.RoleId == 2 || user.RoleId ==3)
+                    {
+                        if(company.OrganizationId != user.OrganizationId)
+                        {
+                            return null;
+                        }
+                    }
+                    else
+                    {
+                        if(company.UserId != user.Id)
+                        {
+                            return null;
+                        }
+                    }
+                }
                 return company;
             }
             catch (Exception ex)
@@ -183,9 +193,27 @@ namespace scrm_dev_mvc.services
                 return null;
             }
         }
-        public Company GetCompanyById(int id)
+        public Company GetCompanyById(int id,Guid userId)
         {
             var Company = unitOfWork.Company.FirstOrDefaultAsync(c => c.Id == id, "Deals,Contacts").Result;
+            if(userId != null && Company != null)
+            {
+                var user =  unitOfWork.Users.GetByIdAsync(userId).Result;
+                if(user.RoleId == 2 || user.RoleId ==3)
+                {
+                    if(Company.OrganizationId != user.OrganizationId)
+                    {
+                        return null;
+                    }
+                }
+                else
+                {
+                    if(Company.UserId != user.Id)
+                    {
+                        return null;
+                    }
+                }
+            }
             return Company;
         }
     }
