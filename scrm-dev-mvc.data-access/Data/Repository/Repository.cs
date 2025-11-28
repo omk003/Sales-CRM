@@ -2,6 +2,7 @@
 using scrm_dev_mvc.Data.Repository.IRepository;
 using scrm_dev_mvc.DataAccess.Data;
 using scrm_dev_mvc.Models;
+using System.Collections.Generic;
 using System.Linq.Expressions;
 
 namespace scrm_dev_mvc.Data.Repository
@@ -48,7 +49,6 @@ namespace scrm_dev_mvc.Data.Repository
         {
             IQueryable<T> query = _dbSet;
 
-            // Apply includes for eager loading
             if (includes != null)
             {
                 foreach (var include in includes)
@@ -57,10 +57,8 @@ namespace scrm_dev_mvc.Data.Repository
                 }
             }
 
-            // Apply filter
             query = query.Where(predicate);
 
-            // Apply no tracking if needed
             if (asNoTracking)
                 query = query.AsNoTracking();
 
@@ -109,6 +107,12 @@ namespace scrm_dev_mvc.Data.Repository
         public void DeleteRange(List<T> entity)
         {
             _dbSet.RemoveRange(entity);
+        }
+
+        public IQueryable<T> GetQueryable()
+        {
+            
+            return _dbSet.AsQueryable();
         }
     }
 }

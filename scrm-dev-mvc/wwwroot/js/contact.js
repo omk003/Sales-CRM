@@ -13,12 +13,63 @@ $(document).ready(function () {
     });
 });
 
+//function loadDataTable() {
+//    dataTable = $('#tblData').DataTable({
+//        scrollY: '280px',
+//        scrollCollapse: true,
+//        paging: false,
+//        "ajax": { url: '/contact/getall' },
+//        "columns": [
+//            {
+//                data: null,
+//                orderable: false,
+//                render: function (data, type, row) {
+//                    return `<input type="checkbox" class="row-select" value="${row.id}"/>`;
+//                },
+//                "width": "1%"
+//            },
+//            { data: 'name', "width": "15%" },
+//            { data: 'email', "width": "15%" },
+//            { data: 'phoneNumber', "width": "15%" },
+//            { data: 'leadStatus', "width": "15%" },
+//            {data:'ownerName',"width":"15%"},
+//            { data: 'createdAt', "width": "10%" }
+//        ],
+//        
+//        "createdRow": function (row, data, dataIndex) {
+//            $(row).attr('data-id', data.id);
+//            $(row).addClass('contact-row');
+//        }
+//    });
+//}
+
 function loadDataTable() {
     dataTable = $('#tblData').DataTable({
-        scrollY: '280px',
-        scrollCollapse: true,
-        paging: false,
-        "ajax": { url: '/contact/getall' },
+        // 1. Enable Server-side processing
+        "serverSide": true,
+        "processing": true, // Shows "Processing..." indicator
+
+        // 2. Remove "paging: false" (You want pagination now!)
+        "paging": true,
+
+        // 3. Optional: Keep scroll if you like, but standard paging is usually better for CRMs
+         scrollY: '280px', 
+         scrollCollapse: true,
+
+        "pageLength": 10, // Default rows per page
+
+        // 4. Configure Ajax
+        "ajax": {
+            "url": '/contact/getall',
+            "type": "POST", // Must match Controller [HttpPost]
+            "contentType": "application/json",
+            "data": function (d) {
+                // Send the data as JSON string to match [FromBody]
+                return JSON.stringify(d);
+            }
+        },
+
+        // Columns remain the same...
         "columns": [
             {
                 data: null,
@@ -32,17 +83,22 @@ function loadDataTable() {
             { data: 'email', "width": "15%" },
             { data: 'phoneNumber', "width": "15%" },
             { data: 'leadStatus', "width": "15%" },
-            {data:'ownerName',"width":"15%"},
-            { data: 'createdAt', "width": "10%" }
+            { data: 'ownerName', "width": "15%" },
+            {
+                data: 'createdAt',
+                "width": "10%",
+                render: function (data) {
+                    // Optional: Format date cleanly
+                    return new Date(data).toLocaleDateString();
+                }
+            }
         ],
-        // Highlight: Use createdRow to assign data-id
         "createdRow": function (row, data, dataIndex) {
             $(row).attr('data-id', data.id);
             $(row).addClass('contact-row');
         }
     });
 }
-
 
 
 $(document).on('change', '.row-select', function () {

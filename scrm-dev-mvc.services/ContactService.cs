@@ -12,7 +12,7 @@ using scrm_dev_mvc.Services;
 using System.Diagnostics;
 using System.Linq;
 using System.Linq.Expressions;
-
+using Microsoft.EntityFrameworkCore;
 
 namespace SCRM_dev.Services
 {
@@ -292,6 +292,59 @@ namespace SCRM_dev.Services
             return contactResponseViewModels;
         }
 
+        
+        public async Task<(List<ContactResponseViewModel> Data, int TotalItems, int FilteredItems)> GetContactsPagedAsync(Guid userId, int skip, int take, string searchValue)
+        {
+            var user = await unitOfWork.Users.GetByIdAsync(userId);
+            if (user == null) return (new List<ContactResponseViewModel>(), 0, 0);
+
+            Expression<Func<Contact, bool>> predicate;
+            if (user.RoleId == (int)UserRoleEnum.SalesAdminSuper || user.RoleId == (int)UserRoleEnum.SalesAdmin)
+            {
+                predicate = c => c.OrganizationId == user.OrganizationId && (!c.IsDeleted ?? false);
+            }
+            else
+            {
+                predicate = c => c.OwnerId == userId && c.OrganizationId == user.OrganizationId && (!c.IsDeleted ?? false);
+            }
+
+            
+            var query = unitOfWork.Contacts.GetQueryable().Where(predicate);
+
+            var totalRecords = await query.CountAsync();
+
+            if (!string.IsNullOrEmpty(searchValue))
+            {
+                searchValue = searchValue.ToLower();
+                query = query.Where(x =>
+                    x.FirstName.Contains(searchValue) ||
+                    x.LastName.Contains(searchValue) ||
+                    x.Email.Contains(searchValue));
+            }
+
+            var filteredRecords = await query.CountAsync();
+
+           
+            var data = await query
+                .OrderByDescending(c => c.CreatedAt) 
+                .Skip(skip)
+                .Take(take)
+                .Include(c => c.LeadStatus) 
+                .Include(c => c.Owner)
+                .Select(contact => new ContactResponseViewModel
+                {
+                    Id = contact.Id,
+                    Name = $"{contact.FirstName} {contact.LastName}",
+                    Email = contact.Email,
+                    PhoneNumber = contact.Number,
+                    LeadStatus = contact.LeadStatus != null ? contact.LeadStatus.LeadStatusName : "N/A",
+                    OwnerName = contact.Owner != null ? contact.Owner.Email : "N/A",
+                    CreatedAt = contact.CreatedAt,
+                })
+                .ToListAsync();
+
+            return (data, totalRecords, filteredRecords);
+        }
 
         public async Task<List<ContactResponseViewModel>> GetAllContactsForCompany(Guid userId, int? companyId)
         {

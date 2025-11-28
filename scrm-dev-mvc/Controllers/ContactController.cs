@@ -4,6 +4,7 @@ using SCRM_dev.Services;
 using scrm_dev_mvc.Data.Repository;
 using scrm_dev_mvc.Data.Repository.IRepository;
 using scrm_dev_mvc.Models;
+using scrm_dev_mvc.Models.DTO;
 using scrm_dev_mvc.Models.ViewModels;
 using scrm_dev_mvc.services;
 using scrm_dev_mvc.services.Interfaces;
@@ -98,17 +99,41 @@ namespace scrm_dev_mvc.Controllers
         }
 
         
-        [HttpGet]
-        public async Task<IActionResult> GetAll()
-        {
-            var userId = currentUserService.GetUserId();
+        //[HttpGet]
+        //public async Task<IActionResult> GetAll()
+        //{
+        //    var userId = currentUserService.GetUserId();
 
-            if (userId == Guid.Empty)
-                return Unauthorized();
+        //    if (userId == Guid.Empty)
+        //        return Unauthorized();
             
-            List<ContactResponseViewModel> ContactList = await contactService.GetAllContacts(userId);
-            return Json(new { data = ContactList });
+        //    List<ContactResponseViewModel> ContactList = await contactService.GetAllContacts(userId);
+        //    return Json(new { data = ContactList });
+        //}
+
+
+        [HttpPost] 
+        public async Task<IActionResult> GetAll([FromBody] DataTableRequest request)
+        {
+            
+            var userId = currentUserService.GetUserId();
+            if (userId == Guid.Empty) return Unauthorized();
+
+            var skip = request.Start;
+            var take = request.Length;
+            var searchValue = request.Search?.Value;
+
+            var result = await contactService.GetContactsPagedAsync(userId, skip, take, searchValue);
+
+            return Json(new
+            {
+                draw = request.Draw,
+                recordsTotal = result.TotalItems,
+                recordsFiltered = result.FilteredItems,
+                data = result.Data
+            });
         }
+
 
         [HttpGet]
         public async Task<IActionResult> GetAllContactsForCompany(int? companyId)

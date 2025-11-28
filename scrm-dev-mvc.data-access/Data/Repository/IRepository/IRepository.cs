@@ -20,6 +20,7 @@ namespace scrm_dev_mvc.Data.Repository.IRepository
 
         void DeleteRange(List<T> entity);
 
+        IQueryable<T> GetQueryable();
 
     }
 }
