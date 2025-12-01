@@ -1,4 +1,5 @@
-﻿@using System.Security.Claims
+﻿@using StackExchange.Profiling
+@using System.Security.Claims
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -7,7 +8,6 @@
     <title>@ViewData["Title"]SCRM</title>
     <link rel="icon" type="image/png" href="images/logo.png">
     <link rel="icon" type="image/png" href="~/favicon.png">
-    <!-- Toastr CSS -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css" rel="stylesheet" />
 
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
@@ -23,7 +23,6 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
     <style>
-        /* ======== LAYOUT BASE ======== */
         body {
             display: flex;
             min-height: 100vh;
@@ -32,7 +31,6 @@
             color: #333;
         }
 
-        /* ======== SIDEBAR ======== */
         .sidebar {
             width: 250px;
             background-color: #ffffff;
@@ -105,14 +103,12 @@
             color: #dc3545 !important;
         }
 
-        /* ======== MAIN CONTENT ======== */
         .main-content {
             margin-left: 250px;
             padding: 2rem;
             flex-grow: 1;
         }
 
-        /* ======== PROFILE BOX ======== */
         .profile-box {
             text-align: center;
             margin-bottom: 2rem;
@@ -140,7 +136,6 @@
             color: #666;
             background-color: #fafafa;
         }
-        /* ======== NEW USER PROFILE ======== */
         .user-profile {
             display: flex;
             align-items: center;
@@ -152,7 +147,7 @@
         }
 
         .profile-icon {
-            flex-shrink: 0; /* Prevents the icon from shrinking */
+            flex-shrink: 0; 
             width: 40px;
             height: 40px;
             background-color: #e9ecef;
@@ -166,8 +161,8 @@
         }
 
         .profile-info {
-            flex-grow: 1; /* Allows this element to take up remaining space */
-            min-width: 0; /* Important for flexbox text truncation */
+            flex-grow: 1; 
+            min-width: 0; 
         }
 
         .profile-name {
@@ -192,7 +187,7 @@
         .status-dot {
             width: 8px;
             height: 8px;
-            background-color: #28a745; /* Green status color */
+            background-color: #28a745; 
             border-radius: 50%;
             flex-shrink: 0;
         }
@@ -202,38 +197,32 @@
         }
 
         .sidebar-divider {
-            margin: 1rem 0; /* Adds space above and below the line */
+            margin: 1rem 0; 
             border: none;
             border-top: 1px solid var(--text-tertiary);
             
         }
-        /* === TOASTR BRAND THEME === */
 
-        /* Main success / brand toast */
         .toast-success {
             background-color: var(--color-secondary) !important;
             color: #fff !important;
         }
 
-        /* Info toast: soft gray-blue */
         .toast-info {
             background-color: hsl(220, 15%, 40%) !important;
             color: #fff !important;
         }
 
-        /* Warning toast: warm orange */
         .toast-warning {
             background-color: hsl(35, 100%, 55%) !important;
             color: #fff !important;
         }
 
-        /* Error toast: deeper version of your brand hue */
         .toast-error {
             background-color: hsl(347.78, 100%, 45%) !important;
             color: #fff !important;
         }
 
-        /* Toast container & close button tweaks */
         .toast {
             border-radius: 10px !important;
             box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15) !important;
@@ -250,6 +239,7 @@
 
     </style>
 </head>
+
 <body>
     @if (TempData["Message"] != null)
     {
@@ -262,7 +252,6 @@
 
     <div class="sidebar">
         <div>
-            @* <div class="sidebar-header">SCRM</div> *@
 
             @if (User?.Identity?.IsAuthenticated == true)
             {
@@ -270,7 +259,6 @@
                 var organizationName = User.Claims.FirstOrDefault(c => c.Type == "OrganizationName")?.Value;
                 bool hasOrganization = !string.IsNullOrEmpty(organizationName);
 
-                @* --- REPLACE the old profile-box div with this new user-profile div --- *@
 
                 <div class="user-profile">
                     <div class="profile-icon">
@@ -282,8 +270,7 @@
                             <div class="profile-name">@firstName</div>
                         }
                         <div class="profile-email">
-                            @* <span class="status-dot"></span> *@
-                            @User.Identity.Name  @* This usually holds the email *@
+                            @User.Identity.Name 
                         </div>
                     </div>
                    
@@ -378,7 +365,6 @@
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
     <script src="//cdn.datatables.net/1.13.3/js/jquery.dataTables.min.js" asp-append-version="true"></script>
-    <!-- Toastr JS -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
     <script>
         toastr.options = {

@@ -1,5 +1,4 @@
-﻿// You'll need to inject your DbContext and IUserService here
-// For this example, let's assume you have a 'ApplicationDbContext' and 'IUserService'
+﻿
 using Microsoft.EntityFrameworkCore.Metadata;
 using scrm_dev_mvc.Data.Repository.IRepository;
 using scrm_dev_mvc.DataAccess.Data;
@@ -16,13 +15,10 @@ public class InvitationService(ApplicationDbContext context, IUserService userSe
         inv.IsAccepted == false &&
         inv.ExpiryDate > DateTime.UtcNow);
 
-        // 2. IF VALID INVITATION EXISTS, RETURN NULL
-        // This signals to the calling code (e.g., your Controller) that the 
-        // invitation failed to create because one already exists.
+        
         if (existingInvitation != null)
         {
-            // "Notify user" happens in the code that *calls* this method,
-            // by checking for a null return.
+           
             return null;
         }
 
@@ -51,10 +47,9 @@ public class InvitationService(ApplicationDbContext context, IUserService userSe
 
         if (invitation == null)
         {
-            return false; // Invalid, used, or expired code
+            return false; 
         }
-        var ownerId = userId;  // User accepting the invitation is the owner
-        // Use a user service to update the user's organization
+        var ownerId = userId;  
         var success = await userService.AssignUserToOrganizationAsync(userId, invitation.OrganizationId, invitation.RoleId, ownerId);
 
         if (success)
@@ -74,7 +69,6 @@ public class InvitationService(ApplicationDbContext context, IUserService userSe
 
     private string GenerateUniqueCode()
     {
-        // Generates a random 8-character alphanumeric code
         return Guid.NewGuid().ToString().Replace("-", "").Substring(0, 8).ToUpper();
     }
 }

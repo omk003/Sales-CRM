@@ -9,6 +9,7 @@ using scrm_dev_mvc.services;
 using scrm_dev_mvc.services.Interfaces;
 using scrm_dev_mvc.Services;
 using Serilog;
+using StackExchange.Profiling;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -22,6 +23,10 @@ builder.Services.AddControllersWithViews();
 var connectionString = builder.Configuration.GetConnectionString("ProductionConnection");
 //builder.Services.AddDbContext<ApplicationDbContext>(options =>
 //    options.UseSqlServer(connectionString));
+
+builder.Services.AddMiniProfiler(options => {
+    options.RouteBasePath = "/profiler";
+}).AddEntityFramework();
 
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlServer(connectionString, sqlOptions =>
@@ -85,7 +90,6 @@ try
     app.UseSerilogRequestLogging();
     if (!app.Environment.IsDevelopment())
     {
-        // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
         app.UseHsts();
     }
     else
@@ -97,7 +101,7 @@ try
 
 
     app.UseStaticFiles();
-
+    app.UseMiniProfiler();
     //app.Use(async (context, next) =>
     //{
     //    Log.Information("HTTP {Method} {Path} invoked by {IP}",

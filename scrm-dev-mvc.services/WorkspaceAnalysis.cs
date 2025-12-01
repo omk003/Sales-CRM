@@ -27,13 +27,11 @@ namespace scrm_dev_mvc.Services
             var viewModel = new WorkspaceViewModel { IsAdmin = isAdmin };
             var today = DateTime.UtcNow;
 
-            // --- 1. GET TASKS ---
             try
             {
                 var completedStatus = await _unitOfWork.TaskStatuses.FirstOrDefaultAsync(s => s.StatusName == "Completed");
                 int completedStatusId = completedStatus?.Id ?? -1;
 
-                // --- Query 1: Get INCOMPLETE Tasks ---
                 var incompleteTasks = await _unitOfWork.Tasks.GetAllAsync(
                     t => t.OwnerId == userId && t.StatusId != completedStatusId,
                     false,
@@ -61,7 +59,6 @@ namespace scrm_dev_mvc.Services
                     .OrderBy(t => t.DueDate)
                     .ToList();
 
-                // --- Query 2: Get COMPLETED Tasks (e.g., last 50) ---
                 var completedTasks = await _unitOfWork.Tasks.GetAllAsync(
                     predicate: t => t.OwnerId == userId && t.StatusId == completedStatusId,
                     asNoTracking: false,
@@ -70,14 +67,14 @@ namespace scrm_dev_mvc.Services
                 );
 
                 viewModel.CompletedTasks = completedTasks
-                    .OrderByDescending(t => t.CompletedAt ?? t.DueDate) // Order by when they were completed
-                    .Take(50) // Only show the last 50
+                    .OrderByDescending(t => t.CompletedAt ?? t.DueDate)
+                    .Take(50) 
                     .Select(t => new TaskSummaryViewModel
                     {
                         Id = t.Id,
                         Title = t.Title ?? "N/A",
                         TaskType = t.TaskType,
-                        DueDate = t.DueDate ?? today, // Use 'today' as a fallback
+                        DueDate = t.DueDate ?? today, 
                         RelatedTo = t.ContactId.HasValue ? $"{t.Contact?.FirstName} {t.Contact?.LastName} (Contact)" :
                                     t.DealId.HasValue ? $"{t.Deal?.Name} (Deal)" : "No Association"
                     })
@@ -120,31 +117,27 @@ namespace scrm_dev_mvc.Services
             }
 
 
-            // --- 3. Get "Team Activity" Data if Admin (No changes here) ---
             if (isAdmin)
             {
                 try
                 {
-                    // --- STEP 3a: Get the Admin's Organization ID ---
-                    // (Assuming your user model is ApplicationUser and is on the UoW)
+                    
                     var adminUser = await _unitOfWork.Users.FindAsync(userId);
                     if (adminUser == null || !adminUser.OrganizationId.HasValue)
                     {
                         _logger.LogWarning("Admin user {UserId} not found or has no OrganizationId.", userId);
-                        return viewModel; // Return the view model with just the user's data
+                        return viewModel; 
                     }
 
                     var organizationId = adminUser.OrganizationId.Value;
 
-                    // --- STEP 3b: Get all User IDs in that Organization ---
                     var orgUserIds = (await _unitOfWork.Users.GetAllAsync(
                             u => u.OrganizationId == organizationId,
-                            true // asNoTracking
+                            true 
                         ))
                         .Select(u => u.Id)
                         .ToList();
 
-                    // --- STEP 3c: Query Activities ONLY for those users ---
                     var teamActivities = await _unitOfWork.Activities.GetAllAsync(
                         a => a.ActivityDate >= today.AddDays(-30) &&
                              orgUserIds.Contains(a.OwnerId), 

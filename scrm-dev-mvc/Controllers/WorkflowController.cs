@@ -95,7 +95,7 @@ namespace scrm_dev_mvc.Controllers
 
             if (viewModel.Action_ChangeLeadStatus)
             {
-                var parameters = new { NewStatus = viewModel.ChangeLeadStatus_NewStatusId };
+                var parameters = new { NewLeadStatus = viewModel.ChangeLeadStatus_NewStatusId };
 
                 workflow.Actions.Add(new WorkflowAction
                 {
@@ -136,7 +136,7 @@ namespace scrm_dev_mvc.Controllers
                 }
                 if (viewModel.Task_ConditionLeadStatus.HasValue)
                 {
-                    conditionDict["LeadStatus"] = viewModel.Task_ConditionLeadStatus.Value.ToString();
+                    conditionDict["LeadStatusId"] = viewModel.Task_ConditionLeadStatus.Value.ToString();
                 }
 
                 var action = new WorkflowAction

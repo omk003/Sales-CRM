@@ -46,7 +46,7 @@ namespace scrm_dev_mvc.Models.ViewModels
         public string? Task_ConditionKey { get; set; }
         public string? Task_ConditionValue { get; set; }
 
-        public string Task_ConditionTaskType { get; set; }  // e.g. "email", "call"
+        public string? Task_ConditionTaskType { get; set; }  // e.g. "email", "call"
         public int? Task_ConditionLeadStatus { get; set; }
         
 

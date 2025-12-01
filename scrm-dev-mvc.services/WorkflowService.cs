@@ -1,7 +1,8 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using Newtonsoft.Json; 
+using Newtonsoft.Json;
+using scrm_dev_mvc.Data.Repository.IRepository;
 using scrm_dev_mvc.DataAccess.Data;
 using scrm_dev_mvc.Models;
 using scrm_dev_mvc.Models.Enums;
@@ -55,6 +56,15 @@ namespace scrm_dev_mvc.Services
         
         public async System.Threading.Tasks.Task RunTriggersAsync(WorkflowTrigger trigger, object entity)
         {
+            if (entity is Models.Task task && task.ContactId.HasValue && task.Contact?.LeadStatus == null)
+            {
+                using (var scope = _serviceProvider.CreateScope())
+                {
+                    var dbContext = scope.ServiceProvider.GetRequiredService<IUnitOfWork>();
+                    task.Contact = await dbContext.Contacts.FirstOrDefaultAsync(c => c.Id == task.ContactId.Value, "LeadStatus");
+                }
+            }
+
             if (!TryGetOrganizationId(entity, out int organizationId))
             {
                 _logger.LogWarning("Could not determine OrganizationId for trigger {Trigger}.", trigger);
@@ -316,33 +326,110 @@ namespace scrm_dev_mvc.Services
                 case scrm_dev_mvc.Models.Task task:
                     organizationId = task.OrganizationId;
                     return true;
-                    // Add other entities here (Company, Deal, etc.)
             }
             return false;
         }
 
 
+        //private bool MatchesCondition(string conditionJson, object entity)
+        //{
+        //    if (string.IsNullOrEmpty(conditionJson))
+        //        return true; 
+
+        //    var conditionDict = JsonConvert.DeserializeObject<Dictionary<string, object>>(conditionJson);
+
+        //    foreach (var kvp in conditionDict)
+        //    {
+        //        var keys = kvp.Key.Split('.'); 
+        //        object value = entity;
+
+        //        //foreach (var key in keys)
+        //        //{
+        //        //    var prop = value?.GetType().GetProperty(key);
+        //        //    if (prop == null)
+        //        //        return false;
+        //        //    value = prop.GetValue(value);
+        //        //}
+        //        foreach (var key in keys)
+        //        {
+        //            if (value == null) return false;
+
+        //            var type = value.GetType();
+        //            var prop = type.GetProperty(key);
+
+        //            // --- SMART FALLBACK LOGIC START ---
+        //            // If property not found on current object, and current object is a Task, 
+        //            // try looking at the Task's Contact.
+        //            if (prop == null && value is Models.Task task && task.Contact != null)
+        //            {
+        //                var contactProp = typeof(Contact).GetProperty(key);
+        //                if (contactProp != null)
+        //                {
+        //                    // Switch context: We are now looking at the Contact, not the Task
+        //                    value = task.Contact;
+        //                    prop = contactProp;
+        //                }
+        //            }
+        //            // --- SMART FALLBACK LOGIC END ---
+
+        //            if (prop == null)
+        //                return false; // Property truly doesn't exist
+
+        //            value = prop.GetValue(value);
+        //        }
+
+        //        string stringValue = value?.ToString();
+        //        string conditionValue = kvp.Value?.ToString();
+
+        //        if (stringValue != conditionValue)
+        //            return false;
+        //    }
+        //    return true;
+        //}
+
         private bool MatchesCondition(string conditionJson, object entity)
         {
             if (string.IsNullOrEmpty(conditionJson))
-                return true; 
+                return true;
 
             var conditionDict = JsonConvert.DeserializeObject<Dictionary<string, object>>(conditionJson);
 
             foreach (var kvp in conditionDict)
             {
-                var keys = kvp.Key.Split('.'); 
+                var keys = kvp.Key.Split('.');
                 object value = entity;
 
                 foreach (var key in keys)
                 {
-                    var prop = value?.GetType().GetProperty(key);
-                    if (prop == null)
-                        return false;
+                    if (value == null) return false;
+
+                    var type = value.GetType();
+                    var prop = type.GetProperty(key);
+
+                    // --- SMART FALLBACK: Redirect to Contact if property is missing on Task ---
+                    if (prop == null && value is Models.Task task && task.Contact != null)
+                    {
+                        // Check if the property (e.g., "LeadStatusId") exists on the Contact instead
+                        var contactProp = typeof(Contact).GetProperty(key);
+                        if (contactProp != null)
+                        {
+                            value = task.Contact; // Switch object to Contact
+                            prop = contactProp;   // Switch property to Contact's property
+                        }
+                    }
+                    // ------------------------------------------------------------------------
+
+                    if (prop == null) return false; // Property truly not found
+
                     value = prop.GetValue(value);
                 }
 
-                if (value == null || value.ToString() != kvp.Value.ToString())
+                // Comparison Logic
+                string entityValue = value?.ToString(); // Now returns "1" (if int) or "New" (if Enum)
+                string ruleValue = kvp.Value?.ToString();
+
+                // Simple string comparison
+                if (entityValue != ruleValue)
                     return false;
             }
             return true;

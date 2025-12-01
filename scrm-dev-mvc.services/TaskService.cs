@@ -33,7 +33,6 @@ namespace scrm_dev_mvc.services
        
         public async Task<TaskCreateViewModel> GetTaskCreateViewModelAsync(int? contactId, int? companyId, int? dealId)
         {
-            // ... (same as before)
             var viewModel = new TaskCreateViewModel
             {
                 ContactId = contactId,
@@ -52,13 +51,11 @@ namespace scrm_dev_mvc.services
             return viewModel;
         }
 
-        // --- THIS METHOD IS NOW UPDATED ---
         public async Task<(bool Success, string Message)> CreateTaskAsync(TaskCreateViewModel viewModel, Guid ownerId)
         {
-            Models.Task task; // Use full namespace
+            Models.Task task; 
             var user = await _unitOfWork.Users.FirstOrDefaultAsync(u => u.Id == ownerId);
             var organizationId = user?.OrganizationId ?? 0;
-            // --- Step 1: Create and Save the Task ---
             try
             {
                 task = new Models.Task
@@ -77,7 +74,7 @@ namespace scrm_dev_mvc.services
                 };
 
                 await _unitOfWork.Tasks.AddAsync(task);
-                await _unitOfWork.SaveChangesAsync(); // Commit the task
+                await _unitOfWork.SaveChangesAsync();
             }
             catch (Exception ex)
             {
@@ -85,13 +82,11 @@ namespace scrm_dev_mvc.services
                 return (false, "A database error occurred while creating the task.");
             }
 
-            // --- Step 2: Call your ActivityService to log the activity ---
             try
             {
                 var status = await _unitOfWork.TaskStatuses.FirstOrDefaultAsync(u => u.Id == viewModel.StatusId);
                 var statusName = status?.StatusName ?? "Pending";
 
-                // Build the DTO your service expects
                 var activityDto = new CreateActivityDto
                 {
                     ActivityTypeName = "Task",
@@ -101,13 +96,12 @@ namespace scrm_dev_mvc.services
                     ActivityDate = DateTime.UtcNow,
                     ContactId = viewModel.ContactId,
                     DealId = viewModel.DealId,
-                    OwnerId = ownerId, // Pass the OwnerId from the controller
+                    OwnerId = ownerId,
 
-                    SubjectId = task.Id, // The ID of the task we just created
+                    SubjectId = task.Id, 
                     SubjectType = "Task"
                 };
 
-                // This call saves itself (based on your service's code)
                 await _activityService.CreateActivityAsync(activityDto);
 
                 return (true, "Task created successfully!");
@@ -115,7 +109,6 @@ namespace scrm_dev_mvc.services
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Task (ID: {TaskId}) was created, but failed to create activity log.", task.Id);
-                // This is a "compensating transaction" scenario. The task exists, but the activity failed.
                 return (false, "Task was created, but logging the activity failed. Please check logs.");
             }
         }
@@ -124,7 +117,7 @@ namespace scrm_dev_mvc.services
         public async Task<TaskUpdateViewModel> GetTaskUpdateViewModelAsync(int taskId)
         {
             var task = await _unitOfWork.Tasks.FirstOrDefaultAsync(u => u.Id == taskId,
-                include: "Contact,Deal"); // Include related data
+                include: "Contact,Deal"); 
 
             if (task == null)
                 throw new InvalidOperationException("Task not found.");
@@ -139,7 +132,6 @@ namespace scrm_dev_mvc.services
                 ContactId = task.ContactId,
                 DealId = task.DealId,
                 TaskType = task.TaskType,
-                // Populate all dropdowns
                 TaskStatuses = (await _unitOfWork.TaskStatuses.GetAllAsync())
                                 .Select(s => new SelectListItem { Value = s.Id.ToString(), Text = s.StatusName }),
                 LeadStatuses = (await _unitOfWork.LeadStatuses.GetAllAsync())
@@ -148,20 +140,18 @@ namespace scrm_dev_mvc.services
                                 .Select(s => new SelectListItem { Value = s.Id.ToString(), Text = s.Name }),
             };
 
-            // If linked to a Contact, pre-fill its current status
             if (task.Contact != null)
             {
-                viewModel.ContactName = task.Contact.FirstName ?? task.Contact.Email; // Assuming Contact has a Name property
-                viewModel.CurrentContactLeadStatusId = task.Contact.LeadStatusId; // Assuming this property exists
+                viewModel.ContactName = task.Contact.FirstName ?? task.Contact.Email; 
+                viewModel.CurrentContactLeadStatusId = task.Contact.LeadStatusId; 
                 viewModel.ContactEmail = task.Contact.Email;
                 viewModel.ContactPhoneNumber = task.Contact.Number;
             }
 
-            // If linked to a Deal, pre-fill its current stage
             if (task.Deal != null)
             {
                 viewModel.DealName = task.Deal.Name;
-                viewModel.CurrentDealStageId = task.Deal.StageId; // Assuming this property exists
+                viewModel.CurrentDealStageId = task.Deal.StageId; 
             }
 
             return viewModel;
@@ -174,19 +164,16 @@ namespace scrm_dev_mvc.services
         {
             try
             {
-                // 1. Get the task AND its related contact
-                // We include "Contact" so we use the same object for all operations
                 var task = await _unitOfWork.Tasks.FirstOrDefaultAsync(u => u.Id == viewModel.TaskId, include: "Contact");
                 if (task == null) return (false, "Task not found.");
 
                 bool taskWasCompleted = false;
                 bool leadStatusWasManuallyChanged = false;
 
-                // --- 1. Handle MANUAL Lead Status change FIRST ---
-                // This block runs if the user *manually* changed the Lead Status dropdown in the modal.
+                
                 if (viewModel.ContactId.HasValue && viewModel.CurrentContactLeadStatusId.HasValue)
                 {
-                    var contact = task.Contact; // Use the already-loaded contact
+                    var contact = task.Contact;
                     if (contact == null)
                     {
                         contact = await _unitOfWork.Contacts.FirstOrDefaultAsync(u => u.Id == viewModel.ContactId.Value);
@@ -207,9 +194,8 @@ namespace scrm_dev_mvc.services
                         });
 
                         contact.LeadStatusId = newManualStatusId;
-                        leadStatusWasManuallyChanged = true; // Flag that this happened
+                        leadStatusWasManuallyChanged = true; 
 
-                        // Fire the trigger for the *manual* change
                         if (TryGetTriggerForStatus(newManualStatusId, out WorkflowTrigger trigger))
                         {
                             await _workflowService.RunTriggersAsync(trigger, contact);
@@ -218,7 +204,6 @@ namespace scrm_dev_mvc.services
                     }
                 }
 
-                // --- 2. Handle Task Status change ---
                 if (task.StatusId != viewModel.StatusId)
                 {
                     await _auditService.LogChangeAsync(new AuditLogDto
@@ -231,18 +216,16 @@ namespace scrm_dev_mvc.services
                         NewValue = viewModel.StatusId.ToString()
                     });
 
-                    task.StatusId = viewModel.StatusId; // Apply change
-
+                    task.StatusId = viewModel.StatusId; 
                     var completedStatus = await _unitOfWork.TaskStatuses.FirstOrDefaultAsync(s => s.StatusName == "Completed");
                     if (completedStatus != null && task.StatusId == completedStatus.Id)
                     {
                         task.CompletedAt = DateTime.UtcNow;
-                        taskWasCompleted = true; // Flag that this happened
+                        taskWasCompleted = true; 
                     }
                     _unitOfWork.Tasks.Update(task);
                 }
 
-                // --- 3. Handle Deal change ---
                 if (viewModel.DealId.HasValue && viewModel.CurrentDealStageId.HasValue)
                 {
                     // ... (Your existing deal logic here) ...
@@ -250,20 +233,16 @@ namespace scrm_dev_mvc.services
                     // _unitOfWork.Deals.Update(deal);
                 }
 
-                // --- 4. Save ALL manual changes in one transaction ---
+                
                 await _unitOfWork.SaveChangesAsync();
 
-                // --- 5. Fire the AUTOMATIC TaskCompleted trigger ---
-                // ONLY run this workflow if the task was completed AND
-                // the user did NOT *also* manually change the lead status.
-                // This gives manual changes priority and prevents the fight.
+               
                 if (taskWasCompleted && !leadStatusWasManuallyChanged)
                 {
-                    // This runs in its own transaction (Context_B) *after*
-                    // Context_A is finished, so it cannot be overwritten.
+                    
                     await _workflowService.RunTriggersAsync(
                         WorkflowTrigger.TaskCompleted,
-                        task // Pass the completed task object
+                        task 
                     );
                 }
 

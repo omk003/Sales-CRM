@@ -95,7 +95,7 @@ namespace scrm_dev_mvc.Controllers
             }
 
             string? adminId = configuration["Gmail:AdminEmailId"];
-            await gmailService.SendEmailAsync(Guid.Parse(adminId ?? ""),email,"Invitation from SCRM",$"Hey, you just got invited to SCRM in {organization.Name}, log in to the SCRM using this link - {"https://maudlinly-nonreactive-arturo.ngrok-free.dev/auth/login?invitationcode=" + invitation.InvitationCode}   ,            if new user use this link {"https://maudlinly-nonreactive-arturo.ngrok-free.dev/auth/register?invitationcode=" + invitation.InvitationCode}","");
+            await gmailService.SendEmailAsync(Guid.Parse(adminId ?? ""),email,"Invitation from SCRM",$"Hey, you just got invited to SCRM in {organization.Name}, log in to the SCRM using this link - {"https://salescrm.qzz.io/auth/login?invitationcode=" + invitation.InvitationCode}   ,            if new user use this link {"https://salescrm.qzz.io/auth/register?invitationcode=" + invitation.InvitationCode}","");
 
             TempData["Message"] = $"Invitation sent successfully to {email}!";
             return RedirectToAction("Index");

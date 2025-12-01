@@ -140,7 +140,7 @@ namespace scrm_dev_mvc.Services
         {
             var user = await _unitOfWork.Users.FirstOrDefaultAsync(u => u.Id == userId, "GmailCred");
 
-            if (user == null || string.IsNullOrEmpty(user.GmailCred.GmailRefreshToken))
+            if (user == null || string.IsNullOrEmpty(user.GmailCred?.GmailRefreshToken))
             {
                
                 string authUrl = await GenerateAuthUrl(user?.Email, redirectUri);
