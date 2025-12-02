@@ -1,18 +1,23 @@
 ﻿
+using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using scrm_dev_mvc.Models;
+using System.Security.Claims;
 
 namespace scrm_dev_mvc.DataAccess.Data;
 
 public partial class ApplicationDbContext : DbContext
 {
-    public ApplicationDbContext()
+    private readonly IHttpContextAccessor _httpContextAccessor;
+    public ApplicationDbContext(IHttpContextAccessor httpContextAccessor)
     {
+        _httpContextAccessor = httpContextAccessor;
     }
 
-    public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
+    public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options, IHttpContextAccessor httpContextAccessor)
         : base(options)
     {
+        _httpContextAccessor = httpContextAccessor;
     }
 
     public virtual DbSet<Activity> Activities { get; set; }
@@ -69,6 +74,134 @@ public partial class ApplicationDbContext : DbContext
 
     public virtual DbSet<WorkflowAction> WorkflowActions { get; set; }
 
+    public override async Task<int> SaveChangesAsync(
+        bool acceptAllChangesOnSuccess,
+        CancellationToken cancellationToken = default)
+    {
+        // 1. Generate Audit Logs *before* saving the changes
+        await AuditTrackedChangesAsync();
+
+        // 2. Save ALL changes (domain changes + new audit records)
+        return await base.SaveChangesAsync(acceptAllChangesOnSuccess, cancellationToken);
+    }
+
+    private async System.Threading.Tasks.Task AuditTrackedChangesAsync()
+    {
+        // Get the current user's GUID (defaults to Guid.Empty if not found)
+        Guid currentOwnerId = GetCurrentOwnerId();
+
+        var auditEntries = new List<Audit>();
+        var timestamp = DateTime.UtcNow;
+
+        // Iterate over all entities currently tracked by EF Core
+        // Use ToList() to avoid iterating over a collection that might change
+        foreach (var entry in ChangeTracker.Entries().ToList())
+        {
+            // Only process entities that are changing
+            if (entry.State == EntityState.Detached ||
+                entry.State == EntityState.Unchanged ||
+                entry.Entity is Audit) // Skip auditing the Audit table itself
+            {
+                continue;
+            }
+
+            // Get the table name
+            // The table name is derived from the EF metadata, respecting the ToTable mapping
+            var fullTableName = entry.Metadata.GetTableName() ?? entry.Metadata.DisplayName();
+
+            // Get the record ID
+            var primaryKey = entry.Properties.SingleOrDefault(p => p.Metadata.IsPrimaryKey());
+            int? recordId = null;
+
+            if (primaryKey != null && primaryKey.CurrentValue != null)
+            {
+                // Try to convert the Primary Key value (which is int? in Audit)
+                if (int.TryParse(primaryKey.CurrentValue.ToString(), out int idValue))
+                {
+                    recordId = idValue;
+                }
+            }
+            // Note on Added entities: For newly added entities, recordId might be 0 or null 
+            // at this point if the key is auto-generated in the DB. This is normal.
+
+            // Iterate over all properties to detect and log changes
+            foreach (var property in entry.Properties)
+            {
+                if (property.IsTemporary) continue;
+
+                string oldValue = null;
+                string newValue = null;
+                bool isChange = false;
+
+                switch (entry.State)
+                {
+                    case EntityState.Added:
+                        // Log the new value for all properties
+                        newValue = property.CurrentValue?.ToString() ?? "[NULL]";
+                        oldValue = "[NEW]";
+                        isChange = true;
+                        break;
+
+                    case EntityState.Deleted:
+                        // Log the original value for all properties being deleted
+                        oldValue = property.OriginalValue?.ToString() ?? "[NULL]";
+                        newValue = "[DELETED]";
+                        isChange = true;
+                        break;
+
+                    case EntityState.Modified:
+                        if (property.IsModified)
+                        {
+                            oldValue = property.OriginalValue?.ToString() ?? "[NULL]";
+                            newValue = property.CurrentValue?.ToString() ?? "[NULL]";
+
+                            // Only log if the values are actually different 
+                            if (!Equals(oldValue, newValue))
+                            {
+                                isChange = true;
+                            }
+                        }
+                        break;
+                }
+
+                if (isChange)
+                {
+                    auditEntries.Add(new Audit
+                    {
+                        OwnerId = currentOwnerId,
+                        RecordId = recordId, // Will be PK or 0/null for new records
+                        TableName = fullTableName,
+                        FieldName = property.Metadata.Name,
+                        OldValue = oldValue,
+                        NewValue = newValue,
+                        Timestamp = timestamp
+                    });
+                }
+            }
+        }
+
+        // Add the new audit log records to the DbContext's change tracker
+        if (auditEntries.Any())
+        {
+            await Audits.AddRangeAsync(auditEntries);
+        }
+    }
+
+    /// <summary>
+    /// Extracts the logged-in user's GUID from the HttpContext.
+    /// </summary>
+    private Guid GetCurrentOwnerId()
+    {
+        var httpContext = _httpContextAccessor.HttpContext;
+        if (httpContext == null)
+        {
+
+            return Guid.Empty;
+        }
+
+        var value = httpContext.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        return !string.IsNullOrEmpty(value) ? Guid.Parse(value) : Guid.Empty;
+    }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

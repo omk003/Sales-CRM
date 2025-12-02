@@ -16,7 +16,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace SCRM_dev.Services
 {
-    public class ContactService(IUnitOfWork unitOfWork, IAuditService _auditService, ILogger<ContactService> _logger, IWorkflowService _workflowService, IMemoryCache cache) : IContactService
+    public class ContactService(IUnitOfWork unitOfWork, ILogger<ContactService> _logger, IWorkflowService _workflowService, IMemoryCache cache) : IContactService
     {
         
         public async Task<string> CreateContactAsync(ContactDto contactDto)
@@ -39,84 +39,6 @@ namespace SCRM_dev.Services
             {
                 if (existingContact.IsDeleted == true)
                 {
-                    var auditOwnerId = contactDto.OwnerId;
-
-                    await _auditService.LogChangeAsync(new AuditLogDto
-                    {
-                        OwnerId = auditOwnerId ?? new Guid(),
-                        RecordId = existingContact.Id,
-                        TableName = "Contact",
-                        FieldName = "IsDeleted",
-                        OldValue = "true",
-                        NewValue = "false"
-                    });
-
-                    if (existingContact.FirstName != contactDto.FirstName)
-                        await _auditService.LogChangeAsync(new AuditLogDto
-                        {
-                            OwnerId = auditOwnerId ?? new Guid(),
-                            RecordId = existingContact.Id,
-                            TableName = "Contact",
-                            FieldName = "FirstName",
-                            OldValue = existingContact.FirstName,
-                            NewValue = contactDto.FirstName
-                        });
-
-                    if (existingContact.LastName != contactDto.LastName)
-                        await _auditService.LogChangeAsync(new AuditLogDto
-                        {
-                            OwnerId = auditOwnerId ?? new Guid(),
-                            RecordId = existingContact.Id,
-                            TableName = "Contact",
-                            FieldName = "LastName",
-                            OldValue = existingContact.LastName,
-                            NewValue = contactDto.LastName
-                        });
-
-                    if (existingContact.Number != contactDto.Number)
-                        await _auditService.LogChangeAsync(new AuditLogDto
-                        {
-                            OwnerId = auditOwnerId ?? new Guid(),
-                            RecordId = existingContact.Id,
-                            TableName = "Contact",
-                            FieldName = "Number",
-                            OldValue = existingContact.Number,
-                            NewValue = contactDto.Number
-                        });
-
-                    if (existingContact.LeadStatusId != contactDto.LeadStatusId)
-                        await _auditService.LogChangeAsync(new AuditLogDto
-                        {
-                            OwnerId = auditOwnerId ?? new Guid(),
-                            RecordId = existingContact.Id,
-                            TableName = "Contact",
-                            FieldName = "LeadStatusId",
-                            OldValue = existingContact.LeadStatusId.ToString(),
-                            NewValue = contactDto.LeadStatusId.ToString()
-                        });
-
-                    if (existingContact.LifeCycleStageId != contactDto.LifeCycleStageId)
-                        await _auditService.LogChangeAsync(new AuditLogDto
-                        {
-                            OwnerId = auditOwnerId ?? new Guid(),
-                            RecordId = existingContact.Id,
-                            TableName = "Contact",
-                            FieldName = "LifeCycleStageId",
-                            OldValue = existingContact.LifeCycleStageId.ToString(),
-                            NewValue = contactDto.LifeCycleStageId.ToString()
-                        });
-
-                    if (existingContact.OwnerId != contactDto.OwnerId)
-                        await _auditService.LogChangeAsync(new AuditLogDto
-                        {
-                            OwnerId = auditOwnerId ?? new Guid(),
-                            RecordId = existingContact.Id,
-                            TableName = "Contact",
-                            FieldName = "OwnerId",
-                            OldValue = existingContact.OwnerId.ToString(),
-                            NewValue = contactDto.OwnerId.ToString()
-                        });
-
                     existingContact.IsDeleted = false;
                     existingContact.FirstName = contactDto.FirstName;
                     existingContact.LastName = contactDto.LastName;
@@ -168,76 +90,7 @@ namespace SCRM_dev.Services
             await unitOfWork.Contacts.AddAsync(contact);
             await unitOfWork.SaveChangesAsync(); 
 
-            try
-            {
-                #region Audit Code
-                var auditOwnerId = contact.OwnerId;
-                await _auditService.LogChangeAsync(new AuditLogDto
-                {
-                    OwnerId = auditOwnerId ?? new Guid(),
-                    RecordId = contact.Id,
-                    TableName = "Contact",
-                    FieldName = "FirstName",
-                    OldValue = "[NULL]",
-                    NewValue = contact.FirstName
-                });
-                await _auditService.LogChangeAsync(new AuditLogDto
-                {
-                    OwnerId = auditOwnerId ?? new Guid(),
-                    RecordId = contact.Id,
-                    TableName = "Contact",
-                    FieldName = "LastName",
-                    OldValue = "[NULL]",
-                    NewValue = contact.LastName
-                });
-                await _auditService.LogChangeAsync(new AuditLogDto
-                {
-                    OwnerId = auditOwnerId ?? new Guid(),
-                    RecordId = contact.Id,
-                    TableName = "Contact",
-                    FieldName = "Email",
-                    OldValue = "[NULL]",
-                    NewValue = contact.Email
-                });
-                await _auditService.LogChangeAsync(new AuditLogDto
-                {
-                    OwnerId = auditOwnerId ?? new Guid(),
-                    RecordId = contact.Id,
-                    TableName = "Contact",
-                    FieldName = "Number",
-                    OldValue = "[NULL]",
-                    NewValue = contact.Number
-                });
-                await _auditService.LogChangeAsync(new AuditLogDto
-                {
-                    OwnerId = auditOwnerId ?? new Guid(),
-                    RecordId = contact.Id,
-                    TableName = "Contact",
-                    FieldName = "JobTitle",
-                    OldValue = "[NULL]",
-                    NewValue = contact.JobTitle
-                });
-                await _auditService.LogChangeAsync(new AuditLogDto
-                {
-                    OwnerId = auditOwnerId ?? new Guid(),
-                    RecordId = contact.Id,
-                    TableName = "Contact",
-                    FieldName = "LeadStatusId",
-                    OldValue = "[NULL]",
-                    NewValue = contact.LeadStatusId.ToString()
-                });
-                await _auditService.LogChangeAsync(new AuditLogDto
-                {
-                    OwnerId = auditOwnerId ?? new Guid(),
-                    RecordId = contact.Id,
-                    TableName = "Contact",
-                    FieldName = "LifeCycleStageId",
-                    OldValue = "[NULL]",
-                    NewValue = contact.LifeCycleStageId.ToString()
-                });
-
-                #endregion 
-                await unitOfWork.SaveChangesAsync();
+            
                 try
                 {
                     await _workflowService.RunTriggersAsync(
@@ -249,11 +102,8 @@ namespace SCRM_dev.Services
                 {
                     _logger.LogError(ex, "Workflow failed for ContactCreated: {ContactId}", contact.Id);
                 }
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Contact {ContactId} was created, but failed to write audit logs.", contact.Id);
-            }
+            
+            
 
             return "Contact created successfully";
         }
@@ -413,16 +263,6 @@ namespace SCRM_dev.Services
             {
                 if (contact.IsDeleted == false)
                 {
-                    await _auditService.LogChangeAsync(new AuditLogDto
-                    {
-                        OwnerId = ownerId,
-                        RecordId = contact.Id,
-                        TableName = "Contact",
-                        FieldName = "IsDeleted",
-                        OldValue = "false",
-                        NewValue = "true"
-                    });
-
                     contact.IsDeleted = true;
                     unitOfWork.Contacts.Update(contact);
                 }
@@ -443,15 +283,13 @@ namespace SCRM_dev.Services
                     
                     if (existingContact.Email != contact.Email)
                     {
-                        // Check if the NEW email is already taken by ANOTHER contact in the same org
                         var emailOwner = await unitOfWork.Contacts.FirstOrDefaultAsync(c =>
                             c.Email == contact.Email &&
                             c.OrganizationId == existingContact.OrganizationId &&
-                            c.Id != existingContact.Id); //  Exclude the current contact
+                            c.Id != existingContact.Id); 
 
                         if (emailOwner != null)
                         {
-                            // The email is taken by another record
                             if (emailOwner.IsDeleted == false)
                             {
                                 return "Email is already in use by another active contact.";
@@ -468,113 +306,42 @@ namespace SCRM_dev.Services
 
                     if (existingContact.FirstName != contact.FirstName)
                     {
-                        await _auditService.LogChangeAsync(new AuditLogDto
-                        {
-                            OwnerId = ownerId,
-                            RecordId = existingContact.Id,
-                            TableName = "Contact",
-                            FieldName = "FirstName",
-                            OldValue = existingContact.FirstName,
-                            NewValue = contact.FirstName
-                        });
                         existingContact.FirstName = contact.FirstName;
                     }
 
                     if (existingContact.LastName != contact.LastName)
                     {
-                        await _auditService.LogChangeAsync(new AuditLogDto
-                        {
-                            OwnerId = ownerId,
-                            RecordId = existingContact.Id,
-                            TableName = "Contact",
-                            FieldName = "LastName",
-                            OldValue = existingContact.LastName,
-                            NewValue = contact.LastName
-                        });
                         existingContact.LastName = contact.LastName;
                     }
 
                     if (existingContact.Email != contact.Email)
                     {
-                        await _auditService.LogChangeAsync(new AuditLogDto
-                        {
-                            OwnerId = ownerId,
-                            RecordId = existingContact.Id,
-                            TableName = "Contact",
-                            FieldName = "Email",
-                            OldValue = existingContact.Email,
-                            NewValue = contact.Email
-                        });
                         existingContact.Email = contact.Email;
                     }
 
                     if (existingContact.Number != contact.Number)
                     {
-                        await _auditService.LogChangeAsync(new AuditLogDto
-                        {
-                            OwnerId = ownerId,
-                            RecordId = existingContact.Id,
-                            TableName = "Contact",
-                            FieldName = "Number",
-                            OldValue = existingContact.Number,
-                            NewValue = contact.Number
-                        });
                         existingContact.Number = contact.Number;
                     }
 
                     if (existingContact.JobTitle != contact.JobTitle)
                     {
-                        await _auditService.LogChangeAsync(new AuditLogDto
-                        {
-                            OwnerId = ownerId,
-                            RecordId = existingContact.Id,
-                            TableName = "Contact",
-                            FieldName = "JobTitle",
-                            OldValue = existingContact.JobTitle,
-                            NewValue = contact.JobTitle
-                        });
+
                         existingContact.JobTitle = contact.JobTitle;
                     }
 
                     if (existingContact.LeadStatusId != contact.LeadStatusId)
                     {
-                        await _auditService.LogChangeAsync(new AuditLogDto
-                        {
-                            OwnerId = ownerId,
-                            RecordId = existingContact.Id,
-                            TableName = "Contact",
-                            FieldName = "LeadStatusId",
-                            OldValue = existingContact.LeadStatusId.ToString(),
-                            NewValue = contact.LeadStatusId.ToString()
-                        });
                         existingContact.LeadStatusId = contact.LeadStatusId;
                     }
 
                     if (existingContact.LifeCycleStageId != contact.LifeCycleStageId)
                     {
-                        await _auditService.LogChangeAsync(new AuditLogDto
-                        {
-                            OwnerId = ownerId,
-                            RecordId = existingContact.Id,
-                            TableName = "Contact",
-                            FieldName = "LifeCycleStageId",
-                            OldValue = existingContact.LifeCycleStageId.ToString(),
-                            NewValue = contact.LifeCycleStageId.ToString()
-                        });
                         existingContact.LifeCycleStageId = contact.LifeCycleStageId;
                     }
 
                     if (existingContact.OwnerId != contact.OwnerId)
                     {
-                        await _auditService.LogChangeAsync(new AuditLogDto
-                        {
-                            OwnerId = ownerId,
-                            RecordId = existingContact.Id,
-                            TableName = "Contact",
-                            FieldName = "OwnerId",
-                            OldValue = existingContact.OwnerId.ToString(),
-                            NewValue = contact.OwnerId.ToString()
-                        });
                         existingContact.OwnerId = contact.OwnerId;
                     }
                     #endregion 
@@ -630,15 +397,7 @@ namespace SCRM_dev.Services
                 }
             }
 
-            await _auditService.LogChangeAsync(new AuditLogDto
-            {
-                OwnerId = ownerId,
-                RecordId = contact.Id,
-                TableName = "Contact",
-                FieldName = "CompanyId",
-                OldValue = "[NULL]",
-                NewValue = companyId.ToString()
-            });
+           
             
             contact.CompanyId = companyId;
             unitOfWork.Contacts.Update(contact);
@@ -686,16 +445,6 @@ namespace SCRM_dev.Services
             }
 
             
-            await _auditService.LogChangeAsync(new AuditLogDto
-            {
-                OwnerId = ownerId,
-                RecordId = contact.Id,
-                TableName = "Contact",
-                FieldName = "DealAssociation",
-                OldValue = "[N/A]",
-                NewValue = $"Associated with Deal ID: {deal.Id} ({deal.Name})"
-            });
-            
             contact.Deals.Add(deal);
             unitOfWork.Contacts.Update(contact);
 
@@ -718,7 +467,7 @@ namespace SCRM_dev.Services
             
             var contact = await unitOfWork.Contacts.FirstOrDefaultAsync(
                 c => c.Id == contactId,
-                "Deals" // Eager load the Deals collection
+                "Deals" 
             );
 
             if (contact == null)
@@ -727,37 +476,21 @@ namespace SCRM_dev.Services
                 return (false, "Contact not found.");
             }
 
-            // 2. Find the deal to remove *from the contact's loaded collection*
             var dealToRemove = contact.Deals.FirstOrDefault(d => d.Id == dealId);
 
-            // 3. Check if the association even exists.
             if (dealToRemove == null)
             {
                 Debug.WriteLine($"DisassociateContactFromDeal: Contact {contactId} is not associated with Deal {dealId}.");
-                // Not an error, the desired state (disassociated) is already met.
                 return (true, "Contact was not associated with this deal.");
             }
+            
 
-            // --- AUDIT LOGIC ---
-            await _auditService.LogChangeAsync(new AuditLogDto
-            {
-                OwnerId = ownerId,
-                RecordId = contact.Id,
-                TableName = "Contact",
-                FieldName = "DealAssociation",
-                OldValue = $"Associated with Deal ID: {dealToRemove.Id} ({dealToRemove.Name})",
-                NewValue = "[Disassociated]"
-            });
-            // --- END AUDIT LOGIC ---
-
-            // 4. Remove the association
             contact.Deals.Remove(dealToRemove);
             unitOfWork.Contacts.Update(contact);
 
-            // 5. Save
             try
             {
-                await unitOfWork.SaveChangesAsync(); // Saves contact change AND audit log
+                await unitOfWork.SaveChangesAsync(); 
                 return (true, "Contact disassociated successfully.");
             }
             catch (Exception ex)
@@ -771,36 +504,20 @@ namespace SCRM_dev.Services
         {
             var contact = await unitOfWork.Contacts.FirstOrDefaultAsync(c => c.Id == contactId);
 
-            // 1. Check if contact exists
             if (contact == null)
                 return (false, "Contact not found.");
 
-            // 2. Check if it's already disassociated
             if (contact.CompanyId == null)
                 return (true, "Contact is already not associated with any company.");
 
-            // Store old value for logging
             var oldCompanyId = contact.CompanyId.ToString();
 
-            // --- AUDIT LOGIC ---
-            await _auditService.LogChangeAsync(new AuditLogDto
-            {
-                OwnerId = ownerId,
-                RecordId = contact.Id,
-                TableName = "Contact",
-                FieldName = "CompanyId",
-                OldValue = oldCompanyId,
-                NewValue = "[NULL]"
-            });
-            // --- END AUDIT LOGIC ---
-
-            // 3. Perform the disassociation
             contact.CompanyId = null;
             unitOfWork.Contacts.Update(contact);
 
             try
             {
-                await unitOfWork.SaveChangesAsync(); // Saves contact AND audit log
+                await unitOfWork.SaveChangesAsync(); 
                 return (true, "Company disassociated successfully.");
             }
             catch (Exception ex)

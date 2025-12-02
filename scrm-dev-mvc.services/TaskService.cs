@@ -7,6 +7,7 @@ using scrm_dev_mvc.Models.Enums;
 using scrm_dev_mvc.Models.ViewModels;
 using scrm_dev_mvc.services.Interfaces;
 using System.Diagnostics;
+using Twilio.TwiML.Voice;
 using LeadStatusEnum = scrm_dev_mvc.Models.Enums.LeadStatusEnum;
 namespace scrm_dev_mvc.services
 {
@@ -15,17 +16,15 @@ namespace scrm_dev_mvc.services
         private readonly IUnitOfWork _unitOfWork;
         private readonly IActivityService _activityService; 
         private readonly ILogger<TaskService> _logger;
-        private readonly IAuditService _auditService; 
         private readonly IWorkflowService _workflowService;
 
         public TaskService(IUnitOfWork unitOfWork,
                            IActivityService activityService, 
-                           ILogger<TaskService> logger, IAuditService auditService, IWorkflowService workflowService)
+                           ILogger<TaskService> logger, IWorkflowService workflowService)
         {
             _unitOfWork = unitOfWork;
             _activityService = activityService; 
             _logger = logger;
-            _auditService = auditService; 
             _workflowService = workflowService;
 
         }
@@ -183,16 +182,6 @@ namespace scrm_dev_mvc.services
 
                     if (contact != null && contact.LeadStatusId != newManualStatusId)
                     {
-                        await _auditService.LogChangeAsync(new AuditLogDto
-                        {
-                            OwnerId = ownerId,
-                            RecordId = contact.Id,
-                            TableName = "Contact",
-                            FieldName = "LeadStatusId",
-                            OldValue = contact.LeadStatusId.ToString(),
-                            NewValue = newManualStatusId.ToString()
-                        });
-
                         contact.LeadStatusId = newManualStatusId;
                         leadStatusWasManuallyChanged = true;
 
@@ -207,15 +196,6 @@ namespace scrm_dev_mvc.services
 
                 if (task.StatusId != viewModel.StatusId)
                 {
-                    await _auditService.LogChangeAsync(new AuditLogDto
-                    {
-                        OwnerId = ownerId,
-                        RecordId = task.Id,
-                        TableName = "Task",
-                        FieldName = "StatusId",
-                        OldValue = task.StatusId.ToString(),
-                        NewValue = viewModel.StatusId.ToString()
-                    });
 
                     task.StatusId = viewModel.StatusId; 
                     var completedStatus = await _unitOfWork.TaskStatuses.FirstOrDefaultAsync(s => s.StatusName == "Completed");
@@ -229,12 +209,23 @@ namespace scrm_dev_mvc.services
 
                 if (viewModel.DealId.HasValue && viewModel.CurrentDealStageId.HasValue)
                 {
-                    // ... (Your existing deal logic here) ...
-                    // var deal = ...
-                    // _unitOfWork.Deals.Update(deal);
+                    
+
+                    var deal = await _unitOfWork.Deals.FirstOrDefaultAsync(d => d.Id == viewModel.DealId.Value);
+
+                    if(deal != null)
+                    {
+                        int oldStageId = deal.StageId;
+
+                        deal.StageId = viewModel.CurrentDealStageId.Value;
+
+                        _unitOfWork.Deals.Update(deal);
+
+                    }
+                    
                 }
 
-                
+
                 await _unitOfWork.SaveChangesAsync();
 
                
@@ -262,7 +253,6 @@ namespace scrm_dev_mvc.services
 
         private bool TryGetTriggerForStatus(int statusId, out WorkflowTrigger trigger)
         {
-            // Cast the int ID to your LeadStatus enum
             LeadStatusEnum status = (LeadStatusEnum)statusId;
 
             switch (status)
@@ -302,28 +292,16 @@ namespace scrm_dev_mvc.services
                     return (false, "Task not found.");
                 }
 
-                // 1. Log the deletion as an audit event
-                await _auditService.LogChangeAsync(new AuditLogDto
-                {
-                    OwnerId = ownerId,
-                    RecordId = task.Id,
-                    TableName = "Task",
-                    FieldName = "Deleted",
-                    OldValue = task.Title, // Store what was deleted
-                    NewValue = "DELETED"
-                });
+                
 
                 var activityDeleted = await _activityService.DeleteActivityBySubjectAsync(taskId, "Task");
                 if (!activityDeleted)
                 {
-                    // Not a critical failure, but worth logging
                     _logger.LogWarning("Task {TaskId} is being deleted, but its associated activity log could not be marked for deletion.", taskId);
                 }
 
-                // 2. Delete the task itself
                 _unitOfWork.Tasks.Delete(task);
 
-                // 3. Save changes
                 await _unitOfWork.SaveChangesAsync();
 
                 _logger.LogInformation("Task {TaskId} deleted successfully by user {OwnerId}.", taskId, ownerId);
