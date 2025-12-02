@@ -78,53 +78,42 @@ public partial class ApplicationDbContext : DbContext
         bool acceptAllChangesOnSuccess,
         CancellationToken cancellationToken = default)
     {
-        // 1. Generate Audit Logs *before* saving the changes
         await AuditTrackedChangesAsync();
 
-        // 2. Save ALL changes (domain changes + new audit records)
         return await base.SaveChangesAsync(acceptAllChangesOnSuccess, cancellationToken);
     }
 
     private async System.Threading.Tasks.Task AuditTrackedChangesAsync()
     {
-        // Get the current user's GUID (defaults to Guid.Empty if not found)
         Guid currentOwnerId = GetCurrentOwnerId();
 
         var auditEntries = new List<Audit>();
         var timestamp = DateTime.UtcNow;
 
-        // Iterate over all entities currently tracked by EF Core
-        // Use ToList() to avoid iterating over a collection that might change
+       
         foreach (var entry in ChangeTracker.Entries().ToList())
         {
-            // Only process entities that are changing
             if (entry.State == EntityState.Detached ||
                 entry.State == EntityState.Unchanged ||
-                entry.Entity is Audit) // Skip auditing the Audit table itself
+                entry.Entity is Audit) 
             {
                 continue;
             }
 
-            // Get the table name
-            // The table name is derived from the EF metadata, respecting the ToTable mapping
+            
             var fullTableName = entry.Metadata.GetTableName() ?? entry.Metadata.DisplayName();
 
-            // Get the record ID
             var primaryKey = entry.Properties.SingleOrDefault(p => p.Metadata.IsPrimaryKey());
             int? recordId = null;
 
             if (primaryKey != null && primaryKey.CurrentValue != null)
             {
-                // Try to convert the Primary Key value (which is int? in Audit)
                 if (int.TryParse(primaryKey.CurrentValue.ToString(), out int idValue))
                 {
                     recordId = idValue;
                 }
             }
-            // Note on Added entities: For newly added entities, recordId might be 0 or null 
-            // at this point if the key is auto-generated in the DB. This is normal.
-
-            // Iterate over all properties to detect and log changes
+            
             foreach (var property in entry.Properties)
             {
                 if (property.IsTemporary) continue;
@@ -136,14 +125,12 @@ public partial class ApplicationDbContext : DbContext
                 switch (entry.State)
                 {
                     case EntityState.Added:
-                        // Log the new value for all properties
                         newValue = property.CurrentValue?.ToString() ?? "[NULL]";
                         oldValue = "[NEW]";
                         isChange = true;
                         break;
 
                     case EntityState.Deleted:
-                        // Log the original value for all properties being deleted
                         oldValue = property.OriginalValue?.ToString() ?? "[NULL]";
                         newValue = "[DELETED]";
                         isChange = true;
@@ -155,7 +142,6 @@ public partial class ApplicationDbContext : DbContext
                             oldValue = property.OriginalValue?.ToString() ?? "[NULL]";
                             newValue = property.CurrentValue?.ToString() ?? "[NULL]";
 
-                            // Only log if the values are actually different 
                             if (!Equals(oldValue, newValue))
                             {
                                 isChange = true;
@@ -169,7 +155,7 @@ public partial class ApplicationDbContext : DbContext
                     auditEntries.Add(new Audit
                     {
                         OwnerId = currentOwnerId,
-                        RecordId = recordId, // Will be PK or 0/null for new records
+                        RecordId = recordId, 
                         TableName = fullTableName,
                         FieldName = property.Metadata.Name,
                         OldValue = oldValue,
@@ -180,16 +166,11 @@ public partial class ApplicationDbContext : DbContext
             }
         }
 
-        // Add the new audit log records to the DbContext's change tracker
         if (auditEntries.Any())
         {
             await Audits.AddRangeAsync(auditEntries);
         }
     }
-
-    /// <summary>
-    /// Extracts the logged-in user's GUID from the HttpContext.
-    /// </summary>
     private Guid GetCurrentOwnerId()
     {
         var httpContext = _httpContextAccessor.HttpContext;

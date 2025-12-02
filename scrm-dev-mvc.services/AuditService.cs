@@ -28,8 +28,7 @@ namespace scrm_dev_mvc.Services
             };
 
             await _unitOfWork.Audits.AddAsync(auditLog);
-            // We DO NOT call SaveChangesAsync here.
-            // The calling service (e.g., TaskService) will do that.
+            
         }
     }
 }
