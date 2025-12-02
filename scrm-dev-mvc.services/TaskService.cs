@@ -194,13 +194,14 @@ namespace scrm_dev_mvc.services
                         });
 
                         contact.LeadStatusId = newManualStatusId;
-                        leadStatusWasManuallyChanged = true; 
+                        leadStatusWasManuallyChanged = true;
 
+                        _unitOfWork.Contacts.Update(contact);
                         if (TryGetTriggerForStatus(newManualStatusId, out WorkflowTrigger trigger))
                         {
                             await _workflowService.RunTriggersAsync(trigger, contact);
                         }
-                        _unitOfWork.Contacts.Update(contact);
+                       
                     }
                 }
 

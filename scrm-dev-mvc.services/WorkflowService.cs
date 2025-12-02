@@ -37,7 +37,7 @@ namespace scrm_dev_mvc.Services
             public string Title { get; set; }
             public int DaysDue { get; set; }
             public string TaskType { get; set; }
-            public string AssignedTo { get; set; } // e.g. "ContactOwner"
+            public string AssignedTo { get; set; } 
             public int PriorityId { get; set; } 
             public int StatusId { get; set; }   
         }
@@ -53,15 +53,66 @@ namespace scrm_dev_mvc.Services
             public int NewStageId { get; set; } 
         }
 
-        
+
+        //public async System.Threading.Tasks.Task RunTriggersAsync(WorkflowTrigger trigger, object entity)
+        //{
+        //    if (entity is Models.Task task && task.ContactId.HasValue && task.Contact?.LeadStatus == null)
+        //    {
+        //        using (var scope = _serviceProvider.CreateScope())
+        //        {
+        //            var dbContext = scope.ServiceProvider.GetRequiredService<IUnitOfWork>();
+        //            task.Contact = await dbContext.Contacts.FirstOrDefaultAsync(c => c.Id == task.ContactId.Value, "LeadStatus");
+        //        }
+        //    }
+
+        //    if (!TryGetOrganizationId(entity, out int organizationId))
+        //    {
+        //        _logger.LogWarning("Could not determine OrganizationId for trigger {Trigger}.", trigger);
+        //        return;
+        //    }
+
+        //    var workflows = await _context.Workflows
+        //        .Include(wf => wf.Actions) 
+        //        .Where(wf => wf.Event == trigger &&
+        //                     wf.OrganizationId == organizationId &&
+        //                     wf.IsActive)
+        //        .ToListAsync();
+
+        //    if (!workflows.Any())
+        //    {
+        //        return; 
+        //    }
+
+        //    _logger.LogInformation("Found {Count} workflows for trigger {Trigger}.", workflows.Count, trigger);
+
+
+        //    foreach (var workflow in workflows)
+        //    { 
+        //        foreach (var action in workflow.Actions)
+        //        {
+
+
+        //            try
+        //            {
+        //                await ExecuteActionAsync(action, entity);
+        //            }
+        //            catch (Exception ex)
+        //            {
+        //                _logger.LogError(ex, "Workflow action {ActionId} for workflow {WorkflowId} failed.", action.Id, workflow.Id);
+        //            }
+        //        }
+        //    }
+        //    }
+
         public async System.Threading.Tasks.Task RunTriggersAsync(WorkflowTrigger trigger, object entity)
         {
-            if (entity is Models.Task task && task.ContactId.HasValue && task.Contact?.LeadStatus == null)
+            
+            if (entity is Models.Task task && task.ContactId.HasValue && task.Contact == null)
             {
                 using (var scope = _serviceProvider.CreateScope())
                 {
-                    var dbContext = scope.ServiceProvider.GetRequiredService<IUnitOfWork>();
-                    task.Contact = await dbContext.Contacts.FirstOrDefaultAsync(c => c.Id == task.ContactId.Value, "LeadStatus");
+                    var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+                    task.Contact = await dbContext.Contacts.AsNoTracking().FirstOrDefaultAsync(c => c.Id == task.ContactId.Value);
                 }
             }
 
@@ -71,29 +122,40 @@ namespace scrm_dev_mvc.Services
                 return;
             }
 
+            
+            var jsonSettings = new JsonSerializerSettings
+            {
+                ReferenceLoopHandling = ReferenceLoopHandling.Ignore, 
+                PreserveReferencesHandling = PreserveReferencesHandling.Objects
+            };
+
+            string serializedEntity = JsonConvert.SerializeObject(entity, jsonSettings);
+            object entitySnapshot = JsonConvert.DeserializeObject(serializedEntity, entity.GetType(), jsonSettings);
+
+
             var workflows = await _context.Workflows
-                .Include(wf => wf.Actions) 
+                .Include(wf => wf.Actions)
                 .Where(wf => wf.Event == trigger &&
-                             wf.OrganizationId == organizationId &&
-                             wf.IsActive)
+                                wf.OrganizationId == organizationId &&
+                                wf.IsActive)
                 .ToListAsync();
 
-            if (!workflows.Any())
-            {
-                return; 
-            }
+            if (!workflows.Any()) return;
 
             _logger.LogInformation("Found {Count} workflows for trigger {Trigger}.", workflows.Count, trigger);
 
-            
             foreach (var workflow in workflows)
-            { 
+            {
                 foreach (var action in workflow.Actions)
                 {
-                    
-                    
                     try
                     {
+                        if (!MatchesCondition(action.ConditionJson, entitySnapshot))
+                        {
+                            _logger.LogInformation($"Action {action.Id} skipped due to condition mismatch.");
+                            continue;
+                        }
+
                         await ExecuteActionAsync(action, entity);
                     }
                     catch (Exception ex)
@@ -102,9 +164,9 @@ namespace scrm_dev_mvc.Services
                     }
                 }
             }
-            }
+        }
 
-       
+
         private async System.Threading.Tasks.Task ExecuteActionAsync(WorkflowAction action, object entity)
         {
             if (!MatchesCondition(action.ConditionJson, entity))
@@ -406,29 +468,24 @@ namespace scrm_dev_mvc.Services
                     var type = value.GetType();
                     var prop = type.GetProperty(key);
 
-                    // --- SMART FALLBACK: Redirect to Contact if property is missing on Task ---
                     if (prop == null && value is Models.Task task && task.Contact != null)
                     {
-                        // Check if the property (e.g., "LeadStatusId") exists on the Contact instead
                         var contactProp = typeof(Contact).GetProperty(key);
                         if (contactProp != null)
                         {
-                            value = task.Contact; // Switch object to Contact
-                            prop = contactProp;   // Switch property to Contact's property
+                            value = task.Contact; 
+                            prop = contactProp;   
                         }
                     }
-                    // ------------------------------------------------------------------------
 
-                    if (prop == null) return false; // Property truly not found
+                    if (prop == null) return false; 
 
                     value = prop.GetValue(value);
                 }
 
-                // Comparison Logic
-                string entityValue = value?.ToString(); // Now returns "1" (if int) or "New" (if Enum)
+                string entityValue = value?.ToString(); 
                 string ruleValue = kvp.Value?.ToString();
 
-                // Simple string comparison
                 if (entityValue != ruleValue)
                     return false;
             }

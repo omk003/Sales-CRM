@@ -175,10 +175,10 @@
             <section id="tab-content-activities" class="tab-content" style="display:none;">
                 <div style="background:var(--bg-secondary);border-radius:var(--border-radius-lg);box-shadow:var(--shadow-sm);padding:var(--space-lg);">
                     <h3 style="font-size:var(--fs-lg);color:var(--color-accent1);margin-bottom:var(--space-md);">Recent Activities</h3>
-                    <div style="margin-bottom:var(--space-md);">
+                    @* <div style="margin-bottom:var(--space-md);">
                         <input type="text" style="width:70%;padding:var(--space-sm);border-radius:var(--border-radius-sm);border:1px solid var(--border-color);" placeholder="Search activities" />
                         <button class="btn btn-custom" style="margin-left:var(--space-sm);">Search</button>
-                    </div>
+                    </div> *@
                     
                     @if (Model.Activities != null && Model.Activities.Any())
                     {
@@ -191,17 +191,14 @@
                                 if (activityName.Equals("Email", StringComparison.OrdinalIgnoreCase)) { icon = "envelope"; }
                                 else if (activityName.Equals("Call", StringComparison.OrdinalIgnoreCase)) { icon = "phone"; }
                                 
-                                // --- START OF LOGIC ---
                                 string onClickHandler = "";
                                 string liStyle = "border-bottom:1px solid var(--border-color); padding:var(--space-md) 0; display:flex; gap: var(--space-md); align-items: flex-start;";
 
-                                // Check if it's a task and has a SubjectId to link to
                                 if (activityName == "Task" && act.SubjectId.HasValue)
                                 {
                                     onClickHandler = $"openUpdateTaskModal({act.SubjectId.Value})";
-                                    liStyle += " cursor:pointer;"; // Make it look clickable
+                                    liStyle += " cursor:pointer;"; 
                                 }
-                                // --- END OF LOGIC ---
 
                                 <li style="@liStyle" onclick="@onClickHandler">
 
@@ -246,7 +243,6 @@
            
         </main>
 
-        <!-- Column 3: Company & Deals -->
         <aside style="flex:1; min-width: 280px;">
             <section style="background:var(--bg-secondary);border-radius:var(--border-radius-lg);box-shadow:var(--shadow-sm);padding:var(--space-lg);margin-bottom:var(--space-lg);">
 
@@ -267,7 +263,6 @@
                                 margin-bottom:var(--space-sm);">
 
                         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:var(--space-xs);">
-                            <!-- Left section: Name + Domain in same line -->
                             <div style="display:flex; align-items:center; gap:var(--space-sm);">
                                 <div style="font-weight:var(--fw-bold);">
                                     @Model.Company.Name
@@ -277,7 +272,6 @@
                                 </span>
                             </div>
 
-                            <!-- Right section: Delete button -->
                             <button class="btn-hover-shadow"
                                     type="button"
                                     title="Disassociate Company"
@@ -340,7 +334,6 @@
     </div>
 </div>
 
-<!-- FontAwesome for icons (if not already included) -->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 @Html.AntiForgeryToken()
 
@@ -374,14 +367,12 @@
     });
 });
 
-// --- NEW FUNCTION TO OPEN THE UPDATE MODAL ---
 function openUpdateTaskModal(taskId) {
     var url = '@Url.Action("Update", "Task")' + '?taskId=' + taskId;
     
     $.get(url, function (data) {
         $('#taskUpdateModalContainer').html(data);
         
-        // This modal ID is 'updateTaskModal'
         $('#updateTaskModal').css('display', 'flex'); 
         
         var form = $("#updateTaskForm");
@@ -394,20 +385,16 @@ function openUpdateTaskModal(taskId) {
     });
 }
 
-// --- NEW FUNCTION TO CLOSE THE UPDATE MODAL ---
 function closeUpdateTaskModal() {
     $('#taskUpdateModalContainer').html(''); 
 }
 
 
        $('#taskModalContainer').on('submit', '#createTaskForm', function (event) {
-        // This will now correctly stop the default form submission
         event.preventDefault(); 
 
         var form = $(this);
 
-        // Check if validation scripts are loaded and if form is valid
-        // This check prevents errors if validation scripts are missing
         if ($.validator && $.validator.unobtrusive && !form.valid()) {
             return false;
         }
@@ -419,7 +406,7 @@ function closeUpdateTaskModal() {
             success: function (response) {
                 closeCreateTaskModal();
                 alert(response.message || "Task created successfully!");
-                location.reload(); // Reloads the original page
+                location.reload(); 
             },
             error: function (xhr) {
                 var response = xhr.responseJSON;
@@ -439,26 +426,21 @@ function closeUpdateTaskModal() {
                     '&companyId=' + (companyId || '') +
                     '&dealId=' + (dealId || '');
 
-        // 1. Load the partial view from the controller
         $.get(url, function (data) {
-            // 2. Inject the HTML into our placeholder
             $('#taskModalContainer').html(data);
 
-            // 3. Show the modal
             $('#createTaskModal').css('display', 'flex');
 
-            // 4. We still need to parse validation for the new dynamic content
             var form = $("#createTaskForm");
             if ($.validator && $.validator.unobtrusive) {
                 $.validator.unobtrusive.parse(form);
             }
 
-            // 5. REMOVED: We no longer call handleTaskFormSubmit() here.
         });
     }
 
     function closeCreateTaskModal() {
-        $('#taskModalContainer').html(''); // Clear the HTML
+        $('#taskModalContainer').html(''); 
     }
 
     function showTab(tabName) {
@@ -475,12 +457,10 @@ function closeUpdateTaskModal() {
                 document.getElementById('companyModal').style.display = 'none';
             }
         function openCompanyModal() {
-            // Fetch companies from server
             $.get('/Company/GetAll', function (response) {
             var list = $('#companyList');
             list.empty();
 
-            // Use response.data (array)
             response.data.forEach(function (company) {
                 list.append(
                     `<li style="padding:8px; border-bottom:1px solid var(--border-color); cursor:pointer;" onclick="selectCompany(${company.id})">
@@ -497,33 +477,28 @@ function closeUpdateTaskModal() {
             $('#companyModal').hide();
         }
 
-        // --- THIS IS THE UPDATED FUNCTION ---
         function selectCompany(companyId) {
-            // Get the AntiForgeryToken
             var token = $('input[name="__RequestVerificationToken"]').val();
 
-            // POST selected companyId and contactId to server
             $.ajax({
                 url: '/Contact/AssociateContactToCompany',
                 type: 'POST',
                 data: { contactId: '@Model.Id', companyId: companyId },
                 headers: {
-                    "RequestVerificationToken": token // <-- ADDED TOKEN
+                    "RequestVerificationToken": token 
                 },
-                success: function (response) { // <-- Added 'response'
+                success: function (response) { 
                     closeCompanyModal();
-                    alert(response.message || "Company associated successfully!"); // Show success message
+                    alert(response.message || "Company associated successfully!"); 
                     location.reload();
                 },
-                error: function(xhr) { // <-- ADDED ERROR HANDLER
-                    // Show the error message from your controller
+                error: function(xhr) { 
                     alert("Failed to associate company: " + (xhr.responseJSON?.message || xhr.responseText));
                 }
             });
         }
 
         function openEmailModal() {
-        // Reset form fields
         $('#emailSubject').val('');
         $('#emailBody').val('');
         $('#emailModal').css('display', 'flex');
@@ -532,7 +507,6 @@ function closeUpdateTaskModal() {
         $('#emailModal').hide();
     }
 
-    // Handle form submit
     $('#emailForm').on('submit', function(event){
         event.preventDefault();
         var subject = $('#emailSubject').val();
@@ -577,14 +551,12 @@ function closeUpdateTaskModal() {
     }
 
     function openDealModal() {
-        // Fetch all deals from the server
-        $.get('@Url.Action("GetAll", "Deal")', function (response) { // Assuming you have a /Deal/GetAll endpoint
+        $.get('@Url.Action("GetAll", "Deal")', function (response) { 
             var list = $('#dealList');
             list.empty();
 
             if (response.data && response.data.length > 0) {
                 response.data.forEach(function (deal) {
-                    // Generate a formatted value, or "No Value"
                     var dealValue = deal.value ?
                         new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', minimumFractionDigits: 0 }).format(deal.value) :
                         'No Value';
@@ -608,25 +580,23 @@ function closeUpdateTaskModal() {
     }
 
     function selectDeal(dealId) {
-        // Get the current Contact ID from the model
         var contactId = @Model.Id;
 
-        // Get the AntiForgeryToken
         var token = $('input[name="__RequestVerificationToken"]').val();
 
         $.ajax({
-            url: '@Url.Action("AssociateContactToDeal", "Contact")', // Action we created
+            url: '@Url.Action("AssociateContactToDeal", "Contact")',
             type: 'POST',
             data: {
                 contactId: contactId,
                 dealId: dealId
             },
             headers: {
-                "RequestVerificationToken": token // Send the token
+                "RequestVerificationToken": token 
             },
             success: function () {
                 closeDealModal();
-                location.reload(); // Reload the page to show the new association
+                location.reload(); 
             },
             error: function(xhr) {
                 alert("Failed to associate deal: " + xhr.responseText);
@@ -634,7 +604,6 @@ function closeUpdateTaskModal() {
         });
     }
     function disassociateCompany() {
-        // Get the AntiForgeryToken
         var token = $('input[name="__RequestVerificationToken"]').val();
 
         if (!confirm("Are you sure you want to remove this company from the contact?")) {
@@ -642,7 +611,7 @@ function closeUpdateTaskModal() {
         }
 
         $.ajax({
-            url: '@Url.Action("DisassociateCompany", "Contact")', // New controller action
+            url: '@Url.Action("DisassociateCompany", "Contact")', 
             type: 'POST',
             data: {
                 contactId: '@Model.Id'
