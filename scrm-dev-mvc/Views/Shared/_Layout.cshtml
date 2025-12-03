@@ -237,10 +237,56 @@
                 opacity: 1;
             }
 
+        #universal-loader {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 10000; 
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .loader-backdrop {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+
+        .loader-spinner {
+            border: 4px solid #f3f3f3; 
+            border-top: 4px solid #dc3545;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            position: relative; 
+        }
+
+        @@keyframes spin {
+            0%
+
+        {
+            transform: rotate(0deg);
+        }
+
+        100% {
+            transform: rotate(360deg);
+        }
+
+        }
     </style>
 </head>
 
 <body>
+    <div id="universal-loader" style="display: none;">
+        <div class="loader-backdrop"></div>
+        <div class="loader-spinner"></div>
+    </div>
     @if (TempData["Message"] != null)
     {
         <script>
@@ -277,19 +323,15 @@
                 </div>
                 <hr class="sidebar-divider"> 
                 <div class="sidebar-menu">
-                    @* --- GET CURRENT PAGE INFO --- *@
                     @{
                         var currentController = ViewContext.RouteData.Values["controller"]?.ToString();
                     }
 
                     <ul>
-                        @* --- UPDATED CLASS LOGIC --- *@
                         @* <li><a asp-controller="Home" asp-action="Index" class="@(currentController == "Home" ? "active" : "")"><i class="bi bi-house"></i> Dashboard</a></li> *@
 
-                        @* --- UPDATED CLASS LOGIC (combines with existing 'disabled' check) --- *@
                         <li><a asp-controller="Contact" asp-action="Index" class="@(hasOrganization ? "" : "disabled") @(currentController == "Contact" ? "active" : "")"><i class="bi bi-person-lines-fill"></i> Contacts</a></li>
 
-                        @* --- UPDATED CLASS LOGIC (combines with existing 'disabled' check) --- *@
                         <li><a asp-controller="Company" asp-action="Index" class="@(hasOrganization ? "" : "disabled") @(currentController == "Company" ? "active" : "")"><i class="bi bi-buildings"></i> Companies</a></li>
 
                         <li><a asp-controller="Deal" asp-action="KanbanBoard"><i class="bi bi-kanban"></i> Deals</a></li>
@@ -384,6 +426,29 @@
             "showMethod": "fadeIn",
             "hideMethod": "fadeOut"
         };
+
+        function showLoader() {
+            $('#universal-loader').fadeIn(100);
+        }
+
+        function hideLoader() {
+            $('#universal-loader').fadeOut(200);
+        }
+
+        $(document).ajaxStart(function () {
+            showLoader();
+        });
+
+        $(document).ajaxStop(function () {
+            hideLoader();
+        });
+
+        
+        $('form:not([data-ajax="true"])').submit(function() {
+            if (!$(this).hasClass('no-loader')) { 
+                showLoader();
+            }
+        });
     </script>
 
     @await RenderSectionAsync("Scripts", required: false)

@@ -3,7 +3,6 @@ var dataTable;
 $(document).ready(function () {
     loadDataTable();
 
-    // This goes after your DataTable setup
     $('#tblData tbody').on('click', 'tr.contact-row td:not(:first-child)', function () {
         console.log('Row cell clicked!');
         var contactId = $(this).closest('tr').data('id');
@@ -13,63 +12,27 @@ $(document).ready(function () {
     });
 });
 
-//function loadDataTable() {
-//    dataTable = $('#tblData').DataTable({
-//        scrollY: '280px',
-//        scrollCollapse: true,
-//        paging: false,
-//        "ajax": { url: '/contact/getall' },
-//        "columns": [
-//            {
-//                data: null,
-//                orderable: false,
-//                render: function (data, type, row) {
-//                    return `<input type="checkbox" class="row-select" value="${row.id}"/>`;
-//                },
-//                "width": "1%"
-//            },
-//            { data: 'name', "width": "15%" },
-//            { data: 'email', "width": "15%" },
-//            { data: 'phoneNumber', "width": "15%" },
-//            { data: 'leadStatus', "width": "15%" },
-//            {data:'ownerName',"width":"15%"},
-//            { data: 'createdAt', "width": "10%" }
-//        ],
-//        
-//        "createdRow": function (row, data, dataIndex) {
-//            $(row).attr('data-id', data.id);
-//            $(row).addClass('contact-row');
-//        }
-//    });
-//}
-
 function loadDataTable() {
     dataTable = $('#tblData').DataTable({
-        // 1. Enable Server-side processing
         "serverSide": true,
-        "processing": true, // Shows "Processing..." indicator
+        "processing": true, 
 
-        // 2. Remove "paging: false" (You want pagination now!)
         "paging": true,
 
-        // 3. Optional: Keep scroll if you like, but standard paging is usually better for CRMs
          scrollY: '280px', 
          scrollCollapse: true,
 
-        "pageLength": 10, // Default rows per page
+        "pageLength": 10, 
 
-        // 4. Configure Ajax
         "ajax": {
             "url": '/contact/getall',
-            "type": "POST", // Must match Controller [HttpPost]
+            "type": "POST", 
             "contentType": "application/json",
             "data": function (d) {
-                // Send the data as JSON string to match [FromBody]
                 return JSON.stringify(d);
             }
         },
 
-        // Columns remain the same...
         "columns": [
             {
                 data: null,
@@ -88,7 +51,6 @@ function loadDataTable() {
                 data: 'createdAt',
                 "width": "10%",
                 render: function (data) {
-                    // Optional: Format date cleanly
                     return new Date(data).toLocaleDateString();
                 }
             }
@@ -106,11 +68,9 @@ $(document).on('change', '.row-select', function () {
     const actionBar = $('#actionBar');
 
     if (selected > 0) {
-        // show the buttons inside actionBar
         actionBar.css('visibility', 'visible');
         actionBar.find('span').text(selected + ' selected');
     } else {
-        // hide buttons but keep the container space
         actionBar.css('visibility', 'hidden');
     }
 });
@@ -153,15 +113,12 @@ $('#btnEdit').click(function () {
 
 
 setTimeout(function () {
-    // Find the alert message element by its ID
     var alert = document.getElementById('tempDataMessage');
 
-    // If the element exists, set another timeout to hide it
     if (alert) {
         setTimeout(function () {
-            // Hides the element by setting its display style to 'none'
             alert.style.display = 'none';
-        }, 5000); // 5000 milliseconds = 5 seconds
+        }, 5000); 
     }
 }, 300);
 
