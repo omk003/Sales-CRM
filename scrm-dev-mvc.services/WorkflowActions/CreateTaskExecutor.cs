@@ -42,7 +42,6 @@ namespace scrm_dev_mvc.Services.WorkflowActions
             }
             else if (entity is Models.Task task && task.ContactId.HasValue)
             {
-                // Must get the contact to assign the task correctly
                 using (var scope = _serviceProvider.CreateScope())
                 {
                     var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
