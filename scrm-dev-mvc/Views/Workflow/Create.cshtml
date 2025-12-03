@@ -1,4 +1,4 @@
-﻿@model scrm_dev_mvc.Models.ViewModels.WorkflowCreateViewModel
+﻿@* @model scrm_dev_mvc.Models.ViewModels.WorkflowCreateViewModel
 @using scrm_dev_mvc.Models.Enums
 <style>
                                      :root {
@@ -202,6 +202,226 @@
             actionCheckboxes.each(toggleParamSection);
 
             // Run when any of them are clicked
+            actionCheckboxes.on('change', toggleParamSection);
+        });
+    </script>
+} *@
+
+@model scrm_dev_mvc.Models.ViewModels.WorkflowCreateViewModel
+@using scrm_dev_mvc.Models.Enums
+<style>
+:root {
+    --brand-primary: hsl(347.78, 100%, 57.65%);
+    --brand-primary-dark: hsl(347.78, 100%, 50%);
+
+    }
+
+.btn-brand {
+    background-color: var(--brand-primary);
+    color: white;
+
+    }
+
+.btn-brand:hover {
+    background-color: var(--brand-primary-dark);
+}
+
+
+.form-input {
+    width: 100%;
+    border-radius: 0.375rem; 
+    border: 1px solid #D1D5DB; 
+    padding: 0.5rem 0.75rem;
+}
+
+.form-label {
+    display: block;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+
+}
+
+.action-block {
+    padding: 1rem;
+    border: 1px solid #e5e7eb;
+    border-radius: 0.5rem;
+    margin-top: 1rem;
+
+}
+
+.action-header {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.action-params {
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid #f3f4f6;
+    display: none; 
+    animation: fadeIn 0.3s ease;
+}
+
+@@keyframes fadeIn {
+from
+{
+    opacity: 0;
+    transform: translateY(-5px);
+
+}
+to {
+    opacity: 1;
+    transform: translateY(0);
+
+}
+
+}
+</style>
+
+<div class="max-w-2xl mx-auto py-4">
+    <div class="bg-white p-4 sm:p-6 rounded-lg shadow-sm">
+        <h3 class="text-2xl font-bold text-gray-900 mb-6">Create New Workflow</h3>
+
+        <form asp-action="Create" method="post" class="space-y-6">
+            @Html.AntiForgeryToken()
+
+            <div>
+                <label asp-for="Name" class="form-label"></label>
+                <input asp-for="Name" class="form-input" />
+                <span asp-validation-for="Name" class="text-red-600 text-sm"></span>
+            </div>
+
+            <div>
+                <label asp-for="Trigger" class="form-label"></label>
+                <select asp-for="Trigger" asp-items="Model.AvailableTriggers" class="form-input">
+                    <option value="">-- Select a Trigger --</option>
+                </select>
+            </div>
+
+            <div>
+                <h4 class="text-lg font-semibold text-gray-800">Do...</h4>
+
+                <div class="action-block">
+                    <div class="action-header">
+                        <input asp-for="Action_ChangeLeadStatus" type="checkbox" data-params-for="Params_ChangeLeadStatus" class="h-4 w-4 rounded border-gray-300 text-pink-600 focus:ring-pink-500">
+                        <label asp-for="Action_ChangeLeadStatus" class="form-label mb-0">Change Contact Lead Status</label>
+                    </div>
+                    <div id="Params_ChangeLeadStatus" class="action-params space-y-4">
+                        <div>
+                            <label asp-for="ChangeLeadStatus_NewStatusId" class="form-label"></label>
+                            <select asp-for="ChangeLeadStatus_NewStatusId" asp-items="Model.AvailableLeadStatuses" class="form-input"></select>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="action-block">
+                    <div class="action-header">
+                        <input asp-for="Action_ChangeLifeCycleStage" type="checkbox" data-params-for="Params_ChangeLifeCycleStage" class="h-4 w-4 rounded border-gray-300 text-pink-600 focus:ring-pink-500">
+                        <label asp-for="Action_ChangeLifeCycleStage" class="form-label mb-0">Change Contact LifeCycle Stage</label>
+                    </div>
+                    <div id="Params_ChangeLifeCycleStage" class="action-params space-y-4">
+                        <div>
+                            <label asp-for="ChangeLifeCycleStage_NewStageId" class="form-label"></label>
+                            <select asp-for="ChangeLifeCycleStage_NewStageId" asp-items="Model.AvailableLifeCycleStages" class="form-input"></select>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="action-block">
+                    <div class="action-header">
+                        <input asp-for="Action_CreateTask" type="checkbox" data-params-for="Params_CreateTask" class="h-4 w-4 rounded border-gray-300 text-pink-600 focus:ring-pink-500">
+                        <label asp-for="Action_CreateTask" class="form-label mb-0">Create a new Task</label>
+                    </div>
+                    <div id="Params_CreateTask" class="action-params space-y-4">
+                        <div>
+                            <label asp-for="Task_Title" class="form-label"></label>
+                            <input asp-for="Task_Title" class="form-input" />
+                        </div>
+                        <div>
+                            <label asp-for="Task_DaysDue" class="form-label"></label>
+                            <input asp-for="Task_DaysDue" type="number" class="form-input" />
+                        </div>
+                        <div>
+                            <label asp-for="Task_TaskType" class="form-label"></label>
+                            <select asp-for="Task_TaskType" class="form-input">
+                                <option value="">-- Select Task Type --</option>
+                                <option value="Call">Call</option>
+                                <option value="Email">Email</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label asp-for="Task_PriorityId" class="form-label"></label>
+                            <select asp-for="Task_PriorityId" asp-items="Model.AvailablePriorities" class="form-input"></select>
+                        </div>
+                        <div>
+                            <label asp-for="Task_StatusId" class="form-label"></label>
+                            <select asp-for="Task_StatusId" asp-items="Model.AvailableTaskStatuses" class="form-input"></select>
+                        </div>
+                        <div class="mt-6">
+                            <label class="form-label">Run this action ONLY if...</label>
+                            <div class="flex gap-2">
+                                <div>
+                                    <label class="form-label">Task Type is</label>
+                                    <select asp-for="Task_ConditionTaskType" class="form-input">
+                                        <option value="">-- Select Task Type --</option>
+                                        <option value="Call">Call</option>
+                                        <option value="Email">Email</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="form-label">Lead Status is</label>
+                                    <select asp-for="Task_ConditionLeadStatus" asp-items="Model.AvailableLeadStatuses" class="form-input">
+                                        <option value="">(Any Status)</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <span class="text-gray-500 text-xs">Leave blank for no condition (will always run).</span>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <div>
+                <button type="submit" class="btn-brand font-bold py-2 px-6 rounded-lg shadow-sm text-sm transition duration-150">
+                    Save Workflow
+                </button>
+                <a asp-action="Index" class="ml-2 text-gray-600 hover:text-gray-800">Cancel</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+        $(document).ready(function() {
+            function toggleParamSection() {
+                var checkbox = $(this);
+                var paramsId = checkbox.data('params-for'); 
+                var paramsSection = $('#' + paramsId);
+
+                if (checkbox.is(':checked')) {
+                    paramsSection.slideDown(); 
+                } else {
+                    paramsSection.slideUp(); 
+                }
+            }
+
+            var actionCheckboxes = $('input[type="checkbox"][data-params-for]');
+
+            actionCheckboxes.each(function() {
+                var checkbox = $(this);
+                var paramsId = checkbox.data('params-for');
+                if (checkbox.is(':checked')) {
+                    $('#' + paramsId).show(); 
+                }
+            });
+
             actionCheckboxes.on('change', toggleParamSection);
         });
     </script>

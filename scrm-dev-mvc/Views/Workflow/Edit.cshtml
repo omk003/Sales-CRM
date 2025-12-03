@@ -88,7 +88,6 @@
             <div>
                 <h4 class="text-lg font-semibold text-gray-800">Do...</h4>
 
-                @* BLOCK 1: CHANGE LEAD STATUS *@
                 <div class="action-block">
                     <div class="action-header">
                         <input asp-for="Action_ChangeLeadStatus" type="checkbox" data-params-for="Params_ChangeLeadStatus" class="h-4 w-4 rounded border-gray-300 text-pink-600 focus:ring-pink-500">
@@ -102,7 +101,6 @@
                     </div>
                 </div>
 
-                @* BLOCK 2: CHANGE LIFECYCLE STAGE (This was missing) *@
                 <div class="action-block">
                     <div class="action-header">
                         <input asp-for="Action_ChangeLifeCycleStage" type="checkbox" data-params-for="Params_ChangeLifeCycleStage" class="h-4 w-4 rounded border-gray-300 text-pink-600 focus:ring-pink-500">
@@ -116,7 +114,6 @@
                     </div>
                 </div>
 
-                @* BLOCK 3: CREATE TASK (This was missing) *@
                 <div class="action-block">
                     <div class="action-header">
                         <input asp-for="Action_CreateTask" type="checkbox" data-params-for="Params_CreateTask" class="h-4 w-4 rounded border-gray-300 text-pink-600 focus:ring-pink-500">
@@ -142,6 +139,27 @@
                         <div>
                             <label asp-for="Task_StatusId" class="form-label"></label>
                             <select asp-for="Task_StatusId" asp-items="Model.AvailableTaskStatuses" class="form-input"></select>
+                        </div>
+
+                        <div class="mt-6">
+                            <label class="form-label">Run this action ONLY if...</label>
+                            <div class="flex gap-2">
+                                <div>
+                                    <label asp-for="Task_ConditionTaskType" class="form-label">Task Type is</label>
+                                    <select asp-for="Task_ConditionTaskType" class="form-input">
+                                        <option value="">-- Select Task Type --</option>
+                                        <option value="Call">Call</option>
+                                        <option value="Email">Email</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label asp-for="Task_ConditionLeadStatus" class="form-label">Lead Status is</label>
+                                    <select asp-for="Task_ConditionLeadStatus" asp-items="Model.AvailableLeadStatuses" class="form-input">
+                                        <option value="">(Any Status)</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <span class="text-gray-500 text-xs">Leave blank for no condition (will always run).</span>
                         </div>
                     </div>
                 </div>

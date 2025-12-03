@@ -8,6 +8,7 @@ using scrm_dev_mvc.DataAccess.Data;
 using scrm_dev_mvc.services;
 using scrm_dev_mvc.services.Interfaces;
 using scrm_dev_mvc.Services;
+using scrm_dev_mvc.Services.WorkflowActions;
 using Serilog;
 using StackExchange.Profiling;
 
@@ -61,6 +62,11 @@ builder.Services.AddScoped<IDealService, DealService>();
 builder.Services.AddScoped<ITaskService, TaskService>();
 
 builder.Services.AddScoped<IWorkflowService, WorkflowService>();
+
+builder.Services.AddScoped<IWorkflowActionExecutor, ChangeLeadStatusExecutor>();
+builder.Services.AddScoped<IWorkflowActionExecutor, ChangeLifeCycleStageExecutor>();
+builder.Services.AddScoped<IWorkflowActionExecutor, CreateTaskExecutor>();
+
 builder.Services.AddScoped<IWorkspaceService, WorkspaceService>(); 
  
 
