@@ -16,7 +16,6 @@ namespace scrm_dev_mvc.services
 {
     public class UserService(IUnitOfWork unitOfWork, ILogger<UserService> _logger, IAuditService _auditService): IUserService
     {
-        // Implement user-related methods here
       
         Task<IEnumerable<User>> IUserService.GetAllUsersAsync()
         {
@@ -46,31 +45,11 @@ namespace scrm_dev_mvc.services
         }
 
 
-        // --- CreateUserAsync now logs the creation ---
         public async System.Threading.Tasks.Task CreateUserAsync(User user)
         {
             await unitOfWork.Users.AddAsync(user);
-            await unitOfWork.SaveChangesAsync(); // Save to get the user.Id
+            await unitOfWork.SaveChangesAsync(); 
 
-            // We can't log this against an OrgId yet, as it's not assigned.
-            // We'll log against a "placeholder" RecordId 0.
-            try
-            {
-                await _auditService.LogChangeAsync(new AuditLogDto
-                {
-                    OwnerId = user.Id, // User "created" themselves
-                    RecordId = 0, // No orgId to log against yet
-                    TableName = "User",
-                    FieldName = "User",
-                    OldValue = "[NULL]",
-                    NewValue = $"Created new user: {user.Email} (Id: {user.Id})"
-                });
-                await unitOfWork.SaveChangesAsync(); // Save the audit log
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "User {UserId} was created, but auditing failed.", user.Id);
-            }
         }
 
         public async System.Threading.Tasks.Task UpdateUserAsync(User user)
@@ -97,17 +76,15 @@ namespace scrm_dev_mvc.services
             {
                 if (user.FirstName != newFirstName)
                 {
-                    await LogChange(ownerId, orgId, userId, "FirstName", user.FirstName, newFirstName);
                     user.FirstName = newFirstName;
                 }
                 if (user.LastName != newLastName)
                 {
-                    await LogChange(ownerId, orgId, userId, "LastName", user.LastName, newLastName);
                     user.LastName = newLastName;
                 }
 
                 unitOfWork.Users.Update(user);
-                await unitOfWork.SaveChangesAsync(); // Saves User changes and Audit logs
+                await unitOfWork.SaveChangesAsync();
                 return true;
             }
             catch (Exception ex)
@@ -124,16 +101,11 @@ namespace scrm_dev_mvc.services
 
             try
             {
-                // Log Organization change
-                await LogChange(adminId, organizationId, userId, "OrganizationId", user.OrganizationId.ToString(), organizationId.ToString());
-
-                // Log Role change
-                await LogChange(adminId, organizationId, userId, "RoleId", user.RoleId.ToString(), roleId.ToString());
-
+                
                 user.OrganizationId = organizationId;
                 user.RoleId = roleId;
 
-                await unitOfWork.SaveChangesAsync(); // Saves User changes and Audit logs
+                await unitOfWork.SaveChangesAsync(); 
                 return true;
             }
             catch (Exception ex)
@@ -143,7 +115,6 @@ namespace scrm_dev_mvc.services
             }
         }
 
-        // --- UPDATED to include adminId for auditing ---
         public async Task<bool> ChangeUserRoleAsync(Guid userId, int organizationId, string newRole, Guid adminId)
         {
             var user = await unitOfWork.Users
@@ -156,21 +127,18 @@ namespace scrm_dev_mvc.services
             var oldRoleId = user.RoleId.ToString();
             int newRoleId;
 
-            // Map role string to RoleId
             if (newRole == "SalesAdmin")
-                newRoleId = 3; // <-- Use your actual admin RoleId
+                newRoleId = 3; 
             else if (newRole == "SalesUser")
-                newRoleId = 4; // <-- Use your actual user RoleId
+                newRoleId = 4; 
             else
                 return false;
 
             try
             {
-                // Log the role change
-                await LogChange(adminId, organizationId, userId, "RoleId", oldRoleId, newRoleId.ToString());
-
+                
                 user.RoleId = newRoleId;
-                await unitOfWork.SaveChangesAsync(); // Saves User change and Audit log
+                await unitOfWork.SaveChangesAsync(); 
                 return true;
             }
             catch (Exception ex)
@@ -180,35 +148,21 @@ namespace scrm_dev_mvc.services
             }
         }
 
-        // --- Private Helper Method for Auditing ---
-        private async System.Threading.Tasks.Task LogChange(Guid ownerId, int organizationId, Guid userId, string field, string oldVal, string newVal)
-        {
-            await _auditService.LogChangeAsync(new AuditLogDto
-            {
-                OwnerId = ownerId,
-                RecordId = organizationId, // Log against the Organization
-                TableName = "User",
-                FieldName = $"{field} (User: {userId})", // Store the Guid here
-                OldValue = oldVal,
-                NewValue = newVal
-            });
-        }
+       
 
         public async Task<bool> DeleteAsync(User user)
         {
             try
             {
-                // --- PRE-DELETE CHECKS ---
                 if (!user.OrganizationId.HasValue)
                 {
                     _logger.LogError("Cannot delete user {UserId}: User has no OrganizationId.", user.Id);
                     return false;
                 }
 
-                // --- 1. Find the Super Admin of the SAME organization to transfer ownership to ---
                 var superAdmin = await unitOfWork.Users.FirstOrDefaultAsync(
                     u => u.OrganizationId == user.OrganizationId &&
-                         u.RoleId == 2 // Assuming Role.Name property
+                         u.RoleId == 2 
                 );
 
                 if (superAdmin == null)
@@ -223,15 +177,13 @@ namespace scrm_dev_mvc.services
                     return false;
                 }
 
-                // --- 2. Delete related Gmail credentials (as before) ---
                 var gmailCred = await unitOfWork.GmailCred.FirstOrDefaultAsync(gc => gc.Email == user.Email);
 
-                if (gmailCred != null) // Check for null before deleting
+                if (gmailCred != null) 
                 {
                     unitOfWork.GmailCred.Delete(gmailCred);
                 }
 
-                // --- 3. REASSIGN related Companies ---
                 var companies = await unitOfWork.Company.GetAllAsync(
                      c => c.UserId == user.Id
                 );
@@ -240,12 +192,11 @@ namespace scrm_dev_mvc.services
                 {
                     foreach (var company in companies)
                     {
-                        company.UserId = superAdmin.Id; // Reassign
-                        unitOfWork.Company.Update(company); // Mark as updated
+                        company.UserId = superAdmin.Id; 
+                        unitOfWork.Company.Update(company); 
                     }
                 }
 
-                // --- 4. REASSIGN related Contacts ---
                 var contacts = await unitOfWork.Contacts.GetAllAsync(
                     c => c.OwnerId == user.Id
                 );
@@ -254,15 +205,13 @@ namespace scrm_dev_mvc.services
                 {
                     foreach (var contact in contacts)
                     {
-                        contact.OwnerId = superAdmin.Id; // Reassign
-                        unitOfWork.Contacts.Update(contact); // Mark as updated
+                        contact.OwnerId = superAdmin.Id; 
+                        unitOfWork.Contacts.Update(contact);
                     }
                 }
 
-                // 5. Now, delete the original user
                 unitOfWork.Users.Delete(user);
 
-                // 6. Save all changes (Deletions AND Updates) in one transaction
                 await unitOfWork.SaveChangesAsync();
                 return true;
             }

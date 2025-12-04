@@ -89,7 +89,7 @@ public partial class ApplicationDbContext : DbContext
 
         var auditEntries = new List<Audit>();
         var timestamp = DateTime.UtcNow;
-
+         
        
         foreach (var entry in ChangeTracker.Entries().ToList())
         {

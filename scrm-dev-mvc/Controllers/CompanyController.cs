@@ -8,7 +8,12 @@ using scrm_dev_mvc.services.Interfaces;
 namespace scrm_dev_mvc.Controllers
 {
     [Authorize]
-    public class CompanyController(IOrganizationService organizationService, IUserService userService, ICompanyService companyService, ILogger<CompanyController> _logger, ICurrentUserService currentUserService) : Controller
+    public class CompanyController (
+        IOrganizationService organizationService, 
+        IUserService userService, 
+        ICompanyService companyService, 
+        ILogger<CompanyController> _logger, 
+        ICurrentUserService currentUserService) : Controller
     {
         public IActionResult Index()
         {

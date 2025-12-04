@@ -27,7 +27,7 @@ namespace scrm_dev_mvc.Services
             {
                 while (!token.IsCancellationRequested)
                 {
-                    var users = _unitOfWork.Users.GetAll(); // Fetch all users with Gmail tokens
+                    var users = _unitOfWork.Users.GetAll(); 
                     foreach (var user in users)
                     {
                         if (string.IsNullOrEmpty(user.GmailCred.GmailAccessToken)) continue;
@@ -52,7 +52,6 @@ namespace scrm_dev_mvc.Services
             using var client = new MailKit.Net.Imap.ImapClient();
             await client.ConnectAsync("imap.gmail.com", 993, MailKit.Security.SecureSocketOptions.SslOnConnect, token);
 
-            // Authenticate using XOAUTH2
             await client.AuthenticateAsync(new MailKit.Security.SaslMechanismOAuth2(user.Email, user.GmailCred.GmailAccessToken), token);
 
             var inbox = client.Inbox;
@@ -60,31 +59,24 @@ namespace scrm_dev_mvc.Services
 
             IList<MailKit.UniqueId> uids;
 
-            // ... code to connect and open inbox ...
 
 
             if (user.LastProcessedUid == null || user.LastProcessedUid == 0)
             {
-                // First run: fetch emails from today using a SearchQuery
                 var query = MailKit.Search.SearchQuery.DeliveredAfter(DateTime.UtcNow.Date);
                 uids = await inbox.SearchAsync(query, token);
             }
             else
             {
-                // Subsequent runs: Build a SearchQuery for the UID range.
-                // This is the most reliable way.
-                // ... inside the else block ...
+               
                 var minUid = new MailKit.UniqueId((uint)user.LastProcessedUid.Value + 1);
                 var range = new MailKit.UniqueIdRange(minUid, MailKit.UniqueId.MaxValue);
 
-                // This is the single, correct line to create the query
                 var query = MailKit.Search.SearchQuery.Uids(range);
 
                 uids = await inbox.SearchAsync(query, token);
             }
 
-            // ... the rest of the logic remains the same ...
-            // Only proceed if there are new emails to process
             if (uids.Any())
             {
                 foreach (var uid in uids)
@@ -92,12 +84,10 @@ namespace scrm_dev_mvc.Services
                     var message = await inbox.GetMessageAsync(uid, token);
                     Console.WriteLine($"[{user.Email}] New email: {message.Subject} from {string.Join(", ", message.From)} at {message.Date}");
 
-                    // Add your specific logic here to handle the new email
-                    // (e.g., create a contact, an activity, etc.)
+                   
                 }
 
-                // --- IMPROVED LOGIC ---
-                // Find the highest UID from this batch and update the user object ONCE.
+ 
                 var maxUid = uids.Max(u => u.Id);
                 user.LastProcessedUid = maxUid;
                 user.LastCheckedTime = DateTime.UtcNow;

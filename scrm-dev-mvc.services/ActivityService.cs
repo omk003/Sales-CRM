@@ -30,7 +30,6 @@ namespace scrm_dev_mvc.services
                     throw new ArgumentException("ActivityTypeName must be provided.");
                 }
 
-            // 1. Find ActivityType using IUnitOfWork
             var activityType = await _unitOfWork.ActivityTypes.FirstOrDefaultAsync(
                     at => at.Name.ToLower() == activityDto.ActivityTypeName.ToLower()
                 );
@@ -40,7 +39,6 @@ namespace scrm_dev_mvc.services
                     throw new InvalidOperationException($"Activity type '{activityDto.ActivityTypeName}' not found.");
                 }
 
-                // 2. Determine Status
                 string status = activityDto.Status;
                 if (string.IsNullOrWhiteSpace(status))
                 {
@@ -49,7 +47,6 @@ namespace scrm_dev_mvc.services
                     status = isFutureTask ? "Pending" : "Completed";
                 }
 
-                // 3. Create Entity
                 var activity = new scrm_dev_mvc.Models.Activity
                 {
                     OwnerId = activityDto.OwnerId,
@@ -64,22 +61,17 @@ namespace scrm_dev_mvc.services
                     SubjectType = activityDto.SubjectType
                 };
 
-                // 4. Save using IUnitOfWork
                 await _unitOfWork.Activities.AddAsync(activity);
                 await _unitOfWork.SaveChangesAsync();
 
                 return activity;
             }
 
-        /// <summary>
-        /// Gets all activities directly linked to a specific Contact ID.
-        /// Includes related data like ActivityType and Owner.
-        /// </summary>
+        
         public async Task<IEnumerable<scrm_dev_mvc.Models.Activity>> GetActivitiesByContactAsync(int contactId)
         {
             _logger.LogInformation("Fetching activities for ContactId: {ContactId}", contactId);
 
-            // 1. Fetch data using the new signature
             var activities = await _unitOfWork.Activities.GetAllAsync(
                 predicate: a => a.ContactId == contactId,
                 asNoTracking: true,
@@ -90,19 +82,14 @@ namespace scrm_dev_mvc.services
                 }
             );
 
-            // 2. Apply sorting in-memory
             return activities.OrderByDescending(a => a.ActivityDate);
         }
 
-        /// <summary>
-        /// Gets all activities directly linked to a specific Deal ID.
-        /// Includes related data like ActivityType and Owner.
-        /// </summary>
+        
         public async Task<IEnumerable<scrm_dev_mvc.Models.Activity>> GetActivitiesByDealAsync(int dealId)
         {
             _logger.LogInformation("Fetching activities for DealId: {DealId}", dealId);
 
-            // 1. Fetch data using the new signature
             var activities = await _unitOfWork.Activities.GetAllAsync(
                 predicate: a => a.DealId == dealId,
                 asNoTracking: true,
@@ -114,27 +101,21 @@ namespace scrm_dev_mvc.services
                 }
             );
 
-            // 2. Apply sorting in-memory
             return activities.OrderByDescending(a => a.ActivityDate);
         }
 
-        /// <summary>
-        /// Gets activities by Company, by checking all Contacts and Deals associated with that Company.
-        /// Includes related data like ActivityType and Owner.
-        /// </summary>
+       
         public async Task<IEnumerable<scrm_dev_mvc.Models.Activity>> GetActivitiesByCompanyAsync(int companyId)
         {
             _logger.LogInformation("Fetching activities for CompanyId: {CompanyId}", companyId);
 
-            // 1. Get all Contact IDs associated with this Company
-            // (Assuming GetAllAsync without includes returns a simpler object list)
+            
             var contactIds = (await _unitOfWork.Contacts.GetAllAsync(
                 predicate: c => c.CompanyId == companyId,
                 asNoTracking: true
             )).Select(c => c.Id).ToList();
 
-            // 2. Get all Deal IDs associated with this Company
-            // (Assuming your Deal model has a CompanyId)
+           
             var dealIds = (await _unitOfWork.Deals.GetAllAsync(
                 predicate: d => d.CompanyId == companyId,
                 asNoTracking: true
@@ -142,7 +123,6 @@ namespace scrm_dev_mvc.services
 
             _logger.LogInformation("CompanyId {CompanyId} maps to {ContactCount} contacts and {DealCount} deals.", companyId, contactIds.Count, dealIds.Count);
 
-            // 3. Find activities where ContactId is in the list OR DealId is in the list
             var activities = await _unitOfWork.Activities.GetAllAsync(
                 predicate: a => (a.ContactId.HasValue && contactIds.Contains(a.ContactId.Value)) ||
                                (a.DealId.HasValue && dealIds.Contains(a.DealId.Value)),
@@ -156,7 +136,6 @@ namespace scrm_dev_mvc.services
                 }
             );
 
-            // 4. Apply sorting in-memory
             return activities.OrderByDescending(a => a.ActivityDate);
         }
 
@@ -169,8 +148,7 @@ namespace scrm_dev_mvc.services
 
             try
             {
-                // Find the activity record linked to the task
-                // Based on your table: subject_id is the TaskId, subject_type is "Task"
+                
                 var activity = await _unitOfWork.Activities.FirstOrDefaultAsync(a =>
                     a.SubjectId == subjectId &&
                     a.SubjectType == subjectType
@@ -179,8 +157,7 @@ namespace scrm_dev_mvc.services
                 if (activity != null)
                 {
                     _unitOfWork.Activities.Delete(activity);
-                    // Note: We don't call SaveChangesAsync here.
-                    // The calling service (TaskService) will do that.
+                    
                     _logger.LogInformation("Activity {ActivityId} marked for deletion (Subject: {SubjectId}).", activity.Id, subjectId);
                 }
                 else

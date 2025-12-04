@@ -66,7 +66,7 @@ builder.Services.AddScoped<IWorkflowService, WorkflowService>();
 builder.Services.AddScoped<IWorkflowActionExecutor, ChangeLeadStatusExecutor>();
 builder.Services.AddScoped<IWorkflowActionExecutor, ChangeLifeCycleStageExecutor>();
 builder.Services.AddScoped<IWorkflowActionExecutor, CreateTaskExecutor>();
-
+ 
 builder.Services.AddScoped<IWorkspaceService, WorkspaceService>(); 
  
 

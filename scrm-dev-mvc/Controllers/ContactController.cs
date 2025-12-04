@@ -232,8 +232,8 @@ namespace scrm_dev_mvc.Controllers
             {
                 return StatusCode(401, new { message = "User is not authenticated." });
             }
-
-            string redirectUri = Url.Action("YourGoogleCallbackMethod", "Auth", null, Request.Scheme);
+            var redirectDomain = configuration["Google:RedirectDomain"];
+            string redirectUri = Url.Action("GoogleCallback", "Auth", null, Request.Scheme, redirectDomain);
 
             var result = await emailService.SendEmailAsync(
                 userId,

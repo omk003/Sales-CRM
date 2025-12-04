@@ -19,7 +19,7 @@ namespace scrm_dev_mvc.Services
         private readonly IServiceProvider _serviceProvider;
 
         private readonly Dictionary<WorkflowActionType, IWorkflowActionExecutor> _actionExecutors;
-
+         
         public WorkflowService(
             ApplicationDbContext context,
             ILogger<WorkflowService> logger,

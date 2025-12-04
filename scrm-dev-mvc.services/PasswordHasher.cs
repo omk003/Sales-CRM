@@ -9,8 +9,8 @@ namespace scrm_dev_mvc.services
 {
     public class PasswordHasher : IPasswordHasher
     {
-        private const int SaltSize = 16; // 128 bit
-        private const int KeySize = 32; // 256 bit
+        private const int SaltSize = 16; 
+        private const int KeySize = 32; 
         private const int Iterations = 10000;
 
         public string HashPassword(string password)
@@ -33,7 +33,6 @@ namespace scrm_dev_mvc.services
             var parts = passwordHash.Split('.', 2);
             if (parts.Length != 2)
             {
-                // You might want to throw an exception or log this for security monitoring
                 return false;
             }
 

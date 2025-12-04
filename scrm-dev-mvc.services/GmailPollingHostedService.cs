@@ -28,7 +28,6 @@ using System.Threading.Tasks;
 namespace scrm_dev_mvc.services
 {
    
-        // Inherit from BackgroundService for a reliable, long-running task
         public class GmailPollingHostedService : BackgroundService
         {
             private readonly IServiceProvider _serviceProvider;
@@ -39,12 +38,11 @@ namespace scrm_dev_mvc.services
             public GmailPollingHostedService(
                 IServiceProvider serviceProvider,
                 ILogger<GmailPollingHostedService> logger,
-                IConfiguration configuration) // Inject IConfiguration to build the flow
+                IConfiguration configuration) 
             {
                 _serviceProvider = serviceProvider;
                 _logger = logger;
 
-                // --- Initialize the Google Flow (copied from your GmailService) ---
                 _googleFlow = new GoogleAuthorizationCodeFlow(new GoogleAuthorizationCodeFlow.Initializer
                 {
                     ClientSecrets = new ClientSecrets
@@ -52,7 +50,7 @@ namespace scrm_dev_mvc.services
                         ClientId = configuration["Google:ClientId"],
                         ClientSecret = configuration["Google:ClientSecret"]
                     },
-                    Scopes = new[] { "https://mail.google.com/" } // Only need the mail scope for IMAP
+                    Scopes = new[] { "https://mail.google.com/" } 
                 });
             }
 
@@ -64,17 +62,15 @@ namespace scrm_dev_mvc.services
                 {
                     try
                     {
-                        // --- 1. Create a new service scope for this cycle ---
                         using (var scope = _serviceProvider.CreateScope())
                         {
                             var unitOfWork = scope.ServiceProvider.GetRequiredService<IUnitOfWork>();
 
-                        // --- 2. Efficiently query ONLY users who need polling ---
-                        // --- NEW CORRECT LINE ---
+                       
                         var usersToPoll = await unitOfWork.Users.GetAllAsync(
                             predicate: u => u.GmailCred != null && !string.IsNullOrEmpty(u.GmailCred.GmailRefreshToken),
-                            asNoTracking: false, // Keep tracking so changes are saved
-                            includes: u => u.GmailCred // Pass the include as a lambda expression
+                            asNoTracking: false, 
+                            includes: u => u.GmailCred 
                         );
 
                         foreach (var user in usersToPoll)
@@ -87,18 +83,15 @@ namespace scrm_dev_mvc.services
                                 }
                                 catch (Exception userEx)
                                 {
-                                    // Log error for a specific user but continue the loop
                                     _logger.LogError(userEx, $"Failed to poll inbox for user {user.Email}.");
                                 }
                             }
 
-                            // --- 3. Save all changes (e.g., new UIDs) ONCE per cycle ---
                             await unitOfWork.SaveChangesAsync();
                         }
                     }
                     catch (Exception ex)
                     {
-                        // Log error for the entire polling cycle
                         _logger.LogError(ex, "An error occurred in the Gmail polling cycle.");
                     }
 
@@ -112,7 +105,6 @@ namespace scrm_dev_mvc.services
             {
                 _logger.LogDebug($"Polling for user {user.Email}...");
 
-                // --- 3. Token Refresh Logic ---
                 string newAccessToken;
                 try
                 {
@@ -124,30 +116,27 @@ namespace scrm_dev_mvc.services
                     if (await credential.RefreshTokenAsync(token))
                     {
                         newAccessToken = credential.Token.AccessToken;
-                        // Save the new refresh token if Google issued one
                         if (credential.Token.RefreshToken != null)
                         {
                             user.GmailCred.GmailRefreshToken = credential.Token.RefreshToken;
-                            unitOfWork.Users.Update(user); // UoW will track this change
+                            unitOfWork.Users.Update(user); 
                         }
                     }
                     else
                     {
                         _logger.LogWarning($"Failed to refresh token for user {user.Email}.");
-                        return; // Skip this user
+                        return; 
                     }
                 }
                 catch (TokenResponseException authEx)
                 {
-                    // This happens if the user revoked access
                     _logger.LogWarning(authEx, $"Auth token revoked for user {user.Email}.");
-                    user.GmailCred.GmailRefreshToken = null; // Clear the bad token
+                    user.GmailCred.GmailRefreshToken = null; 
                     user.GmailCred.GmailAccessToken = null;
-                    unitOfWork.Users.Update(user); // UoW will track this change
-                    return; // Skip this user
+                    unitOfWork.Users.Update(user); 
+                    return; 
                 }
 
-                // --- Your IMAP Logic (Now using the fresh Access Token) ---
                 using var client = new ImapClient();
                 await client.ConnectAsync("imap.gmail.com", 993, SecureSocketOptions.SslOnConnect, token);
                 await client.AuthenticateAsync(new SaslMechanismOAuth2(user.Email, newAccessToken), token);
@@ -158,7 +147,6 @@ namespace scrm_dev_mvc.services
                 IList<UniqueId> uids;
                 if (user.LastProcessedUid == null || user.LastProcessedUid == 0)
                 {
-                    // First run: Get emails from the last 24 hours to avoid overload
                     var query = SearchQuery.DeliveredAfter(DateTime.UtcNow.AddDays(-1));
                     uids = await inbox.SearchAsync(query, token);
                 }
@@ -173,19 +161,14 @@ namespace scrm_dev_mvc.services
                 if (uids.Any())
                 {
                     _logger.LogInformation($"Found {uids.Count} new email(s) for {user.Email}.");
-                    foreach (var uid in uids.OrderBy(u => u.Id)) // Process in order
+                    foreach (var uid in uids.OrderBy(u => u.Id)) 
                     {
                         var message = await inbox.GetMessageAsync(uid, token);
                         _logger.LogDebug($"[{user.Email}] New email: {message.Subject}");
 
-                        //
-                        // --- TODO: Add your logic here ---
-                        // Example: await _emailService.IngestInboundEmail(user, message);
-                        //
+                       
                     }
 
-                    // Update the user's last processed UID.
-                    // This change will be saved by the ExecuteAsync method.
                     user.LastProcessedUid = uids.Max(u => u.Id);
                     user.LastCheckedTime = DateTime.UtcNow;
                     unitOfWork.Users.Update(user);

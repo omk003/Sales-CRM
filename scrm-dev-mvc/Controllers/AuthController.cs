@@ -342,7 +342,7 @@ namespace scrm_dev_mvc.Controllers
             }
             catch (Exception ex)
             {
-                TempData["Message"] = "Login Failed"; //ex.Message;
+                TempData["Message"] = "Login Failed"; 
                 return RedirectToAction("Login");
             }
         }

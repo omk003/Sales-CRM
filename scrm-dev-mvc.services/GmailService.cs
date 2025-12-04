@@ -78,7 +78,6 @@ namespace scrm_dev_mvc.Services
                 ApplicationName = "sales-crm-dev"
             });
 
-            // Get user's info from Google
             var userInfo = await oauth2Service.Userinfo.Get().ExecuteAsync();
             var googleEmail = userInfo.Email;
             var firstName = userInfo.GivenName;
@@ -100,13 +99,12 @@ namespace scrm_dev_mvc.Services
                 
             if (user == null)
             {
-                // If not, create a new user
                 user = new User
                 {
                     Email = googleEmail,
                     FirstName = firstName,
                     LastName = lastName,
-                    RoleId = 4, // default role
+                    RoleId = 4, 
                     GmailCred = new GmailCred(),
                     
                 };
@@ -189,7 +187,6 @@ namespace scrm_dev_mvc.Services
                 await smtp.SendAsync(message);
                 await smtp.DisconnectAsync(true);
 
-                // If we reach here, the email was sent successfully.
                 return new SendEmailResult { IsSuccess = true };
             }
             catch (Exception ex)
