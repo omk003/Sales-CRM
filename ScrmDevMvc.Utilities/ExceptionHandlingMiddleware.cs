@@ -32,7 +32,7 @@ public class ExceptionHandlingMiddleware
                 await context.Response.WriteAsJsonAsync(new
                 {
                     StatusCode = context.Response.StatusCode,
-                    Message = "An unexpected error occurred. Please try again later. Check If contacts company and updated company is same."
+                    Message = "An unexpected error occurred. Please try again later."
                 });
             }
             else

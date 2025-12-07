@@ -22,8 +22,7 @@ Log.Logger = new LoggerConfiguration()
 builder.Host.UseSerilog();
 builder.Services.AddControllersWithViews();
 var connectionString = builder.Configuration.GetConnectionString("ProductionConnection");
-//builder.Services.AddDbContext<ApplicationDbContext>(options =>
-//    options.UseSqlServer(connectionString));
+
 
 builder.Services.AddMiniProfiler(options => {
     options.RouteBasePath = "/profiler";
@@ -70,8 +69,6 @@ builder.Services.AddScoped<IWorkflowActionExecutor, CreateTaskExecutor>();
 builder.Services.AddScoped<IWorkspaceService, WorkspaceService>(); 
  
 
-builder.Services.AddHostedService<GmailPollingHostedService>();
-
 builder.Services.Configure<ForwardedHeadersOptions>(options =>
 {
     options.ForwardedHeaders =
@@ -107,7 +104,6 @@ try
 
 
     app.UseStaticFiles();
-    app.UseMiniProfiler();
     //app.Use(async (context, next) =>
     //{
     //    Log.Information("HTTP {Method} {Path} invoked by {IP}",

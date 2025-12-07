@@ -588,14 +588,13 @@ public partial class ApplicationDbContext : DbContext
 
             entity.HasKey(e => e.Id);
 
-            // Ensure that every invitation code is unique in the database
             entity.HasIndex(e => e.InvitationCode).IsUnique();
 
             entity.Property(e => e.Id).HasColumnName("id");
 
             entity.Property(e => e.InvitationCode)
                 .IsRequired()
-                .HasMaxLength(16) // Set a reasonable max length for the code
+                .HasMaxLength(16) 
                 .HasColumnName("invitation_code");
 
             entity.Property(e => e.Email)
@@ -608,7 +607,7 @@ public partial class ApplicationDbContext : DbContext
             entity.Property(e => e.RoleId).HasColumnName("role_id");
 
             entity.Property(e => e.SentDate)
-                .HasDefaultValueSql("(getutcdate())") // Use getutcdate() for UTC time
+                .HasDefaultValueSql("(getutcdate())") 
                 .HasColumnName("sent_date");
 
             entity.Property(e => e.ExpiryDate).HasColumnName("expiry_date");
@@ -617,11 +616,10 @@ public partial class ApplicationDbContext : DbContext
                 .HasDefaultValue(false)
                 .HasColumnName("is_accepted");
 
-            // Define the relationship to the Organization entity
             entity.HasOne(d => d.Organization)
-                .WithMany(p => p.Invitations) // Assumes Organization has a 'public ICollection<Invitation> Invitations' property
+                .WithMany(p => p.Invitations) 
                 .HasForeignKey(d => d.OrganizationId)
-                .OnDelete(DeleteBehavior.Cascade) // Deletes invitations if the organization is deleted
+                .OnDelete(DeleteBehavior.Cascade) 
                 .HasConstraintName("FK_invitation_organization");
         });
 
