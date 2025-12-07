@@ -10,6 +10,8 @@ public partial class Deal
     public int Id { get; set; }
 
     [Required(ErrorMessage = "Deal Name is required.")]
+    [RegularExpression(@"^[a-zA-Z\s]+$", ErrorMessage = "First name can only contain letters and spaces.")]
+    [StringLength(50, ErrorMessage = "First name cannot exceed 50 characters.")]
     public string Name { get; set; }
     public Guid? OwnerId { get; set; }
     [Required(ErrorMessage = "Please select a deal stage.")] // <-- ADD THIS
