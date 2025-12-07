@@ -93,7 +93,7 @@ namespace scrm_dev_mvc.Controllers
                     Name = companyEntity.Name,
                     City = companyEntity.City,
                     Country = companyEntity.Country,
-                    userId = companyEntity.UserId ?? Guid.Empty,
+                    userId = companyEntity.UserId,
                     Domain = companyEntity.Domain,
                     CreatedDate = companyEntity.CreatedAt,
                 },

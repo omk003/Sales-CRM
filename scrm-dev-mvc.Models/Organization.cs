@@ -13,7 +13,7 @@ public partial class Organization
 
     public string? PhoneNumber { get; set; }
 
-    public DateTime? CreatedAt { get; set; }
+    public DateTime CreatedAt { get; set; }
 
     public virtual ICollection<User> Users { get; set; } = new List<User>();
 

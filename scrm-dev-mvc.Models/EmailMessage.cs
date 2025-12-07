@@ -11,11 +11,11 @@ public partial class EmailMessage
 
     public string? Body { get; set; }
 
-    public DateTime? SentAt { get; set; }
+    public DateTime SentAt { get; set; }
 
-    public string? Direction { get; set; }
+    public string Direction { get; set; }
 
-    public bool? IsDeleted { get; set; }
+    public bool IsDeleted { get; set; }
 
     public virtual EmailThread Thread { get; set; } = null!;
 }

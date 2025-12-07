@@ -79,7 +79,7 @@ namespace scrm_dev_mvc.services
                 foreach (var company in CompanyList)
                 {
                     var id = company.Id;
-                    var currentUser = await unitOfWork.Users.GetByIdAsync(company.UserId ?? Guid.Empty);
+                    var currentUser = await unitOfWork.Users.GetByIdAsync(company.UserId);
                     CompanyResponseViewModels.Add(new CompanyViewModel
                     {
                         Id = id,
@@ -99,7 +99,7 @@ namespace scrm_dev_mvc.services
             foreach (var company in CompanyObject)
             {
                 var id = company.Id;
-                var currentUser = await unitOfWork.Users.GetByIdAsync(company.UserId ?? Guid.Empty);
+                var currentUser = await unitOfWork.Users.GetByIdAsync(company.UserId);
                 CompanyResponseViewModelsObject.Add(new CompanyViewModel
                 {
                     Id = id,
@@ -112,7 +112,7 @@ namespace scrm_dev_mvc.services
             }
             return CompanyResponseViewModelsObject;
 
-        }
+        }   
 
         public async Task<bool> DeleteCompanyByIdsAsync(List<int> ids)
         {

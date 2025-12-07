@@ -194,9 +194,9 @@
                                 string onClickHandler = "";
                                 string liStyle = "border-bottom:1px solid var(--border-color); padding:var(--space-md) 0; display:flex; gap: var(--space-md); align-items: flex-start;";
 
-                                if (activityName == "Task" && act.SubjectId.HasValue)
+                                if (activityName == "Task")
                                 {
-                                    onClickHandler = $"openUpdateTaskModal({act.SubjectId.Value})";
+                                    onClickHandler = $"openUpdateTaskModal({act.SubjectId})";
                                     liStyle += " cursor:pointer;"; 
                                 }
 
@@ -213,7 +213,7 @@
                                                 @activityName
                                             </h6>
                                             <span style="color:var(--text-secondary); font-size: var(--fs-sm);">
-                                                @act.ActivityDate?.ToString("dd MMM yyyy")
+                                                @act.ActivityDate.ToString("dd MMM yyyy")
                                             </span>
                                         </div>
 
@@ -320,7 +320,7 @@
                                 @deal.Value?.ToString("C0")
                             </span>
                             <span style="color:var(--text-secondary);font-size:var(--fs-sm); display:block;">
-                                Created: @deal.CreatedAt?.ToString("MM/dd/yyyy")
+                                Created: @deal.CreatedAt.ToString("MM/dd/yyyy")
                             </span>
                         </div>
                     }

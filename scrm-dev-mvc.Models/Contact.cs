@@ -12,23 +12,23 @@ public partial class Contact
 
     public string? LastName { get; set; }
 
-    public int? LeadStatusId { get; set; }
+    public int LeadStatusId { get; set; }
 
-    public int? LifeCycleStageId { get; set; }
+    public int LifeCycleStageId { get; set; }
 
     public string? Number { get; set; }
 
     public string Email { get; set; } = null!;
 
-    public bool? IsDeleted { get; set; }
+    public bool IsDeleted { get; set; }
 
-    public Guid? OwnerId { get; set; }
+    public Guid OwnerId { get; set; }
 
     public int? CompanyId { get; set; }
 
-    public DateTime? CreatedAt { get; set; }
+    public DateTime CreatedAt { get; set; }
 
-    public DateTime? UpdatedAt { get; set; }
+    public DateTime UpdatedAt { get; set; }
 
     public int OrganizationId { get; set; }
 

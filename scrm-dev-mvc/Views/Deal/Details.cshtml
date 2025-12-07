@@ -112,7 +112,7 @@
                     <div><b>Owner:</b> @Model.Deal.Owner?.FirstName @Model.Deal.Owner?.LastName</div>
                     <div><b>Company:</b> @Model.Deal.Company?.Name</div>
                     <div><b>Close Date:</b> @Model.Deal.CloseDate?.ToString("MM/dd/yyyy")</div>
-                    <div><b>Created At:</b> @Model.Deal.CreatedAt?.ToString("MM/dd/yyyy hh:mm tt")</div>
+                    <div><b>Created At:</b> @Model.Deal.CreatedAt.ToString("MM/dd/yyyy hh:mm tt")</div>
                 </div>
             </section>
         </aside>
@@ -174,9 +174,9 @@
                                 // Safer check for "Task"
                                 bool isTask = (activityName ?? "").Equals("Task", StringComparison.OrdinalIgnoreCase);
 
-                                if (isTask && act.SubjectId.HasValue)
+                                if (isTask )
                                 {
-                                    onClickHandler = $"openUpdateTaskModal({act.SubjectId.Value})";
+                                    onClickHandler = $"openUpdateTaskModal({act.SubjectId})";
                                     liStyle += " cursor:pointer;";
                                 }
 
@@ -191,7 +191,7 @@
                                                 @activityName
                                             </h6>
                                             <span style="color:var(--text-secondary); font-size: var(--fs-sm);">
-                                                @act.ActivityDate?.ToString("dd MMM yyyy")
+                                                @act.ActivityDate.ToString("dd MMM yyyy")
                                             </span>
                                         </div>
 

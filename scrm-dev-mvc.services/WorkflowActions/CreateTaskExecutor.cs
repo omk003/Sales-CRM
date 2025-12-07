@@ -62,8 +62,8 @@ namespace scrm_dev_mvc.Services.WorkflowActions
                 return;
             }
 
-            Guid assigneeId = contact.OwnerId ?? Guid.Empty;
-            if (parameters.AssignedTo == "ContactOwner" && !contact.OwnerId.HasValue)
+            Guid assigneeId = contact.OwnerId ;
+            if (parameters.AssignedTo == "ContactOwner" )
             {
                 _logger.LogWarning("Contact {ContactId} has no OwnerId. Task creation may result in an unassigned task.", contact.Id);
             }

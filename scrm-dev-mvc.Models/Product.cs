@@ -13,7 +13,7 @@ public partial class Product
 
     public Guid UserId { get; set; }
 
-    public DateTime? CreatedAt { get; set; }
+    public DateTime CreatedAt { get; set; }
 
     public virtual ICollection<DealLineItem> DealLineItems { get; set; } = new List<DealLineItem>();
 

@@ -82,8 +82,8 @@ namespace SCRM_dev.Services
                 Email = contactDto.Email,
                 Number = contactDto.Number,
                 JobTitle = contactDto.JobTitle,
-                LeadStatusId = contactDto.LeadStatusId ?? 1,
-                LifeCycleStageId = contactDto.LifeCycleStageId ?? 1,
+                LeadStatusId = contactDto.LeadStatusId ,
+                LifeCycleStageId = contactDto.LifeCycleStageId ,
                 OrganizationId = user?.OrganizationId ?? 0,
                 OwnerId = contactDto.OwnerId,
             };
@@ -119,11 +119,11 @@ namespace SCRM_dev.Services
             Expression<Func<Contact, bool>> predicate;
             if (user.RoleId == (int)UserRoleEnum.SalesAdminSuper || user.RoleId == (int)UserRoleEnum.SalesAdmin)
             {
-                predicate = c => c.OrganizationId == user.OrganizationId && (!c.IsDeleted ?? false);
+                predicate = c => c.OrganizationId == user.OrganizationId && (!c.IsDeleted );
             }
             else
             {
-                predicate = c => c.OwnerId == userId && c.OrganizationId == user.OrganizationId && (!c.IsDeleted ?? false);
+                predicate = c => c.OwnerId == userId && c.OrganizationId == user.OrganizationId && (!c.IsDeleted);
             }
 
             var contacts = await unitOfWork.Contacts.GetAllAsync(predicate, asNoTracking: true, c => c.LeadStatus, c => c.Owner);
@@ -151,11 +151,11 @@ namespace SCRM_dev.Services
             Expression<Func<Contact, bool>> predicate;
             if (user.RoleId == (int)UserRoleEnum.SalesAdminSuper || user.RoleId == (int)UserRoleEnum.SalesAdmin)
             {
-                predicate = c => c.OrganizationId == user.OrganizationId && (!c.IsDeleted ?? false);
+                predicate = c => c.OrganizationId == user.OrganizationId && (!c.IsDeleted);
             }
             else
             {
-                predicate = c => c.OwnerId == userId && c.OrganizationId == user.OrganizationId && (!c.IsDeleted ?? false);
+                predicate = c => c.OwnerId == userId && c.OrganizationId == user.OrganizationId && (!c.IsDeleted);
             }
 
             
@@ -207,22 +207,22 @@ namespace SCRM_dev.Services
             {
                 if (user.RoleId == 2 || user.RoleId == 3)
                 {
-                    predicate = c => c.OrganizationId == user.OrganizationId && (!c.IsDeleted ?? false) ;
+                    predicate = c => c.OrganizationId == user.OrganizationId && (!c.IsDeleted) ;
                 }
                 else
                 {
-                    predicate = c => c.OwnerId == userId && c.OrganizationId == user.OrganizationId && (!c.IsDeleted ?? false) ;
+                    predicate = c => c.OwnerId == userId && c.OrganizationId == user.OrganizationId && (!c.IsDeleted) ;
                 }
             }
             else
             {
                 if (user.RoleId == 2 || user.RoleId == 3)
                 {
-                    predicate = c => c.OrganizationId == user.OrganizationId && (!c.IsDeleted ?? false) && c.CompanyId == companyId;
+                    predicate = c => c.OrganizationId == user.OrganizationId && (!c.IsDeleted) && c.CompanyId == companyId;
                 }
                 else
                 {
-                    predicate = c => c.OwnerId == userId && c.OrganizationId == user.OrganizationId && (!c.IsDeleted ?? false) && c.CompanyId == companyId;
+                    predicate = c => c.OwnerId == userId && c.OrganizationId == user.OrganizationId && (!c.IsDeleted) && c.CompanyId == companyId;
                 }
             }
             

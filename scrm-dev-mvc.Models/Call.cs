@@ -7,7 +7,7 @@ public partial class Call
 {
     public int Id { get; set; }
 
-    public string? Sid { get; set; }
+    public string Sid { get; set; }
 
     public string? Notes { get; set; }
 
@@ -17,11 +17,11 @@ public partial class Call
 
     public int? DurationSeconds { get; set; }
 
-    public string? Outcome { get; set; }
+    public string Outcome { get; set; }
 
-    public string? Direction { get; set; }
+    public string Direction { get; set; }
 
-    public DateTime? CallTime { get; set; }
+    public DateTime CallTime { get; set; }
 
     public virtual Contact Contact { get; set; } = null!;
 

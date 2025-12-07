@@ -13,8 +13,8 @@ public partial class Deal
     [RegularExpression(@"^[a-zA-Z\s]+$", ErrorMessage = "First name can only contain letters and spaces.")]
     [StringLength(50, ErrorMessage = "First name cannot exceed 50 characters.")]
     public string Name { get; set; }
-    public Guid? OwnerId { get; set; }
-    [Required(ErrorMessage = "Please select a deal stage.")] // <-- ADD THIS
+    public Guid OwnerId { get; set; }
+    [Required(ErrorMessage = "Please select a deal stage.")] 
     [Display(Name = "Deal Stage")]
     public int StageId { get; set; }
 
@@ -24,9 +24,9 @@ public partial class Deal
 
     public decimal? Value { get; set; }
 
-    public bool? IsDeleted { get; set; }
+    public bool IsDeleted { get; set; }
 
-    public DateTime? CreatedAt { get; set; }
+    public DateTime CreatedAt { get; set; }
 
     public virtual ICollection<Activity> Activities { get; set; } = new List<Activity>();
 
@@ -39,7 +39,7 @@ public partial class Deal
     public virtual Stage? Stage { get; set; }
 
     
-    public int? OrganizationId { get; set; }
+    public int OrganizationId { get; set; }
 
     [ForeignKey("OrganizationId")]
     public virtual Organization? Organization { get; set; }

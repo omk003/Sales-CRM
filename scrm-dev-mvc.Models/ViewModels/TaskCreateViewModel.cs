@@ -21,9 +21,8 @@ namespace scrm_dev_mvc.Models.ViewModels
         [Required(ErrorMessage = "Please select a status.")]
         public int StatusId { get; set; }
 
-        public DateTime? DueDate { get; set; }
+        public DateTime DueDate { get; set; }
 
-        // These IDs are hidden fields, set by the page that opens the modal
         public int? ContactId { get; set; }
         public int? CompanyId { get; set; }
         public int? DealId { get; set; }

@@ -15,9 +15,9 @@ public partial class TaskTemplate
 
     public DateTime? Duedate { get; set; }
 
-    public DateTime? CreatedAt { get; set; }
+    public DateTime CreatedAt { get; set; }
 
-    public DateTime? UpdatedAt { get; set; }
+    public DateTime UpdatedAt { get; set; }
 
     public virtual WorkflowTemplate Workflow { get; set; } = null!;
 }

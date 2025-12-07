@@ -24,11 +24,11 @@ namespace scrm_dev_mvc.Models.ViewModels
         [RegularExpression(@"^[a-zA-Z\s]+$", ErrorMessage = "Country can only contain letters and spaces.")]
         public string? Country { get; set; }
 
-        public Guid? userId { get; set; }
+        public Guid userId { get; set; }
 
         public string? userName { get; set; }
 
-        public DateTime? CreatedDate { get; set; }
+        public DateTime CreatedDate { get; set; }
 
         [Required(ErrorMessage = "Domain is required.")]
         [RegularExpression(@"^([a-zA-Z0-9-]+\.)+[a-zA-Z]{2,}$", ErrorMessage = "Domain is invalid")]

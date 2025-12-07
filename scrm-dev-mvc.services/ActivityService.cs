@@ -52,7 +52,7 @@ namespace scrm_dev_mvc.services
                     OwnerId = activityDto.OwnerId,
                     ActivityTypeId = activityType.Id,
                     Notes = activityDto.Notes,
-                    ActivityDate = activityDto.ActivityDate ?? DateTime.UtcNow,
+                    ActivityDate = activityDto.ActivityDate,
                     DueDate = activityDto.DueDate,
                     Status = status,
                     ContactId = activityDto.ContactId,

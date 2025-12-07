@@ -9,25 +9,22 @@ public partial class Task
     public string? Description { get; set; }
     public int PriorityId { get; set; }
     public int StatusId { get; set; }
-    public DateTime? DueDate { get; set; }
-    public DateTime? CompletedAt { get; set; }
+    public DateTime DueDate { get; set; }
+    public DateTime CompletedAt { get; set; }
 
     public Guid OwnerId { get; set; }
 
-    // --- ADD THESE NEW PROPERTIES ---
     public int? ContactId { get; set; }
     public int? CompanyId { get; set; }
     public int? DealId { get; set; }
 
 
-    public string? TaskType { get; set; }
+    public string TaskType { get; set; }
 
     public int OrganizationId { get; set; }
-    // --- Navigation Properties ---
     public virtual Priority Priority { get; set; } = null!;
     public virtual scrm_dev_mvc.Models.TaskStatus Status { get; set; } = null!;
 
-    // --- NAVIGATION PROPERTIES ---
     public virtual Contact? Contact { get; set; }
     public virtual Company? Company { get; set; }
     public virtual Deal? Deal { get; set; }

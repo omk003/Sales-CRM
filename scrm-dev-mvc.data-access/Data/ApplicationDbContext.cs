@@ -104,7 +104,7 @@ public partial class ApplicationDbContext : DbContext
             var fullTableName = entry.Metadata.GetTableName() ?? entry.Metadata.DisplayName();
 
             var primaryKey = entry.Properties.SingleOrDefault(p => p.Metadata.IsPrimaryKey());
-            int? recordId = null;
+            int recordId = 0;
 
             if (primaryKey != null && primaryKey.CurrentValue != null)
             {

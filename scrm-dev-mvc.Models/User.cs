@@ -19,11 +19,11 @@ public partial class User
 
     public bool? IsDeleted { get; set; }
 
-    public DateTime? CreatedAt { get; set; }
+    public DateTime CreatedAt { get; set; }
 
     public long? LastProcessedUid { get; set; }
 
-    public DateTime? LastCheckedTime { get; set; }
+    public DateTime LastCheckedTime { get; set; }
 
     public string? PasswordHash { get; set; }
 

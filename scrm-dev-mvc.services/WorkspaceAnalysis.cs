@@ -43,7 +43,7 @@ namespace scrm_dev_mvc.Services
                 {
                     Id = t.Id,
                     Title = t.Title ?? "N/A",
-                    DueDate = t.DueDate ?? today.AddYears(1),
+                    DueDate = t.DueDate ,
                     TaskType = t.TaskType,
                     RelatedTo = t.ContactId.HasValue ? $"{t.Contact?.FirstName} {t.Contact?.LastName} (Contact)" :
                                 t.DealId.HasValue ? $"{t.Deal?.Name} (Deal)" : "No Association"
@@ -67,14 +67,14 @@ namespace scrm_dev_mvc.Services
                 );
 
                 viewModel.CompletedTasks = completedTasks
-                    .OrderByDescending(t => t.CompletedAt ?? t.DueDate)
+                    .OrderByDescending(t => t.CompletedAt )
                     .Take(50) 
                     .Select(t => new TaskSummaryViewModel
                     {
                         Id = t.Id,
                         Title = t.Title ?? "N/A",
                         TaskType = t.TaskType,
-                        DueDate = t.DueDate ?? today, 
+                        DueDate = t.DueDate, 
                         RelatedTo = t.ContactId.HasValue ? $"{t.Contact?.FirstName} {t.Contact?.LastName} (Contact)" :
                                     t.DealId.HasValue ? $"{t.Deal?.Name} (Deal)" : "No Association"
                     })
@@ -97,7 +97,7 @@ namespace scrm_dev_mvc.Services
                     .GroupBy(a => a.ActivityType.Name.ToLower())
                     .ToDictionary(
                         g => g.Key,
-                        g => g.GroupBy(a => a.ActivityDate.Value.Date)
+                        g => g.GroupBy(a => a.ActivityDate.Date)
                               .Select(dateGroup => new ActivityChartDataPoint
                               {
                                   Date = dateGroup.Key.ToString("yyyy-MM-dd"),

@@ -11,13 +11,13 @@ public partial class EmailThread
 
     public int ContactId { get; set; }
 
-    public string? Subject { get; set; }
+    public string Subject { get; set; }
 
     public bool? IsArchived { get; set; }
 
-    public DateTime? CreatedAt { get; set; }
+    public DateTime CreatedAt { get; set; }
 
-    public DateTime? UpdatedAt { get; set; }
+    public DateTime UpdatedAt { get; set; }
 
     public virtual Contact Contact { get; set; } = null!;
 

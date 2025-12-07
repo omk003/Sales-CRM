@@ -12,9 +12,9 @@ namespace scrm_dev_mvc.Models.ViewModels
         [StringLength(50, ErrorMessage = "Last name cannot exceed 50 characters.")]
         public string? LastName { get; set; } 
 
-        public int? LeadStatusId { get; set; }
+        public int LeadStatusId { get; set; }
 
-        public int? LifeCycleStageId { get; set; }
+        public int LifeCycleStageId { get; set; }
         [RegularExpression(@"^(\+91)?[0-9]{10}$", ErrorMessage = "Enter a valid 10-digit or +91 phone number.")]
         public string? Number { get; set; }
 
@@ -26,7 +26,7 @@ namespace scrm_dev_mvc.Models.ViewModels
         public string? JobTitle { get; set; }
 
 
-        public Guid? OwnerId { get; set; }
+        public Guid OwnerId { get; set; }
 
     }
 }

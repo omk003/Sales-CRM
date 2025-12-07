@@ -26,42 +26,25 @@ namespace scrm_dev_mvc.Models.DTO
             /// <summary>
             /// The date/time the activity occurred. Defaults to DateTime.UtcNow if not set.
             /// </summary>
-            public DateTime? ActivityDate { get; set; }
+            public DateTime ActivityDate { get; set; }
 
             /// <summary>
             /// The due date, primarily for tasks.
             /// </summary>
             public DateTime? DueDate { get; set; }
 
-            /// <summary>
-            /// The status, e.g., "Pending", "Completed".
-            /// Defaults to "Pending" for future tasks, "Completed" otherwise.
-            /// </summary>
-            public string? Status { get; set; }
+            
+            public string Status { get; set; }
 
-            // --- Associations ---
-
-            /// <summary>
-            /// Optional: The ID of the associated Contact.
-            /// </summary>
+           
             public int? ContactId { get; set; }
 
-            /// <summary>
-            /// Optional: The ID of the associated Deal.
-            /// </summary>
             public int? DealId { get; set; }
 
-            // --- Source Record Linking ---
+            public int SubjectId { get; set; }
 
-            /// <summary>
-            /// Optional: The ID of the source record (e.g., an EmailMessage's ID).
-            /// </summary>
-            public int? SubjectId { get; set; }
-
-            /// <summary>
-            /// Optional: The type of the source record (e.g., "email_message").
-            /// </summary>
-            public string? SubjectType { get; set; }
+          
+            public string SubjectType { get; set; }
         }
     
 }

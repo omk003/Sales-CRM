@@ -13,17 +13,17 @@ public partial class Activity
 
     public int? ContactId { get; set; } 
 
-    public int? ActivityTypeId { get; set; }
+    public int ActivityTypeId { get; set; }
 
-    public int? SubjectId { get; set; }
+    public int SubjectId { get; set; }
 
-    public string? SubjectType { get; set; }
+    public string SubjectType { get; set; }
 
     public string? Notes { get; set; }
 
-    public DateTime? ActivityDate { get; set; }
+    public DateTime ActivityDate { get; set; }
 
-    public string? Status { get; set; }
+    public string Status { get; set; }
 
     public DateTime? DueDate { get; set; }
 

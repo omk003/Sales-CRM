@@ -132,10 +132,10 @@ namespace scrm_dev_mvc.services
             try
             {
                 var user = await _userService.GetUserByIdAsync(userId);
-                vm.Deal.OwnerId = vm.Deal.OwnerId ?? userId;
+                vm.Deal.OwnerId = vm.Deal.OwnerId;
                 vm.Deal.CreatedAt = DateTime.UtcNow;
                 vm.Deal.IsDeleted = false;
-                vm.Deal.OrganizationId = user.OrganizationId;
+                vm.Deal.OrganizationId = user.OrganizationId ?? 0;
 
                 await _unitOfWork.Deals.AddAsync(vm.Deal);
                 await _unitOfWork.SaveChangesAsync();
