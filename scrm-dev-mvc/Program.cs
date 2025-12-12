@@ -21,7 +21,7 @@ Log.Logger = new LoggerConfiguration()
 
 builder.Host.UseSerilog();
 builder.Services.AddControllersWithViews();
-var connectionString = builder.Configuration.GetConnectionString("ProductionConnection");
+var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 
 
 builder.Services.AddMiniProfiler(options => {
